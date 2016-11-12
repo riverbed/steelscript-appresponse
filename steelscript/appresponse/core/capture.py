@@ -1,15 +1,23 @@
+# Copyright (c) 2016 Riverbed Technology, Inc.
+#
+# This software is licensed under the terms and conditions of the MIT License
+# accompanying the software ("License").  This software is distributed "AS IS"
+# as set forth in the License.
 
-class PacketsService(object):
+
+from steelscript.common.datastructures import DictObject
+
+class CaptureJobService(object):
     """This class is responsible for managing capture jobs"""
 
-    def __init__(self, host, auth, name):
-        self.packets = svcmgr.find(host, auth, name)
-        self.jobs = packets.bind('jobs')
+    def __init__(self, arx):
+        self.capture = arx.find_service('npm.packet_capture')
+        self.jobs = self.capture.bind('jobs')
 
     def get_jobs(self):
         resp = self.jobs.execute('get')
 
-        return [Job(self.get_job(item['id']))
+        return [self.get_job_by_id(item['id'])
                 for item in resp.data['items']]
 
     def create_job(self):
@@ -25,16 +33,21 @@ class PacketsService(object):
     def bulk_stop(self):
         return self.jobs.execute('bulk_stop')
 
-    def get_job(self, id):
-        datarep = self.packets.bind('job', id)
-        resp = datarep.execute('get')
-        return Job(resp)
+    def get_job_by_id(self, id_):
+        return Job(self.capture.bind('job', id=id_))
+
+    def get_job_by_name(self, name):
+        return (j for j in self.get_jobs()
+                if j.prop.config.name == name).next()
 
 
 class Job(object):
 
     def __init__(self, datarep):
+
         self.datarep = datarep
+        data = self.datarep.execute('get').data
+        self.prop = DictObject.create_from_dict(data)
 
     def set(self):
         self.datarep.execute('set')
@@ -52,4 +65,4 @@ class Job(object):
         self.datarep.execute('clear_packets')
 
     def get_stats(self):
-        return self.datarep.execute('get_stats')
+        return self.datarep.execute('get_stats').data

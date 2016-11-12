@@ -1,15 +1,18 @@
+# Copyright (c) 2016 Riverbed Technology, Inc.
+#
+# This software is licensed under the terms and conditions of the MIT License
+# accompanying the software ("License").  This software is distributed "AS IS"
+# as set forth in the License.
 
 
 class CommonService(object):
 
     def __init__(self, arx):
-        service = arx.get_service('common')
+        service = arx.find_service('common')
         self.info = service.bind('info')
         self.ping = service.bind('ping')
         self.services = service.bind('services')
         self.auth_info = service.bind('auth_info')
-        self.token = service.bind('token')
-        self.session_auth = service.bind('session_auth')
 
     def get_versions(self):
         versions_list = self.services.execute('get').data
@@ -22,5 +25,3 @@ class CommonService(object):
             versions[service['id']] = service['versions']
 
         return versions
-
-
