@@ -7,8 +7,9 @@
 
 from steelscript.common.datastructures import DictObject
 
+
 class CaptureJobService(object):
-    """This class is responsible for managing capture jobs"""
+    """This class manages packet capture jobs."""
 
     def __init__(self, arx):
         self.capture = arx.find_service('npm.packet_capture')
@@ -20,8 +21,8 @@ class CaptureJobService(object):
         return [self.get_job_by_id(item['id'])
                 for item in resp.data['items']]
 
-    def create_job(self):
-        resp = self.jobs.execute('create')
+    def create_job(self, config):
+        resp = self.jobs.execute('create', _data=config)
         return Job(resp)
 
     def delete_jobs(self):
@@ -42,9 +43,9 @@ class CaptureJobService(object):
 
 
 class Job(object):
+    """This class manages single packet capture job."""
 
     def __init__(self, datarep):
-
         self.datarep = datarep
         data = self.datarep.execute('get').data
         self.prop = DictObject.create_from_dict(data)

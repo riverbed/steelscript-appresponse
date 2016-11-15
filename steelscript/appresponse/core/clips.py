@@ -6,7 +6,11 @@
 
 from steelscript.common.datastructures import DictObject
 
+
 class ClipService(object):
+    """This class provides an interface to manage the clip service on
+    an AppResponse appliance.
+    """
 
     def __init__(self, arx):
         self.npm_clip = arx.find_service('npm.clips')
@@ -33,6 +37,25 @@ class ClipService(object):
 
         return Clip(resp)
 
+    def create_clips(self, data_defs):
+        return Clips([self.create_clip(dd.job, dd.timefilter)
+                      for dd in data_defs])
+
+
+class Clips(object):
+
+    def __init__(self, clip_objs):
+        self.clip_objs = clip_objs
+
+    def __enter__(self):
+        return self.clip_objs
+
+    def __exit__(self, type, value, traceback):
+        for clip in self.clip_objs:
+            clip.delete()
+
+        self.clip_objs = None
+
 
 class Clip(object):
 
@@ -41,12 +64,6 @@ class Clip(object):
         self.datarep = datarep
         data = self.datarep.execute('get').data
         self.prop = DictObject.create_from_dict(data)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.delete()
 
     def delete(self):
         self.datarep.execute('delete')

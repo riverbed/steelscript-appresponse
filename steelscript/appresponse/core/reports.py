@@ -7,7 +7,6 @@
 import time
 
 from steelscript.common.datastructures import DictObject
-from steelscript.appresponse.core.capture import Job
 from steelscript.appresponse.core.types import PacketsSource
 
 
@@ -23,38 +22,39 @@ class ProbeReportService(object):
         resp = self.columns.execute('get')
         return [item['id'] for item in resp.data['items']]
 
-    def create_report(self, source, columns, granularity, timefilter):
+    def create_report(self, job, columns, granularity, timefilter):
+        """Create a report instance with just one data definition request."""
 
-        # Check the source, if it is a capture job, create a trace clip
-        # and use the clip as the source instead
+        report = Report(self.arx)
+        report.add(job, columns, granularity, timefilter)
+        report.run()
+        return report
 
-        if isinstance(source.packets_obj, Job):
+    def create_instance(self, job_data_defs):
+        """Create a report instance with multiple data definition requests."""
 
-            with self.arx.create_clip(source.packets_obj, timefilter) as clip:
+        with self.arx.clips.create_clips(job_data_defs) as clips:
 
-                source = PacketsSource(clip)
-                return self.create_non_job_report(source, columns, granularity, timefilter)
+            clip_data_defs = []
 
-        else:
+            for clip, dd in zip(clips, job_data_defs):
 
-            return self.create_non_job_report(source, columns, granularity, timefilter)
+                data_def = DataDef.build_criteria(source=PacketsSource(clip),
+                                                  columns=dd.columns,
+                                                  granularity=dd.granularity,
+                                                  timefilter=dd.timefilter)
 
-    def create_non_job_report(self, source, columns, granularity, timefilter):
+                clip_data_defs.append(data_def)
 
-        data_def = DataDef.build_criteria(source, columns, granularity, timefilter)
+            config = dict(data_defs=clip_data_defs)
 
-        instance = self.create_instance([data_def])
+            instance = ReportInstance(
+                self.instances.execute('create', _data=config))
 
-        while not instance.ready:
-            time.sleep(1)
+            while not instance.ready:
+                time.sleep(1)
 
-        return instance
-
-    def create_instance(self, data_defs):
-
-        config = {'data_defs': data_defs}
-        resp = self.instances.execute('create', _data=config)
-        return ReportInstance(resp, self.reports)
+            return instance
 
     def get_instances(self):
         resp = self.instances.execute('get')
@@ -71,15 +71,16 @@ class ProbeReportService(object):
 
 
 class ReportInstance(object):
-    """Instance class should """
-    def __init__(self, datarep, reports):
+    """Main interface to  """
+    def __init__(self, datarep):
         self.datarep = datarep
         data = self.datarep.execute('get').data
         self.prop = DictObject.create_from_dict(data)
 
     @property
     def ready(self):
-        return all([item['progress']['percent'] == 100 for item in self.status])
+        return all([item['progress']['percent'] == 100
+                    for item in self.status])
 
     @property
     def status(self):
@@ -93,10 +94,17 @@ class ReportInstance(object):
 
 
 class DataDef(object):
+    """This class provides an interface to build a data definition request
+    as a dict.
+    """
+    def __init__(self, job, columns, granularity, timefilter):
+        self.job = job
+        self.columns = columns
+        self.granularity = granularity
+        self.timefilter = timefilter
 
     @classmethod
     def build_criteria(cls, source, columns, granularity, timefilter):
-
         data_def = dict()
         data_def['source'] = dict(name=source.name, path=source.path)
         data_def['group_by'] = [col.name for col in columns if col.key]
@@ -107,35 +115,38 @@ class DataDef(object):
 
         return data_def
 
-"""
+
 class Report(object):
+    """This class is the main interface to build and run a report against
+    an AppResponse appliance.
+    """
+
     def __init__(self, arx):
+        """Initialize an AppResponse object.
+
+        :param arx: the AppResponse object.
+        """
         self.arx = arx
         self.data_defs = []
         self.instance = None
 
-    def add(self, source, columns, granularity, timefilter):
-        if isinstance(source.packets_obj, Job):
+    def add(self, job, columns, granularity, timefilter):
+        """Add one data definition request.
 
-
-        self.data_defs['data_defs'].append(build_data_def(**kwargs))
+        :param job: packet capture job object.
+        :param columns: list Key/Value column objects.
+        :param str granularity: granularity value.
+        :param timefilter: time filter object.
+        """
+        self.data_defs.append(DataDef(job, columns, granularity, timefilter))
 
     def run(self):
-        datarep = self.appresponse.reports.create_instance(self.data_defs)
-        self.instance = ReportInstance(datarep)
+        if not self.instance:
+            self.instance = self.arx.reports.create_instance(self.data_defs)
 
     def get_data(self):
         return self.instance.get_data()
 
-
-#arx = AppResponse()
-#report = arx.create_view(**kwargs)
-#report.get_data()
-
-arx = AppResponse()
-report = Report(arx)
-report.add(**kwargs)
-report.add(**kwargs)
-report.run()
-report.get_data()
-"""
+    def delete(self):
+        self.instance.delete()
+        self.instance = None

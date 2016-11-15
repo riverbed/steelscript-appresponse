@@ -9,15 +9,18 @@ import yaml
 
 from steelscript.appresponse.core import CommonService, ProbeReportService, \
     CaptureJobService, ClipService
-from steelscript.common.service import UserAuth, Service
-from reschema.servicedef import ServiceDefLoadHook, ServiceDef, ServiceDefManager
+from steelscript.common.service import Service
+from reschema.servicedef import ServiceDefLoadHook, ServiceDef,\
+    ServiceDefManager
 from steelscript.common._fs import SteelScriptDir
 from sleepwalker.connection import ConnectionManager, ConnectionHook
 from sleepwalker.service import ServiceManager
 
 
 class ARXServiceDefLoader(ServiceDefLoadHook):
-    """This class serves as the custom hook for service manager."""
+    """This class serves as the custom hook for service definition manager
+    for AppResponse devices.
+    """
 
     SERVICE_ID = '/api/{name}/{version}'
 
@@ -72,8 +75,27 @@ class ARXConnectionHook(ConnectionHook):
 
 
 class AppResponse(object):
+    """The AppResponse class is the main interface to interact with a
+    AppResponse appliance. Primarity this provides an interface to
+    reporting. """
 
     def __init__(self, host, auth, versions=None):
+        """Initialize an AppResponse object.
+
+        :param str host: name or IP address of the AppResponse appliance.
+
+        :param auth: defines the authentication method and credentials
+            to use to access the AppResponse. It should be an instance of
+            :py:class:`UserAuth<steelscript.common.service.UserAuth>` or
+            :py:class:`OAuth<steelscript.common.service.OAuth>`
+
+
+        :param dict versions: service versions to use, keyed by the service
+        name, value is a list of version strings that are required by the
+        external application. If unspecified, this will use the latest
+        version of each service supported by both this implementation and
+        the AppResponse appliance.
+        """
 
         self.host = host
         self.auth = auth
@@ -85,6 +107,7 @@ class AppResponse(object):
 
     @property
     def service_manager(self):
+        """Initialize the service manager instance if it does not exist."""
 
         if self._service_manager is not None:
             return self._service_manager
@@ -110,6 +133,7 @@ class AppResponse(object):
 
     @property
     def versions(self):
+        """Determine version strings for each required service."""
         if self._versions:
             return self._versions
 
@@ -142,49 +166,7 @@ class AppResponse(object):
     def get_capture_jobs(self):
         return self.capture.get_jobs()
 
-    def create_report(self, source, columns, granularity, timefilter=None):
-        return self.reports.create_report(source, columns, granularity, timefilter)
-
-    def create_clip(self, job, timefilter):
-        return self.clips.create_clip(job, timefilter)
-
-"""
-    def get_instance_status(self):
-        return self.reports.get_instance_status()
-
-    def create_job(self):
-        self.packets.create_job()
-
-    def get_jobs(self):
-        return self.packets.get_jobs()
-
-    def delete_jobs(self):
-        return self.packets.delete_jobs()
-
-    def start_job(self):
-        self.packets.start_job()
-
-    def get_job_status(self):
-        self.packets.get_job_status()
-
-# class DataDef(DictObject):
-#
-#     @classmethod
-#     def create(reference, source_name, source_path, group_by, time, columns):
-#         data_def = ...
-#         return create_from_dict(data_def)
-#
-
-#class AppResponseService(Sleepwalker.Service):
-
-    #@classmethod
-    #def create(host, name, auth, version='1.0'):
-    #    return svcmgr.find_by_name(host=host, name=name, version='1.0', auth=auth)
-
-
-#    def execute(self, resource, link, data):
-#        data_rep = self.bind(resource)
-#        return data_rep.execute(link, data)
-
-"""
+    def create_report(self, job, columns, granularity, timefilter=None):
+        return self.reports.create_report(job, columns,
+                                          granularity, timefilter)
 

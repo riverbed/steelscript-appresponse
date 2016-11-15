@@ -22,6 +22,7 @@ class Column(object):
     def __str__(self):
         return self.name
 
+
 class Key(Column):
 
     def __init__(self, name):
@@ -69,4 +70,3 @@ class TimeFilter(object):
     def parse_range(cls, string):
         start, end = timeutils.parse_range(string)
         return cls(start, end)
-
