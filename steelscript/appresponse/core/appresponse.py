@@ -6,6 +6,7 @@
 
 import os
 import yaml
+import logging
 
 from steelscript.appresponse.core import CommonService, ProbeReportService, \
     CaptureJobService, ClipService
@@ -16,8 +17,9 @@ from steelscript.common._fs import SteelScriptDir
 from sleepwalker.connection import ConnectionManager, ConnectionHook
 from sleepwalker.service import ServiceManager
 
+logger = logging.getLogger(__name__)
 
-class ARXServiceDefLoader(ServiceDefLoadHook):
+class AppResponseServiceDefLoader(ServiceDefLoadHook):
     """This class serves as the custom hook for service definition manager
     for AppResponse devices.
     """
@@ -25,18 +27,34 @@ class ARXServiceDefLoader(ServiceDefLoadHook):
     SERVICE_ID = '/api/{name}/{version}'
 
     def __init__(self, connection):
+        """Initialize AppResponse object.
 
+        :param connection: Connection object to the AppResponse appliance.
+            should be an instance of
+            :py:class:`Connection<steelscript.common.connection.Connection`
+        """
         self.connection = connection
         self.ss_dir = SteelScriptDir('AppResponse', 'files')
 
     def get_fnames(self, name, version):
+        """Return both the base filename and absolute file name of the
+        Service Def file.
 
+        :param str name: name of the service
+        :param str version: version string
+
+        :return: base file name and absolute file name
+        """
         rel_fname = name + '-' + version + '.yml'
         abs_fname = os.path.join(self.ss_dir.basedir, rel_fname)
 
         return rel_fname, abs_fname
 
     def find_by_id(self, id_):
+        """Return ServiceDef object of the given service.
+
+        :param str id_: uri of the service definition
+        """
         _, name, version = id_.rsplit('/', 2)
 
         rel_fname, abs_fname = self.get_fnames(name, version)
@@ -53,6 +71,7 @@ class ARXServiceDefLoader(ServiceDefLoadHook):
         return ServiceDef.create_from_file(abs_fname)
 
     def find_by_name(self, name, version, provider):
+        """Return ServiceDef object of the given service and version."""
 
         assert(provider == 'riverbed')
 
@@ -66,11 +85,11 @@ class ARXServiceDefLoader(ServiceDefLoadHook):
         return self.find_by_id(service_id)
 
 
-class ARXConnectionHook(ConnectionHook):
+class AppResponseConnectionHook(ConnectionHook):
 
     def connect(self, host, auth):
         """Create a connection to the server"""
-        svc = Service("ARX", host=host, auth=auth)
+        svc = Service("AppResponse", host=host, auth=auth)
         return svc.conn
 
 
@@ -104,6 +123,7 @@ class AppResponse(object):
         self._service_manager = None
         self.common_service_version = '1.0'
         self._init_services()
+        logger.info("Initialized AppResponse object with %s" % self.host)
 
     @property
     def service_manager(self):
@@ -113,12 +133,12 @@ class AppResponse(object):
             return self._service_manager
 
         conn_mgr = ConnectionManager()
-        conn_mgr.add_conn_hook(ARXConnectionHook())
+        conn_mgr.add_conn_hook(AppResponseConnectionHook())
 
         appl_conn = conn_mgr.find(host=self.host, auth=self.auth)
 
         svcdef_mgr = ServiceDefManager()
-        svcdef_mgr.add_load_hook(ARXServiceDefLoader(appl_conn))
+        svcdef_mgr.add_load_hook(AppResponseServiceDefLoader(appl_conn))
 
         self._service_manager = ServiceManager(servicedef_manager=svcdef_mgr,
                                                connection_manager=conn_mgr)
@@ -131,26 +151,32 @@ class AppResponse(object):
         self.clips = ClipService(self)
         self.reports = ProbeReportService(self)
 
+        # At this point, all services have used negotiated versions
+        # Except common which is using 1.0 to get supported versions
+        # Now reinitialize common service with negotiated versions
+        self.common = CommonService(self)
+
     @property
     def versions(self):
         """Determine version strings for each required service."""
         if self._versions:
             return self._versions
 
-        arx_versions = self.common.get_versions()
+        ar_versions = self.common.get_versions()
 
         self._versions = {}
-        for svc, versions in arx_versions.iteritems():
+        for svc, versions in ar_versions.iteritems():
             if self.req_versions and svc in self.req_versions:
                 self._versions[svc] = max(set(self.req_versions[svc]).
-                                          intersection(set(arx_versions[svc])))
+                                          intersection(set(ar_versions[svc])))
             else:
                 self._versions[svc] = max(versions)
 
         return self._versions
 
     def find_service(self, name):
-        if name == 'common':
+        if not self._versions and name == 'common':
+            # Initializing appresponse, use hard coded common service version
             version = self.common_service_version
         else:
             version = self.versions[name]
@@ -166,7 +192,6 @@ class AppResponse(object):
     def get_capture_jobs(self):
         return self.capture.get_jobs()
 
-    def create_report(self, job, columns, granularity, timefilter=None):
-        return self.reports.create_report(job, columns,
-                                          granularity, timefilter)
+    def create_report(self, data_def_request):
+        return self.reports.create_report(data_def_request)
 

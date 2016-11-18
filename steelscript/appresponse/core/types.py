@@ -26,13 +26,13 @@ class Column(object):
 class Key(Column):
 
     def __init__(self, name):
-        return super(Key, self).__init__(name, key=True)
+        super(Key, self).__init__(name, key=True)
 
 
 class Value(Column):
 
     def __init__(self, name):
-        return super(Value, self).__init__(name, key=False)
+        super(Value, self).__init__(name, key=False)
 
 
 class Source(object):

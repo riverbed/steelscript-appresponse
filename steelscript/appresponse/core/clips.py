@@ -12,20 +12,27 @@ class ClipService(object):
     an AppResponse appliance.
     """
 
-    def __init__(self, arx):
-        self.npm_clip = arx.find_service('npm.clips')
+    def __init__(self, appresponse):
+        self.npm_clip = appresponse.find_service('npm.clips')
         self.clips = self.npm_clip.bind('clips')
 
     def get_clips(self):
+        """Return a list of Clip objects."""
+
         resp = self.clips.execute('get')
 
         return [self.get_job_by_id(item['id'])
                 for item in resp.data['items']]
 
     def get_clip_by_id(self, id_):
+        """Return the Clip object given an id."""
+
         return Clip(self.npm_clip.bind('clip', id=id_))
 
     def create_clip(self, job, timefilter, description=''):
+        """Create a Clip object based on the packet capture job and time
+         filter.
+        """
 
         config = dict(job_id=job.prop.id,
                       start_time=timefilter.start,
@@ -38,6 +45,8 @@ class ClipService(object):
         return Clip(resp)
 
     def create_clips(self, data_defs):
+        """Create a Clips object from a list of data definition requests."""
+
         return Clips([self.create_clip(dd.job, dd.timefilter)
                       for dd in data_defs])
 
@@ -67,3 +76,5 @@ class Clip(object):
 
     def delete(self):
         self.datarep.execute('delete')
+        self.prop = None
+        self.datarep = None

@@ -9,6 +9,7 @@ from steelscript.appresponse.core.types import TimeFilter
 from steelscript.common.service import UserAuth
 from steelscript.appresponse.core.appresponse import AppResponse
 from steelscript.appresponse.core.types import Key, Value
+from steelscript.appresponse.core.reports import DataDef
 
 hostname = '<hostname>'
 auth = UserAuth(username='admin', password='admin')
@@ -21,7 +22,9 @@ tf = TimeFilter.parse_range('last 5 minutes')
 
 columns = [Key('start_time'), Value('sum_traffic.total_bytes')]
 
-report = arx.create_report(job=job, columns=columns,
-                           timefilter=tf, granularity='1')
+data_def = DataDef(job=job, columns=columns,
+                   granularity='1', timefilter=tf)
+
+report = arx.create_report(data_def)
 
 report.get_data()

@@ -7,8 +7,8 @@
 
 class CommonService(object):
 
-    def __init__(self, arx):
-        service = arx.find_service('common')
+    def __init__(self, appresponse):
+        service = appresponse.find_service('common')
         self.info = service.bind('info')
         self.ping = service.bind('ping')
         self.services = service.bind('services')
