@@ -5,15 +5,25 @@
 # as set forth in the License.
 
 from steelscript.common.datastructures import DictObject
+from steelscript.appresponse.core.types import ServiceClass
 
 
-class ClipService(object):
+class ClipService(ServiceClass):
     """This class provides an interface to manage the clip service on
     an AppResponse appliance.
     """
 
     def __init__(self, appresponse):
-        self.npm_clip = appresponse.find_service('npm.clips')
+        self.appresponse = appresponse
+        self.npm_clip = None
+        self.clips = None
+
+    def real_init(self):
+
+        # Init service
+        self.npm_clip = self.appresponse.find_service('npm.clips')
+
+        # Init resource
         self.clips = self.npm_clip.bind('clips')
 
     def get_clips(self):

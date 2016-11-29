@@ -16,8 +16,13 @@ from reschema.servicedef import ServiceDefLoadHook, ServiceDef,\
 from steelscript.common._fs import SteelScriptDir
 from sleepwalker.connection import ConnectionManager, ConnectionHook
 from sleepwalker.service import ServiceManager
+from steelscript.appresponse.core.types import InstanceDescriptorMixin
 
 logger = logging.getLogger(__name__)
+
+
+COMMON_SERVICE_VERSION = '1.0'
+
 
 class AppResponseServiceDefLoader(ServiceDefLoadHook):
     """This class serves as the custom hook for service definition manager
@@ -89,11 +94,15 @@ class AppResponseConnectionHook(ConnectionHook):
 
     def connect(self, host, auth):
         """Create a connection to the server"""
+
+        # This call would call get on resource 'services' to get versions
+        # which is redundant. But since it is only one time during
+        # initialization, it is benign.
         svc = Service("AppResponse", host=host, auth=auth)
         return svc.conn
 
 
-class AppResponse(object):
+class AppResponse(InstanceDescriptorMixin):
     """The AppResponse class is the main interface to interact with a
     AppResponse appliance. Primarity this provides an interface to
     reporting. """
@@ -121,7 +130,6 @@ class AppResponse(object):
         self._versions = None
         self.req_versions = versions
         self._service_manager = None
-        self.common_service_version = '1.0'
         self._init_services()
         logger.info("Initialized AppResponse object with %s" % self.host)
 
@@ -154,7 +162,8 @@ class AppResponse(object):
         # At this point, all services have used negotiated versions
         # Except common which is using 1.0 to get supported versions
         # Now reinitialize common service with negotiated versions
-        self.common = CommonService(self)
+        if self.versions['common'] != COMMON_SERVICE_VERSION:
+            self.common = CommonService(self)
 
     @property
     def versions(self):
@@ -177,7 +186,7 @@ class AppResponse(object):
     def find_service(self, name):
         if not self._versions and name == 'common':
             # Initializing appresponse, use hard coded common service version
-            version = self.common_service_version
+            version = COMMON_SERVICE_VERSION
         else:
             version = self.versions[name]
         return self.service_manager.find_by_name(
@@ -194,4 +203,3 @@ class AppResponse(object):
 
     def create_report(self, data_def_request):
         return self.reports.create_report(data_def_request)
-

@@ -4,13 +4,49 @@
 # accompanying the software ("License").  This software is distributed "AS IS"
 # as set forth in the License.
 
-from steelscript.appresponse.core.clips import Clip
-from steelscript.appresponse.core.capture import Job
+import logging
+
 from steelscript.common import timeutils
+
+logger = logging.getLogger(__name__)
 
 
 class InvalidType(Exception):
     pass
+
+
+class ServiceClass(object):
+    """Service classes are implemented as descriptors:
+    They are not fully fledged service objects until
+    they are called second time. 'common' service is
+    an exception because it will always be used to fetch
+    service versions first."""
+
+    initialized = False
+
+    def real_init(self):
+        pass
+
+    def __get__(self, obj, objtype):
+        if self.initialized:
+            return self
+
+        self.initialized = True
+
+        logger.debug('initializing %s service' % self.__class__.__name__)
+        self.real_init()
+        return self
+
+
+# This class is used for instance descriptors
+# http://blog.brianbeck.com/post/74086029/instance-descriptors
+class InstanceDescriptorMixin(object):
+
+    def __getattribute__(self, name):
+        value = object.__getattribute__(self, name)
+        if hasattr(value, '__get__'):
+            value = value.__get__(self, self.__class__)
+        return value
 
 
 class Column(object):
@@ -33,31 +69,6 @@ class Value(Column):
 
     def __init__(self, name):
         super(Value, self).__init__(name, key=False)
-
-
-class Source(object):
-
-    def __init__(self, name, path, packets_obj):
-        self.name = name
-        self.path = path
-        self.packets_obj = packets_obj
-
-    def to_dict(self):
-        return dict(name=self.name, path=self.path)
-
-
-class PacketsSource(Source):
-
-    def __init__(self, packets_obj):
-        if isinstance(packets_obj, Clip):
-            path = 'clips/%s' % packets_obj.prop.id
-        elif isinstance(packets_obj, Job):
-            path = 'jobs/%s' % packets_obj.prop.id
-        else:
-            raise InvalidType('Can only support clip packet source')
-
-        super(PacketsSource, self).__init__(name='packets', path=path,
-                                            packets_obj=packets_obj)
 
 
 class TimeFilter(object):

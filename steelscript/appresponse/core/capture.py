@@ -6,13 +6,23 @@
 
 
 from steelscript.common.datastructures import DictObject
+from steelscript.appresponse.core.types import ServiceClass
 
 
-class CaptureJobService(object):
+class CaptureJobService(ServiceClass):
     """This class manages packet capture jobs."""
 
     def __init__(self, appresponse):
-        self.capture = appresponse.find_service('npm.packet_capture')
+        self.appresponse = appresponse
+        self.capture = None
+        self.jobs = None
+
+    def real_init(self):
+
+        # init service
+        self.capture = self.appresponse.find_service('npm.packet_capture')
+
+        # init resources
         self.jobs = self.capture.bind('jobs')
 
     def get_jobs(self):

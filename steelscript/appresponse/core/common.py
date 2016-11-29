@@ -8,11 +8,13 @@
 class CommonService(object):
 
     def __init__(self, appresponse):
-        service = appresponse.find_service('common')
-        self.info = service.bind('info')
-        self.ping = service.bind('ping')
-        self.services = service.bind('services')
-        self.auth_info = service.bind('auth_info')
+        self.appresponse = appresponse
+
+        # Init service
+        self.common = self.appresponse.find_service('common')
+
+        # Init resource
+        self.services = self.common.bind('services')
 
     def get_versions(self):
         versions_list = self.services.execute('get').data

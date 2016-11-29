@@ -10,22 +10,61 @@ import logging
 from collections import OrderedDict
 
 from steelscript.common.datastructures import DictObject
-from steelscript.appresponse.core.types import PacketsSource
+from steelscript.appresponse.core.types import InvalidType, ServiceClass
+from steelscript.appresponse.core.clips import Clip
+from steelscript.appresponse.core.capture import Job
 from steelscript.common._fs import SteelScriptDir
+
 
 logger = logging.getLogger(__name__)
 
 
-class ProbeReportService(object):
+class Source(object):
+
+    def __init__(self, name, path, packets_obj):
+        self.name = name
+        self.path = path
+        self.packets_obj = packets_obj
+
+    def to_dict(self):
+        return dict(name=self.name, path=self.path)
+
+
+class PacketsSource(Source):
+
+    def __init__(self, packets_obj):
+        if isinstance(packets_obj, Clip):
+            path = 'clips/%s' % packets_obj.prop.id
+        elif isinstance(packets_obj, Job):
+            path = 'jobs/%s' % packets_obj.prop.id
+        else:
+            raise InvalidType('Can only support clip packet source')
+
+        super(PacketsSource, self).__init__(name='packets', path=path,
+                                            packets_obj=packets_obj)
+
+
+class ProbeReportService(ServiceClass):
 
     SOURCE_NAME = 'packets'
     SERVICE_NAME = 'npm.probe.reports'
 
     def __init__(self, appresponse):
         self.appresponse = appresponse
-        self.reports = self.appresponse.find_service(self.SERVICE_NAME)
-        self.instances = self.reports.bind('instances')
+        self.reports = None
+        self.instances = None
+        self.source_columns = None
         self._columns = None
+
+    def real_init(self):
+
+        # Init service
+        self.reports = self.appresponse.find_service(self.SERVICE_NAME)
+
+        # Init resources
+        self.instances = self.reports.bind('instances')
+        self.source_columns = self.reports.bind('source_columns',
+                                                name=self.SOURCE_NAME)
 
     def _load_columns(self):
         """Load columns data from local cache file."""
@@ -55,8 +94,7 @@ class ProbeReportService(object):
     def get_columns(self):
         """Return an ordered dict representing all the columns."""
 
-        columns = self.reports.bind('source_columns', name=self.SOURCE_NAME)
-        cols = columns.execute('get').data['items']
+        cols = self.source_columns.execute('get').data['items']
 
         # Create a ordered dict
         return OrderedDict(sorted(zip(map(lambda x: x['id'], cols), cols)))
@@ -213,7 +251,8 @@ class Report(object):
         data definition instances as a list of records (dictionaries).
         """
         if not self._instance:
-            self._instance = self.appresponse.reports.create_instance(self.data_defs)
+            self._instance = \
+                self.appresponse.reports.create_instance(self._data_defs)
 
             results = self._instance.get_data()['data_defs']
 
