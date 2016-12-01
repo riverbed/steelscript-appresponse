@@ -14,16 +14,16 @@ class CaptureJobService(ServiceClass):
 
     def __init__(self, appresponse):
         self.appresponse = appresponse
-        self.capture = None
+        self.servicedef = None
         self.jobs = None
 
-    def real_init(self):
+    def bind_resources(self):
 
         # init service
-        self.capture = self.appresponse.find_service('npm.packet_capture')
+        self.servicedef = self.appresponse.find_service('npm.packet_capture')
 
         # init resources
-        self.jobs = self.capture.bind('jobs')
+        self.jobs = self.servicedef.bind('jobs')
 
     def get_jobs(self):
         resp = self.jobs.execute('get')
@@ -45,7 +45,7 @@ class CaptureJobService(ServiceClass):
         return self.jobs.execute('bulk_stop')
 
     def get_job_by_id(self, id_):
-        return Job(self.capture.bind('job', id=id_))
+        return Job(self.servicedef.bind('job', id=id_))
 
     def get_job_by_name(self, name):
         return (j for j in self.get_jobs()

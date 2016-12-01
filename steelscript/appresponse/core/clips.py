@@ -15,16 +15,16 @@ class ClipService(ServiceClass):
 
     def __init__(self, appresponse):
         self.appresponse = appresponse
-        self.npm_clip = None
+        self.servicedef = None
         self.clips = None
 
-    def real_init(self):
+    def bind_resources(self):
 
         # Init service
-        self.npm_clip = self.appresponse.find_service('npm.clips')
+        self.servicedef = self.appresponse.find_service('npm.clips')
 
         # Init resource
-        self.clips = self.npm_clip.bind('clips')
+        self.clips = self.servicedef.bind('clips')
 
     def get_clips(self):
         """Return a list of Clip objects."""
@@ -37,7 +37,7 @@ class ClipService(ServiceClass):
     def get_clip_by_id(self, id_):
         """Return the Clip object given an id."""
 
-        return Clip(self.npm_clip.bind('clip', id=id_))
+        return Clip(self.servicedef.bind('clip', id=id_))
 
     def create_clip(self, job, timefilter, description=''):
         """Create a Clip object based on the packet capture job and time

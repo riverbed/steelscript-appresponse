@@ -11,10 +11,10 @@ class CommonService(object):
         self.appresponse = appresponse
 
         # Init service
-        self.common = self.appresponse.find_service('common')
+        self.servicedef = self.appresponse.find_service('common')
 
         # Init resource
-        self.services = self.common.bind('services')
+        self.services = self.servicedef.bind('services')
 
     def get_versions(self):
         versions_list = self.services.execute('get').data

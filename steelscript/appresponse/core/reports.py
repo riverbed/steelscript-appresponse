@@ -51,20 +51,20 @@ class ProbeReportService(ServiceClass):
 
     def __init__(self, appresponse):
         self.appresponse = appresponse
-        self.reports = None
+        self.servicedef = None
         self.instances = None
         self.source_columns = None
         self._columns = None
 
-    def real_init(self):
+    def bind_resources(self):
 
         # Init service
-        self.reports = self.appresponse.find_service(self.SERVICE_NAME)
+        self.servicedef = self.appresponse.find_service(self.SERVICE_NAME)
 
         # Init resources
-        self.instances = self.reports.bind('instances')
-        self.source_columns = self.reports.bind('source_columns',
-                                                name=self.SOURCE_NAME)
+        self.instances = self.servicedef.bind('instances')
+        self.source_columns = self.servicedef.bind('source_columns',
+                                                   name=self.SOURCE_NAME)
 
     def _load_columns(self):
         """Load columns data from local cache file."""
@@ -163,7 +163,7 @@ class ProbeReportService(ServiceClass):
 
 
 class ReportInstance(object):
-    """Main interface to  """
+    """Main interface to interact with a probe report instance. """
     def __init__(self, datarep):
         self.datarep = datarep
         data = self.datarep.execute('get').data
@@ -242,8 +242,7 @@ class Report(object):
         self._instance = None
 
     def add(self, data_def_request):
-        """Add one data definition request.
-       """
+        """Add one data definition request."""
         self._data_defs.append(data_def_request)
 
     def run(self):
@@ -259,6 +258,8 @@ class Report(object):
             for i, res in enumerate(results):
                 # For each data def result, build a list of dictionaries
                 # from column names and a list of list of values
+                res['data'] = [map(lambda x: int(x) if x.isdigit() else x, r)
+                               for r in res['data']]
                 self._data_defs[i].data = [dict(zip(res['columns'], rec))
                                            for rec in res['data']]
 

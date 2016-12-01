@@ -9,7 +9,7 @@ import yaml
 import logging
 
 from steelscript.appresponse.core import CommonService, ProbeReportService, \
-    CaptureJobService, ClipService
+    CaptureJobService, ClipService, ClassificationService
 from steelscript.common.service import Service
 from reschema.servicedef import ServiceDefLoadHook, ServiceDef,\
     ServiceDefManager
@@ -158,7 +158,7 @@ class AppResponse(InstanceDescriptorMixin):
         self.capture = CaptureJobService(self)
         self.clips = ClipService(self)
         self.reports = ProbeReportService(self)
-
+        self.classification = ClassificationService(self)
         # At this point, all services have used negotiated versions
         # Except common which is using 1.0 to get supported versions
         # Now reinitialize common service with negotiated versions
