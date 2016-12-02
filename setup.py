@@ -14,7 +14,7 @@ from setuptools import setup, find_packages
 from gitpy_versioning import get_version
 
 install_requires = (
-    'steelscript.appfwk',
+    'steelscript',
 
     # Add any special python package requirements below this line
 )
