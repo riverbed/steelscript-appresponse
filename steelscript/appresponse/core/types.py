@@ -24,7 +24,7 @@ class ServiceClass(object):
 
     initialized = False
 
-    def bind_resources(self):
+    def _bind_resources(self):
         pass
 
     def __get__(self, obj, objtype):
@@ -34,7 +34,7 @@ class ServiceClass(object):
         self.initialized = True
 
         logger.debug('initializing %s service' % self.__class__.__name__)
-        self.bind_resources()
+        self._bind_resources()
         return self
 
 

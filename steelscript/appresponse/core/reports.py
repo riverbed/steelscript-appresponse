@@ -56,7 +56,7 @@ class ProbeReportService(ServiceClass):
         self.source_columns = None
         self._columns = None
 
-    def bind_resources(self):
+    def _bind_resources(self):
 
         # Init service
         self.servicedef = self.appresponse.find_service(self.SERVICE_NAME)

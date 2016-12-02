@@ -18,7 +18,7 @@ class ClipService(ServiceClass):
         self.servicedef = None
         self.clips = None
 
-    def bind_resources(self):
+    def _bind_resources(self):
 
         # Init service
         self.servicedef = self.appresponse.find_service('npm.clips')

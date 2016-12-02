@@ -17,7 +17,7 @@ class CaptureJobService(ServiceClass):
         self.servicedef = None
         self.jobs = None
 
-    def bind_resources(self):
+    def _bind_resources(self):
 
         # init service
         self.servicedef = self.appresponse.find_service('npm.packet_capture')
