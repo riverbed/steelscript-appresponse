@@ -176,8 +176,11 @@ class AppResponse(InstanceDescriptorMixin):
         self._versions = {}
         for svc, versions in ar_versions.iteritems():
             if self.req_versions and svc in self.req_versions:
-                self._versions[svc] = max(set(self.req_versions[svc]).
-                                          intersection(set(ar_versions[svc])))
+                vers = set(self.req_versions[svc]).intersection(set(versions))
+                if not vers:
+                    raise KeyError("No support of service '%s' of version '%s'."
+                                   % (svc, ', '.join(self.req_versions[svc])))
+                self._versions[svc] = max(vers)
             else:
                 self._versions[svc] = max(versions)
 
