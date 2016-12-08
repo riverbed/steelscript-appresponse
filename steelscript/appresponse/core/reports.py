@@ -12,7 +12,6 @@ from collections import OrderedDict
 from steelscript.common.datastructures import DictObject
 from steelscript.appresponse.core.types import InvalidType, ServiceClass
 from steelscript.appresponse.core.clips import Clip
-from steelscript.appresponse.core.capture import Job
 from steelscript.common._fs import SteelScriptDir
 
 
@@ -35,8 +34,6 @@ class PacketsSource(Source):
     def __init__(self, packets_obj):
         if isinstance(packets_obj, Clip):
             path = 'clips/%s' % packets_obj.prop.id
-        elif isinstance(packets_obj, Job):
-            path = 'jobs/%s' % packets_obj.prop.id
         else:
             raise InvalidType('Can only support clip packet source')
 
@@ -125,7 +122,7 @@ class ProbeReportService(ServiceClass):
 
             for clip, dd in zip(clips, data_def_requests):
 
-                data_def = DataDef.build_criteria(source=PacketsSource(clip),
+                data_def = DataDef.build_criteria(source=clip,
                                                   columns=dd.columns,
                                                   granularity=dd.granularity,
                                                   timefilter=dd.timefilter)
@@ -191,15 +188,15 @@ class DataDef(object):
     """This class provides an interface to build a data definition request
     as a dict.
     """
-    def __init__(self, job, columns, granularity, timefilter):
+    def __init__(self, source, columns, granularity, timefilter=None):
         """Initialize a data definition request object.
 
-        :param job: packet capture job object.
+        :param source: packet source object, i.e. packet capture job.
         :param columns: list Key/Value column objects.
         :param str granularity: granularity value.
         :param timefilter: time filter object.
         """
-        self.job = job
+        self.source = source
         self.columns = columns
         self.granularity = granularity
         self.timefilter = timefilter
@@ -208,11 +205,12 @@ class DataDef(object):
     @classmethod
     def build_criteria(cls, source, columns, granularity, timefilter):
         data_def = dict()
-        data_def['source'] = dict(name=source.name, path=source.path)
+        data_def['source'] = PacketsSource(source).to_dict()
         data_def['group_by'] = [col.name for col in columns if col.key]
-        data_def['time'] = dict(start=str(timefilter.start),
-                                end=str(timefilter.end),
-                                granularity=granularity)
+        data_def['time'] = dict(granularity=granularity)
+        if timefilter:
+            data_def['time']['start'] = str(timefilter.start)
+            data_def['time']['end'] = str(timefilter.end)
         data_def['columns'] = [col.name for col in columns]
 
         return data_def

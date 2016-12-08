@@ -6,6 +6,7 @@
 
 from steelscript.common.datastructures import DictObject
 from steelscript.appresponse.core.types import ServiceClass
+from steelscript.appresponse.core.capture import Job
 
 
 class ClipService(ServiceClass):
@@ -31,7 +32,7 @@ class ClipService(ServiceClass):
 
         resp = self.clips.execute('get')
 
-        return [self.get_job_by_id(item['id'])
+        return [self.get_clip_by_id(item['id'])
                 for item in resp.data['items']]
 
     def get_clip_by_id(self, id_):
@@ -39,7 +40,7 @@ class ClipService(ServiceClass):
 
         return Clip(self.servicedef.bind('clip', id=id_))
 
-    def create_clip(self, job, timefilter, description=''):
+    def create_clip(self, job, timefilter, description='', from_job=False):
         """Create a Clip object based on the packet capture job and time
          filter.
         """
@@ -52,13 +53,29 @@ class ClipService(ServiceClass):
         data = dict(config=config)
         resp = self.clips.execute('create', _data=data)
 
-        return Clip(resp)
+        return Clip(resp, from_job=from_job)
 
     def create_clips(self, data_defs):
-        """Create a Clips object from a list of data definition requests."""
+        """Create a Clips object from a list of data definition requests.
+        When some DataDef objects are using sources other than capture jobs,
+        then those sources will stay the same. The capture job sources will
+        be converted into Clip objects.
 
-        return Clips([self.create_clip(dd.job, dd.timefilter)
-                      for dd in data_defs])
+        :param data_defs: list of DataDef objects
+        :return: a Clips object
+        """
+
+        clips = []
+
+        for dd in data_defs:
+            if isinstance(dd.source, Job):
+                clips.append(self.create_clip(dd.source, dd.timefilter,
+                                              from_job=True))
+            else:
+                # source can be a clip or file or interface
+                clips.append(dd.source)
+
+        return Clips(clips)
 
 
 class Clips(object):
@@ -66,23 +83,29 @@ class Clips(object):
     def __init__(self, clip_objs):
         self.clip_objs = clip_objs
 
+    def __iter__(self):
+        for clip_obj in self.clip_objs:
+            yield clip_obj
+
     def __enter__(self):
         return self.clip_objs
 
     def __exit__(self, type, value, traceback):
         for clip in self.clip_objs:
-            clip.delete()
+            if isinstance(clip, Clip) and clip.from_job:
+                clip.delete()
 
         self.clip_objs = None
 
 
 class Clip(object):
 
-    def __init__(self, datarep):
+    def __init__(self, datarep, from_job=False):
 
         self.datarep = datarep
         data = self.datarep.execute('get').data
         self.prop = DictObject.create_from_dict(data)
+        self.from_job = from_job
 
     def delete(self):
         self.datarep.execute('delete')
