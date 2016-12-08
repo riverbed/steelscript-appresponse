@@ -102,7 +102,7 @@ class ProbeReportService(ServiceClass):
     def get_column_names(self):
         """Return a list of column names."""
 
-        return [col['id'] for col in self.columns]
+        return self.columns.keys()
 
     def create_report(self, data_def_request):
         """Create a report instance with just one data definition request."""
@@ -245,6 +245,33 @@ class Report(object):
         """Add one data definition request."""
         self._data_defs.append(data_def_request)
 
+    def _cast_number(self, result):
+        """ Check records and convert string to integer/float. If the type
+        of the column is 'number' or unit is not 'none', then check if
+        the column name has 'avg' in its name, if yes, then convert it to
+        float, otherwise to integer.
+
+        :param result dict: including Mata data for one data def request
+            as well as the response data for the data def request.
+        """
+
+        functions = [lambda x: x] * len(result['columns'])
+
+        columns = self.appresponse.reports.columns
+
+        for i, col in enumerate(result['columns']):
+            if columns[col]['type'] == 'number' or \
+                    columns[col]['unit'] != 'none':
+
+                functions[i] = float if col.startswith('avg') else int
+
+        # result['data'] is a list of lists, one of which represents a record
+        records = [dict(zip(result['columns'],
+                            map(lambda x, y: x(y), functions, rec)))
+                   for rec in result['data']]
+
+        return records
+
     def run(self):
         """Create a report instance and record the results of multiple
         data definition instances as a list of records (dictionaries).
@@ -256,12 +283,7 @@ class Report(object):
             results = self._instance.get_data()['data_defs']
 
             for i, res in enumerate(results):
-                # For each data def result, build a list of dictionaries
-                # from column names and a list of list of values
-                res['data'] = [map(lambda x: int(x) if x.isdigit() else x, r)
-                               for r in res['data']]
-                self._data_defs[i].data = [dict(zip(res['columns'], rec))
-                                           for rec in res['data']]
+                self._data_defs[i].data = self._cast_number(res)
 
     def get_data(self, index=None):
         """Return data for the indexed data definition requests. If not set, then
