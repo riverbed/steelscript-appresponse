@@ -5,7 +5,6 @@
 # as set forth in the License.
 
 
-from steelscript.appresponse.core.types import TimeFilter
 from steelscript.common.service import UserAuth
 from steelscript.appresponse.core.appresponse import AppResponse
 from steelscript.appresponse.core.types import Key, Value
@@ -18,12 +17,12 @@ arx = AppResponse(host=hostname, auth=auth)
 
 job = arx.get_capture_job_by_name('<Job Name>')
 
-tf = TimeFilter.parse_range('last 5 minutes')
+duration = 'last 5 minutes'
 
 columns = [Key('start_time'), Value('sum_traffic.total_bytes')]
 
 data_def = DataDef(job=job, columns=columns,
-                   granularity='1', timefilter=tf)
+                   granularity='1', duration=duration)
 
 report = arx.create_report(data_def)
 

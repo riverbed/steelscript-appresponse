@@ -17,17 +17,14 @@ arx = AppResponse(host=hostname, auth=auth)
 
 report = Report(arx)
 
-tf1 = TimeFilter.parse_range('last 10 seconds')
-tf2 = TimeFilter.parse_range('last 20 seconds')
-
 job = arx.get_capture_job_by_name('<Job Name>')
 
 columns = [Key('start_time'), Value('sum_traffic.total_bytes')]
 
-data_def1 = DataDef(job=job, timefilter=tf1,
+data_def1 = DataDef(job=job, duration='10 seconds', start=<epoch_seconds>,
                     granularity='1', columns=columns)
 
-data_def2 = DataDef(job=job, timefilter=tf2,
+data_def2 = DataDef(job=job, duration='20 seconds', start=<epoch_seconds>,
                     granularity='1', columns=columns)
 
 report.add(data_def1)
