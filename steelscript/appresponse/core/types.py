@@ -73,11 +73,29 @@ class Value(Column):
 
 class TimeFilter(object):
 
-    def __init__(self, start, end):
-        self.start = start.strftime('%s')
-        self.end = end.strftime('%s')
+    def __init__(self, duration=None, start=None, end=None):
+        """Initialize a TimeFilter object.
 
-    @classmethod
-    def parse_range(cls, string):
-        start, end = timeutils.parse_range(string)
-        return cls(start, end)
+         :param start integer: start time in epoch seconds
+         :param end integer: end time in epoch seconds
+         :param duration string: time duration, i.e. '1 hour' or 'last 1 hour'
+
+        """
+
+        if start and end:
+            self.start = str(start)
+            self.end = str(end)
+
+        elif not start and not end:
+            start, end = timeutils.parse_range(duration)
+            self.start = start.strftime('%s')
+            self.end = end.strftime('%s')
+
+        else:
+            td = timeutils.parse_timedelta(duration).total_seconds()
+            if start:
+                self.start = str(start)
+                self.end = str(int(start + td))
+            else:
+                self.start = str(int(end - td))
+                self.end = str(end)

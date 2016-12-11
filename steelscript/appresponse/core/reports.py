@@ -10,7 +10,8 @@ import logging
 from collections import OrderedDict
 
 from steelscript.common.datastructures import DictObject
-from steelscript.appresponse.core.types import InvalidType, ServiceClass
+from steelscript.appresponse.core.types import InvalidType, ServiceClass, \
+    TimeFilter
 from steelscript.appresponse.core.clips import Clip
 from steelscript.common._fs import SteelScriptDir
 
@@ -109,27 +110,16 @@ class ProbeReportService(ServiceClass):
         report.run()
         return report
 
-    def create_instance(self, data_def_requests):
+    def create_instance(self, data_defs):
         """Create a report instance with multiple data definition requests.
 
         Currenly only support data definition requests with capture jobs
         as the packets source. Will need to support packets source in
         formats of file, clips, etc.
         """
-        with self.appresponse.clips.create_clips(data_def_requests) as clips:
+        with self.appresponse.clips.create_clips(data_defs):
 
-            clip_data_defs = []
-
-            for clip, dd in zip(clips, data_def_requests):
-
-                data_def = DataDef.build_criteria(source=clip,
-                                                  columns=dd.columns,
-                                                  granularity=dd.granularity,
-                                                  timefilter=dd.timefilter)
-
-                clip_data_defs.append(data_def)
-
-            config = dict(data_defs=clip_data_defs)
+            config = dict(data_defs=[dd.to_dict() for dd in data_defs])
 
             instance = ReportInstance(
                 self.instances.execute('create', _data=config))
@@ -188,30 +178,39 @@ class DataDef(object):
     """This class provides an interface to build a data definition request
     as a dict.
     """
-    def __init__(self, source, columns, granularity, timefilter=None):
+    def __init__(self, source, columns, start=None, end=None, duration=None,
+                 granularity=None, resolution=None):
         """Initialize a data definition request object.
 
         :param source: packet source object, i.e. packet capture job.
         :param columns: list Key/Value column objects.
+        :param start: epoch start time in seconds.
+        :param end: epoch endtime in seconds.
+        :param duration string: duration of data def request.
+        :param resolution string: Resoluion in seconds.
         :param str granularity: granularity value.
-        :param timefilter: time filter object.
         """
         self.source = source
         self.columns = columns
         self.granularity = granularity
-        self.timefilter = timefilter
+        self.start = start
+        self.end = end
+        self.duration = duration
+        self.resolution = resolution
+        self.timefilter = TimeFilter(duration, start, end)
         self._data = None
 
-    @classmethod
-    def build_criteria(cls, source, columns, granularity, timefilter):
+    def to_dict(self):
         data_def = dict()
-        data_def['source'] = PacketsSource(source).to_dict()
-        data_def['group_by'] = [col.name for col in columns if col.key]
-        data_def['time'] = dict(granularity=granularity)
-        if timefilter:
-            data_def['time']['start'] = str(timefilter.start)
-            data_def['time']['end'] = str(timefilter.end)
-        data_def['columns'] = [col.name for col in columns]
+        data_def['source'] = PacketsSource(self.source).to_dict()
+        data_def['group_by'] = [col.name for col in self.columns if col.key]
+        data_def['time'] = dict()
+        for k in ['start', 'end', 'granularity', 'duration', 'resolution']:
+            v = getattr(self, k)
+            if v:
+                data_def['time'][k] = str(v)
+
+        data_def['columns'] = [col.name for col in self.columns]
 
         return data_def
 

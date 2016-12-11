@@ -65,17 +65,13 @@ class ClipService(ServiceClass):
         :return: a Clips object
         """
 
-        clips = []
-
         for dd in data_defs:
             if isinstance(dd.source, Job):
-                clips.append(self.create_clip(dd.source, dd.timefilter,
-                                              from_job=True))
-            else:
-                # source can be a clip or file or interface
-                clips.append(dd.source)
 
-        return Clips(clips)
+                dd.source = self.create_clip(dd.source, dd.timefilter,
+                                             from_job=True)
+
+        return Clips([dd.source for dd in data_defs])
 
 
 class Clips(object):
