@@ -15,7 +15,7 @@ from gitpy_versioning import get_version
 
 install_requires = (
     'steelscript',
-
+    'sleepwalker',
     # Add any special python package requirements below this line
 )
 
