@@ -21,11 +21,11 @@ The typical structure is as follows:
 
 See the documeantion or sample plugin for more details
 """
-
-import steelscript.appfwk.apps.datasource.modules.analysis as analysis
-from steelscript.appfwk.apps.report.models import Report
-from steelscript.appfwk.apps.datasource.models import Column, TableField
-import steelscript.appfwk.apps.report.modules.yui3 as yui3
-
-# Import the datasource module for this plugin (if needed)
-import steelscript.appresponse.appfwk.datasources.appresponse_source as appresponse
+#
+# import steelscript.appfwk.apps.datasource.modules.analysis as analysis
+# from steelscript.appfwk.apps.report.models import Report
+# from steelscript.appfwk.apps.datasource.models import Column, TableField
+# import steelscript.appfwk.apps.report.modules.yui3 as yui3
+#
+# # Import the datasource module for this plugin (if needed)
+# import steelscript.appresponse.appfwk.datasources.appresponse_source as appresponse

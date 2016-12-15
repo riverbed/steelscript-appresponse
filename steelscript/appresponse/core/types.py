@@ -76,9 +76,9 @@ class TimeFilter(object):
     def __init__(self, duration=None, start=None, end=None):
         """Initialize a TimeFilter object.
 
-         :param start integer: start time in epoch seconds
-         :param end integer: end time in epoch seconds
-         :param duration string: time duration, i.e. '1 hour' or 'last 1 hour'
+         :param start: integer, start time in epoch seconds
+         :param end: integer, end time in epoch seconds
+         :param duration: string, time duration, i.e. '1 hour' or 'last 1 hour'
 
         """
 
