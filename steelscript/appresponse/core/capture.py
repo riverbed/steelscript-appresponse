@@ -16,6 +16,8 @@ class CaptureJobService(ServiceClass):
         self.appresponse = appresponse
         self.servicedef = None
         self.jobs = None
+        self.settings = None
+        self.phys_interfaces = None
 
     def _bind_resources(self):
 
@@ -24,6 +26,8 @@ class CaptureJobService(ServiceClass):
 
         # init resources
         self.jobs = self.servicedef.bind('jobs')
+        self.settings = self.servicedef.bind('settings')
+        self.phys_interfaces = self.servicedef.bind('phys_interfaces')
 
     def get_jobs(self):
         resp = self.jobs.execute('get')
@@ -60,8 +64,8 @@ class Job(object):
         data = self.datarep.execute('get').data
         self.prop = DictObject.create_from_dict(data)
 
-    # def set(self):
-    #     self.datarep.execute('set')
+    def set(self):
+        self.datarep.execute('set')
 
     def stop(self):
         self.datarep.execute('stop')

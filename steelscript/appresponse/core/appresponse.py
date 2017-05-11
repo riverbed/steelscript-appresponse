@@ -9,7 +9,7 @@ import yaml
 import logging
 
 from steelscript.appresponse.core import CommonService, ProbeReportService, \
-    CaptureJobService, ClipService, ClassificationService
+    CaptureJobService, ClipService, ClassificationService, SystemTimeService
 from steelscript.common.service import Service
 from reschema.servicedef import ServiceDefLoadHook, ServiceDef,\
     ServiceDefManager
@@ -159,6 +159,7 @@ class AppResponse(InstanceDescriptorMixin):
         self.clips = ClipService(self)
         self.reports = ProbeReportService(self)
         self.classification = ClassificationService(self)
+        self.mgmt_time = SystemTimeService(self)
         # At this point, all services have used negotiated versions
         # Except common which is using 1.0 to get supported versions
         # Now reinitialize common service with negotiated versions
@@ -178,8 +179,9 @@ class AppResponse(InstanceDescriptorMixin):
             if self.req_versions and svc in self.req_versions:
                 vers = set(self.req_versions[svc]).intersection(set(versions))
                 if not vers:
-                    raise KeyError("No support of service '%s' of version '%s'."
-                                   % (svc, ', '.join(self.req_versions[svc])))
+                    raise KeyError(
+                        "No support of service '%s' of version '%s'."
+                        % (svc, ', '.join(self.req_versions[svc])))
                 self._versions[svc] = max(vers)
             else:
                 self._versions[svc] = max(versions)
