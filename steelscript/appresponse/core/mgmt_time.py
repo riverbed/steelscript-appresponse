@@ -21,8 +21,9 @@ class SystemTimeService(ServiceClass):
     def __init__(self, appresponse):
         self.appresponse = appresponse
         self.servicedef = None
-        self.time_config = None
+        self.time_configuration = None
         self.ntp_servers = None
+        self.ntp_status = None
 
     def _bind_resources(self):
 
@@ -30,6 +31,6 @@ class SystemTimeService(ServiceClass):
         self.servicedef = self.appresponse.find_service(self.SERVICE_NAME)
 
         # Init resources
-        self.time_config = self.servicedef.bind('time_configuration')
+        self.time_configuration = self.servicedef.bind('time_configuration')
         self.ntp_servers = self.servicedef.bind('ntp_servers')
         self.ntp_status = self.servicedef.bind('ntp_status')
