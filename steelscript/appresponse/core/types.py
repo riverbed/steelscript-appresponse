@@ -11,7 +11,7 @@ from steelscript.common import timeutils
 logger = logging.getLogger(__name__)
 
 
-class InvalidType(Exception):
+class AppResponseException(Exception):
     pass
 
 
@@ -33,7 +33,7 @@ class ServiceClass(object):
 
         self.initialized = True
 
-        logger.debug('initializing %s service' % self.__class__.__name__)
+        logger.debug('Initializing %s service' % self.__class__.__name__)
         self._bind_resources()
         return self
 
@@ -81,8 +81,12 @@ class TimeFilter(object):
          :param duration: string, time duration, i.e. '1 hour' or 'last 1 hour'
 
         """
+        if not start and not end and not duration:
+            # when querying file or clip, usually no time filters are provided
+            self.start = None
+            self.end = None
 
-        if start and end:
+        elif start and end:
             self.start = str(start)
             self.end = str(end)
 

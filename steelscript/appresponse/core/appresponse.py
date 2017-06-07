@@ -9,7 +9,8 @@ import yaml
 import logging
 
 from steelscript.appresponse.core import CommonService, ProbeReportService, \
-    CaptureJobService, ClipService, ClassificationService, SystemTimeService
+    CaptureJobService, ClipService, ClassificationService, SystemTimeService, \
+    FileSystemService
 from steelscript.common.service import Service
 from reschema.servicedef import ServiceDefLoadHook, ServiceDef,\
     ServiceDefManager
@@ -117,7 +118,6 @@ class AppResponse(InstanceDescriptorMixin):
             :py:class:`UserAuth<steelscript.common.service.UserAuth>` or
             :py:class:`OAuth<steelscript.common.service.OAuth>`
 
-
         :param dict versions: service versions to use, keyed by the service
         name, value is a list of version strings that are required by the
         external application. If unspecified, this will use the latest
@@ -160,6 +160,7 @@ class AppResponse(InstanceDescriptorMixin):
         self.reports = ProbeReportService(self)
         self.classification = ClassificationService(self)
         self.mgmt_time = SystemTimeService(self)
+        self.fs = FileSystemService(self)
         # At this point, all services have used negotiated versions
         # Except common which is using 1.0 to get supported versions
         # Now reinitialize common service with negotiated versions
@@ -208,3 +209,25 @@ class AppResponse(InstanceDescriptorMixin):
 
     def create_report(self, data_def_request):
         return self.reports.create_report(data_def_request)
+
+    def upload(self, dest_path, local_file):
+
+        dest_dir, filename = dest_path.rsplit('/', 1)
+
+        headers = {'Content-Disposition': filename,
+                   'Content-Type': 'application/octet-stream'}
+
+        if dest_dir[0] == '/':
+            dest_dir = dest_dir[1:]
+
+        conn = self.service_manager.connection_manager.\
+            find(host=self.host, auth=self.auth)
+
+        uri = '{}/fs/{}'.format(self.fs.servicedef.servicepath, dest_dir)
+
+        with open(local_file) as f:
+            logger.debug("Uploading file {}".format(local_file))
+            resp = conn.upload(uri, f, extra_headers=headers)
+            logger.debug("File {} successfully uploaded.".format(local_file))
+
+            return resp
