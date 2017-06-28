@@ -135,7 +135,7 @@ class ProbeReportService(ServiceClass):
             instance = ReportInstance(
                 self.instances.execute('create', _data=config))
 
-            while not instance.is_complete:
+            while not instance.is_complete():
                 time.sleep(1)
 
             if instance.errors:
