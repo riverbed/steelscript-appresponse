@@ -11,11 +11,10 @@ Ran a report against sources of 'packets' (capture job, clips, files) on an
 AppResponse 11 appliance.
 """
 
-import pandas
-
 from steelscript.appresponse.core.app import AppResponseApp
 from steelscript.appresponse.core.types import Key, Value
 from steelscript.appresponse.core.reports import DataDef, Report
+from steelscript.common.datautils import Formatter
 
 
 class PacketsReportApp(AppResponseApp):
@@ -36,11 +35,11 @@ class PacketsReportApp(AppResponseApp):
                           default=None,
                           help='List of value column names separated by comma'
                           )
-        parser.add_option('--duration', dest='duration',
+        parser.add_option('--timerange', dest='timerange',
                           help='Time range to analyze, valid formats are: '
                                '"06/05/17 17:09:00 to 06/05/17 18:09:00" '
                                'or "17:09:00 to 18:09:00" '
-                               'or "last 1 hour".' )
+                               'or "last 1 hour".')
         parser.add_option('--granularity', dest='granularity',
                           help='The amount of time in seconds for which the '
                                'data source computes a summary of the '
@@ -67,9 +66,9 @@ class PacketsReportApp(AppResponseApp):
         if self.options.valuecolumns is None:
             self.parser.error("Value column names must be provided")
 
-        if self.options.duration is None and \
-                self.options.sourcetype == 'job':
-            self.parser.error("Duration must be provided for source type job")
+        if (self.options.timerange is None and
+                self.options.sourcetype == 'job'):
+            self.parser.error("Time range must be provided for 'job' source")
 
     def main(self):
         if self.options.sourcetype == 'file':
@@ -82,27 +81,33 @@ class PacketsReportApp(AppResponseApp):
                 get_clip_by_id(self.options.sourceid)
 
         columns = []
+        headers = []
         for col in self.options.keycolumns.split(','):
             columns.append(Key(col))
+            headers.append(col)
 
         for col in self.options.valuecolumns.split(','):
             columns.append(Value(col))
+            headers.append(col)
 
         data_def = DataDef(source=source, columns=columns,
                            granularity=self.options.granularity,
                            resolution=self.options.resolution,
-                           duration=self.options.duration)
+                           time_range=self.options.timerange)
 
         report = Report(self.appresponse)
         report.add(data_def)
         report.run()
 
-        df = pandas.DataFrame(report.get_data(0)[0])
+        data = [[d[k] for k in headers] for d in report.get_data(0)[0]]
 
         if self.options.csvfile:
-            df.to_csv(self.options.csvfile)
+            with open(self.options.csvfile, 'w') as f:
+                for line in Formatter.get_csv(data, headers):
+                    f.write(line)
+                    f.write('\n')
         else:
-            print(df.to_string())
+            Formatter.print_csv(data, headers)
 
 
 if __name__ == "__main__":

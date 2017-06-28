@@ -135,7 +135,7 @@ class ProbeReportService(ServiceClass):
             instance = ReportInstance(
                 self.instances.execute('create', _data=config))
 
-            while not instance.complete:
+            while not instance.is_complete:
                 time.sleep(1)
 
             if instance.errors:
@@ -170,8 +170,7 @@ class ReportInstance(object):
         self.prop = DictObject.create_from_dict(data)
         self.errors = []
 
-    @property
-    def complete(self):
+    def is_complete(self):
 
         status = self.status
 
@@ -205,25 +204,24 @@ class DataDef(object):
     as a dict.
     """
     def __init__(self, source, columns, start=None, end=None, duration=None,
-                 granularity=None, resolution=None):
+                 granularity=None, resolution=None, time_range=None):
         """Initialize a data definition request object.
 
         :param source: packet source object, i.e. packet capture job.
         :param columns: list Key/Value column objects.
         :param start: epoch start time in seconds.
         :param end: epoch endtime in seconds.
-        :param duration string: duration of data def request.
+        :param duration: string duration of data def request.
+        :param time_range: string time range of data def request.
         :param resolution string: Resoluion in seconds.
         :param str granularity: granularity value.
         """
         self.source = source
         self.columns = columns
         self.granularity = granularity
-        self.start = start
-        self.end = end
-        self.duration = duration
         self.resolution = resolution
-        self.timefilter = TimeFilter(start=start, end=end, duration=duration)
+        self.timefilter = TimeFilter(start=start, end=end,
+                                     duration=duration, time_range=time_range)
         self._data = None
 
     def to_dict(self):
@@ -294,10 +292,16 @@ class Report(object):
         columns = self.appresponse.reports.columns
 
         for i, col in enumerate(result['columns']):
-            if columns[col]['type'] == 'number' or \
-                    columns[col]['unit'] != 'none':
 
-                functions[i] = float if col.startswith('avg') else int
+            col_dict = columns[col]
+
+            if 'subtype' in col_dict and col_dict['subtype'] == 'float':
+                functions[i] = float
+
+            elif (columns[col]['type'] == 'number' or
+                  columns[col]['unit'] != 'none'):
+
+                functions[i] = int
 
         records = []
         if 'data' in result:

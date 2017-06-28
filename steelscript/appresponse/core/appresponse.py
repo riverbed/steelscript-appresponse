@@ -211,6 +211,14 @@ class AppResponse(InstanceDescriptorMixin):
         return self.reports.create_report(data_def_request)
 
     def upload(self, dest_path, local_file):
+        """ Upload a local file to the AppResponse 11 device.
+
+        :param dest_path: path where local file will be stored
+            at AppResponse device
+        :param local_file: path to local file to be uploaded
+        :return: location information if resource has been created,
+            otherwise the response body (if any).
+        """
 
         dest_dir, filename = dest_path.rsplit('/', 1)
 

@@ -17,7 +17,6 @@ install_requires = (
     'steelscript',
     'sleepwalker',
     # Add any special python package requirements below this line
-    'pandas',
 )
 
 setup_args = {
