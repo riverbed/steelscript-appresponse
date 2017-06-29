@@ -4,9 +4,13 @@
 # accompanying the software ("License").  This software is distributed "AS IS"
 # as set forth in the License.
 
+import logging
+
 from steelscript.common.datastructures import DictObject
 from steelscript.appresponse.core.types import ServiceClass
 from steelscript.appresponse.core.capture import Job
+
+logger = logging.getLogger(__name__)
 
 
 class ClipService(ServiceClass):
@@ -30,6 +34,8 @@ class ClipService(ServiceClass):
     def get_clips(self):
         """Return a list of Clip objects."""
 
+        logger.debug("Obtaining all Clip objects ")
+
         resp = self.clips.execute('get')
 
         return [self.get_clip_by_id(item['id'])
@@ -38,6 +44,7 @@ class ClipService(ServiceClass):
     def get_clip_by_id(self, id_):
         """Return the Clip object given an id."""
 
+        logger.debug("Getting clip object with id {}".format(id_))
         return Clip(self.servicedef.bind('clip', id=id_))
 
     def create_clip(self, job, timefilter, description='', from_job=False):
@@ -50,7 +57,11 @@ class ClipService(ServiceClass):
                       end_time=timefilter.end,
                       description=description)
 
+        logger.debug("Creating a Clip object with configuration as {}"
+                     .format(config))
+
         data = dict(config=config)
+
         resp = self.clips.execute('create', _data=data)
 
         return Clip(resp, from_job=from_job)
@@ -64,9 +75,11 @@ class ClipService(ServiceClass):
         :param data_defs: list of DataDef objects
         :return: a Clips object
         """
-
         for dd in data_defs:
             if isinstance(dd.source, Job):
+                logger.debug("Creating a Clip object for one data def request "
+                             "with capture job '{}'"
+                             .format(dd.source.prop['config']['name']))
 
                 dd.source = self.create_clip(dd.source, dd.timefilter,
                                              from_job=True)
@@ -89,6 +102,8 @@ class Clips(object):
     def __exit__(self, type, value, traceback):
         for clip in self.clip_objs:
             if isinstance(clip, Clip) and clip.from_job:
+                logger.debug("Deleting Clip object with id {}"
+                             .format(clip.prop.id))
                 clip.delete()
 
         self.clip_objs = None
@@ -102,6 +117,8 @@ class Clip(object):
         data = self.datarep.execute('get').data
         self.prop = DictObject.create_from_dict(data)
         self.from_job = from_job
+        logger.debug("Initialized Clip object with id {}"
+                     .format(self.prop.id))
 
     def delete(self):
         self.datarep.execute('delete')

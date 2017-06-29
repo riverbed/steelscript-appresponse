@@ -10,9 +10,11 @@ import logging
 from collections import OrderedDict
 
 from steelscript.common.datastructures import DictObject
-from steelscript.appresponse.core.types import InvalidType, ServiceClass, \
-    TimeFilter
+from steelscript.appresponse.core.types import AppResponseException,\
+    ServiceClass, TimeFilter
 from steelscript.appresponse.core.clips import Clip
+from steelscript.appresponse.core.fs import File
+from steelscript.appresponse.core.capture import Job
 from steelscript.common._fs import SteelScriptDir
 
 
@@ -35,8 +37,13 @@ class PacketsSource(Source):
     def __init__(self, packets_obj):
         if isinstance(packets_obj, Clip):
             path = 'clips/%s' % packets_obj.prop.id
+        elif isinstance(packets_obj, File):
+            path = 'fs{}'.format(packets_obj.prop.id)
+        elif isinstance(packets_obj, Job):
+            path = 'jobs/{}'.format(packets_obj.prop.id)
         else:
-            raise InvalidType('Can only support clip packet source')
+            raise AppResponseException(
+                'Can only support job or clip or file packet source')
 
         super(PacketsSource, self).__init__(name='packets', path=path,
                                             packets_obj=packets_obj)
@@ -92,6 +99,9 @@ class ProbeReportService(ServiceClass):
     def get_columns(self):
         """Return an ordered dict representing all the columns."""
 
+        logger.debug("Obtaining source columns via resource 'source_columns' "
+                     "via link 'get'")
+
         cols = self.source_columns.execute('get').data['items']
 
         # Create a ordered dict
@@ -120,14 +130,17 @@ class ProbeReportService(ServiceClass):
         with self.appresponse.clips.create_clips(data_defs):
 
             config = dict(data_defs=[dd.to_dict() for dd in data_defs])
+            logger.debug("Creating instance with data definitions %s" % config)
 
             instance = ReportInstance(
                 self.instances.execute('create', _data=config))
 
-            logger.debug("Creating instance with data definitions %s" % config)
-
-            while not instance.ready:
+            while not instance.is_complete():
                 time.sleep(1)
+
+            if instance.errors:
+                err_msgs = ';\n'.join(instance.errors)
+                raise AppResponseException(err_msgs)
 
             return instance
 
@@ -155,16 +168,28 @@ class ReportInstance(object):
         self.datarep = datarep
         data = self.datarep.execute('get').data
         self.prop = DictObject.create_from_dict(data)
+        self.errors = []
 
-    @property
-    def ready(self):
-        # We only checking the percentage
-        # will need to check for errors
-        return all([item['progress']['percent'] == 100
-                    for item in self.status])
+    def is_complete(self):
+
+        status = self.status
+
+        if all([item['progress']['percent'] == 100
+                for item in status]):
+            # Check errors when all queries have completed
+            for item in status:
+                if item['state'] == 'error':
+                    for m in item['messages']:
+                        self.errors.append(m['text'])
+                        logger.error("Error msg from status: {}"
+                                     .format(m['text']))
+            return True
+        return False
 
     @property
     def status(self):
+        logger.debug("Getting status of the report instance with id {}"
+                     .format(self.prop.id))
         return self.datarep.execute('get_status').data
 
     def get_data(self):
@@ -179,25 +204,24 @@ class DataDef(object):
     as a dict.
     """
     def __init__(self, source, columns, start=None, end=None, duration=None,
-                 granularity=None, resolution=None):
+                 time_range=None, granularity=None, resolution=None):
         """Initialize a data definition request object.
 
         :param source: packet source object, i.e. packet capture job.
         :param columns: list Key/Value column objects.
         :param start: epoch start time in seconds.
         :param end: epoch endtime in seconds.
-        :param duration string: duration of data def request.
+        :param duration: string duration of data def request.
+        :param time_range: string time range of data def request.
         :param resolution string: Resoluion in seconds.
         :param str granularity: granularity value.
         """
         self.source = source
         self.columns = columns
         self.granularity = granularity
-        self.start = start
-        self.end = end
-        self.duration = duration
         self.resolution = resolution
-        self.timefilter = TimeFilter(duration, start, end)
+        self.timefilter = TimeFilter(start=start, end=end,
+                                     duration=duration, time_range=time_range)
         self._data = None
 
     def to_dict(self):
@@ -205,7 +229,12 @@ class DataDef(object):
         data_def['source'] = PacketsSource(self.source).to_dict()
         data_def['group_by'] = [col.name for col in self.columns if col.key]
         data_def['time'] = dict()
-        for k in ['start', 'end', 'granularity', 'duration', 'resolution']:
+        for k in ['start', 'end']:
+            v = getattr(self.timefilter, k)
+            if v:
+                data_def['time'][k] = str(v)
+
+        for k in ['granularity', 'resolution']:
             v = getattr(self, k)
             if v:
                 data_def['time'][k] = str(v)
@@ -234,12 +263,16 @@ class Report(object):
 
         :param appresponse: the AppResponse object.
         """
+        logger.debug("Initializing Report object with appresponse '{}'"
+                     .format(appresponse.host))
         self.appresponse = appresponse
         self._data_defs = []
         self._instance = None
 
     def add(self, data_def_request):
         """Add one data definition request."""
+        logger.debug("Adding a data_def request {}"
+                     .format(data_def_request.to_dict()))
         self._data_defs.append(data_def_request)
 
     def _cast_number(self, result):
@@ -252,20 +285,30 @@ class Report(object):
             as well as the response data for the data def request.
         """
 
+        logger.debug("Converting string in records into integer/float")
+
         functions = [lambda x: x] * len(result['columns'])
 
         columns = self.appresponse.reports.columns
 
         for i, col in enumerate(result['columns']):
-            if columns[col]['type'] == 'number' or \
-                    columns[col]['unit'] != 'none':
 
-                functions[i] = float if col.startswith('avg') else int
+            col_dict = columns[col]
 
-        # result['data'] is a list of lists, one of which represents a record
-        records = [dict(zip(result['columns'],
-                            map(lambda x, y: x(y), functions, rec)))
-                   for rec in result['data']]
+            if 'subtype' in col_dict and col_dict['subtype'] == 'float':
+                functions[i] = float
+
+            elif (columns[col]['type'] == 'number' or
+                  columns[col]['unit'] != 'none'):
+
+                functions[i] = int
+
+        records = []
+        if 'data' in result:
+            # result['data'] is a list of records
+            records = [dict(zip(result['columns'],
+                                map(lambda x, y: x(y), functions, rec)))
+                       for rec in result['data']]
 
         return records
 
@@ -281,6 +324,8 @@ class Report(object):
 
             for i, res in enumerate(results):
                 self._data_defs[i].data = self._cast_number(res)
+                logger.debug("Obtained {} records for the {}th data request."
+                             .format(len(self._data_defs[i].data), i))
 
     def get_data(self, index=None):
         """Return data for the indexed data definition requests. If not set, then

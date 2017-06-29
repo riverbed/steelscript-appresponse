@@ -4,9 +4,13 @@
 # accompanying the software ("License").  This software is distributed "AS IS"
 # as set forth in the License.
 
+import logging
 
 from steelscript.common.datastructures import DictObject
-from steelscript.appresponse.core.types import ServiceClass
+from steelscript.appresponse.core.types import ServiceClass, \
+    AppResponseException
+
+logger = logging.getLogger(__name__)
 
 
 class CaptureJobService(ServiceClass):
@@ -30,12 +34,19 @@ class CaptureJobService(ServiceClass):
         self.phys_interfaces = self.servicedef.bind('phys_interfaces')
 
     def get_jobs(self):
+
+        logger.debug("Getting info of capture jobs via resource "
+                     "'jobs' link 'get'...")
+
         resp = self.jobs.execute('get')
 
         return [self.get_job_by_id(item['id'])
                 for item in resp.data['items']]
 
     def create_job(self, config):
+
+        logger.debug("Creating one capture job via resource "
+                     "'jobs' link 'create' with data {}".format(config))
         resp = self.jobs.execute('create', _data=config)
         return Job(resp)
 
@@ -52,8 +63,15 @@ class CaptureJobService(ServiceClass):
         return Job(self.servicedef.bind('job', id=id_))
 
     def get_job_by_name(self, name):
-        return (j for j in self.get_jobs()
-                if j.prop.config.name == name).next()
+
+        try:
+            logger.debug("Obtaining Job object with name '{}'".format(name))
+            return (j for j in self.get_jobs()
+                    if j.prop.config.name == name).next()
+
+        except StopIteration:
+            raise AppResponseException(
+                "No capture job found with name '{}'".format(name))
 
 
 class Job(object):
@@ -63,6 +81,7 @@ class Job(object):
         self.datarep = datarep
         data = self.datarep.execute('get').data
         self.prop = DictObject.create_from_dict(data)
+        logger.debug('Initialized Job object with data {}'.format(data))
 
     def set(self):
         self.datarep.execute('set')

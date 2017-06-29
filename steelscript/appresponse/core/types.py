@@ -11,7 +11,7 @@ from steelscript.common import timeutils
 logger = logging.getLogger(__name__)
 
 
-class InvalidType(Exception):
+class AppResponseException(Exception):
     pass
 
 
@@ -33,7 +33,7 @@ class ServiceClass(object):
 
         self.initialized = True
 
-        logger.debug('initializing %s service' % self.__class__.__name__)
+        logger.debug('Initializing %s service' % self.__class__.__name__)
         self._bind_resources()
         return self
 
@@ -73,29 +73,58 @@ class Value(Column):
 
 class TimeFilter(object):
 
-    def __init__(self, duration=None, start=None, end=None):
+    def __init__(self, start=None, end=None, duration=None, time_range=None):
         """Initialize a TimeFilter object.
 
          :param start: integer, start time in epoch seconds
          :param end: integer, end time in epoch seconds
-         :param duration: string, time duration, i.e. '1 hour' or 'last 1 hour'
+         :param duration: string, time duration, i.e. '1 hour'
+         :param time_range: string, time range, i.e. 'last 1 hour'
+            or '4/21/13 4:00 to 4/21/13 5:00'
 
         """
+        invalid = False
 
-        if start and end:
-            self.start = str(start)
-            self.end = str(end)
+        if not start and not end and not duration and not time_range:
+            # when querying file or clip, usually no time filters are provided
+            self.start = None
+            self.end = None
 
-        elif not start and not end:
-            start, end = timeutils.parse_range(duration)
-            self.start = start.strftime('%s')
-            self.end = end.strftime('%s')
-
-        else:
-            td = timeutils.parse_timedelta(duration).total_seconds()
-            if start:
-                self.start = str(start)
-                self.end = str(int(start + td))
+        elif start and end:
+            if duration or time_range:
+                invalid = True
             else:
-                self.start = str(int(end - td))
+                self.start = str(start)
                 self.end = str(end)
+
+        elif time_range:
+            if start or end or duration:
+                invalid = True
+            else:
+                start, end = timeutils.parse_range(time_range)
+                self.start = start.strftime('%s')
+                self.end = end.strftime('%s')
+
+        elif duration:
+            if not start and not end:
+                invalid = True
+            else:
+                td = timeutils.parse_timedelta(duration).total_seconds()
+                if start:
+                    self.start = str(start)
+                    self.end = str(int(start + td))
+                else:
+                    self.start = str(int(end - td))
+                    self.end = str(end)
+
+        elif start or end:
+            invalid = True
+
+        if invalid:
+            msg = ('Start/end timestamps can not be derived from start "{}" '
+                   'end "{}" duration "{}" time_range "{}".'
+                   .format(start, end, duration, time_range))
+            raise AppResponseException(msg)
+
+    def __repr__(self):
+        return "TimeFilter(start={}, end={})".format(self.start, self.end)
