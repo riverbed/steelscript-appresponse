@@ -204,7 +204,7 @@ class DataDef(object):
     as a dict.
     """
     def __init__(self, source, columns, start=None, end=None, duration=None,
-                 granularity=None, resolution=None, time_range=None):
+                 time_range=None, granularity=None, resolution=None):
         """Initialize a data definition request object.
 
         :param source: packet source object, i.e. packet capture job.
