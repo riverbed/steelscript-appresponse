@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Riverbed Technology, Inc.
+# Copyright (c) 2017 Riverbed Technology, Inc.
 #
 # This software is licensed under the terms and conditions of the MIT License
 # accompanying the software ("License").  This software is distributed "AS IS"
@@ -82,6 +82,17 @@ class Job(object):
         data = self.datarep.execute('get').data
         self.prop = DictObject.create_from_dict(data)
         logger.debug('Initialized Job object with data {}'.format(data))
+
+    def __repr__(self):
+        return '<{0} {1} on MIFG {2}'.format(
+            self.__class__.__name__,
+            self.name,
+            self.datarep.data['config']['mifg_id']
+        )
+
+    @property
+    def name(self):
+        return self.datarep.data['config']['name']
 
     def set(self):
         self.datarep.execute('set')

@@ -1,3 +1,6 @@
 include RELEASE-VERSION
+include AUTHORS
 include LICENSE
-include gitpy_versioning/*
+include README.md
+include examples/*.py
+include gitpy_versioning/__init__.py

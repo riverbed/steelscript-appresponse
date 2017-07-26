@@ -1,15 +1,19 @@
-appresponse
-========
-Python modules to interact AppResponse via REST API
+Riverbed SteelScript for SteelCentral AppResponse
+=================================================
 
-The directory structure is as follows:
+This package provides device specific bindings for interacting
+with Riverbed SteelCentral AppResponse devices as part of the Riverbed
+SteelScript for Python.
 
-* ./README.rst -- this file
-* ./setup.py -- package installation parameters
-* ./steelscript -- package source files files
-* ./steelscript/appresponse/core/ -- core source files
-* ./steelscript/appresponse/appfwk/plugin.py -- plugin information
-* ./steelscript/appresponse/appfwk/datasources/ - directory
-* ./steelscript/appresponse/appfwk/devices/ - directory of devices
-* ./steelscript/appresponse/appfwk/reports/ - directory of reports
-* ./steelscript/appresponse/appfwk/libs/ - helper functions
+For a complete guide to installation, see:
+
+  `https://support.riverbed.com/apis/steelscript/index.html <https://support.riverbed.com/apis/steelscript/index.html>`_
+
+License
+=======
+
+Copyright (c) 2017 Riverbed Technology, Inc.
+
+This software is licensed under the terms and conditions of the MIT License
+accompanying the software ("License").  This software is distributed "AS IS" as
+set forth in the License.
