@@ -10,9 +10,11 @@
 Host Group information on AppResponse appliance:
 
 1. Show existng host groups
-2. Update host group from a file
-3. Update one host group by providing a name and a hostgroup
-3. Delete all host group info
+2. Update one host group
+3. Add one host group
+4. Create multiple host groups by uploading a file
+5. Delete one host group
+6. Clear all host groups
 """
 
 
