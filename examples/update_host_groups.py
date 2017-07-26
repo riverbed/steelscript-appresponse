@@ -27,8 +27,10 @@ class HostGroupApp(AppResponseApp):
 
         parser.add_option('--file', dest='file', default=None,
                           help=('Path to the file with hostgroup info, '
-                                'each line should have three columns formated as:              '
-                                '"<hostgroup_name> <subnet_1>,<subnet_2>,...,<subnet_n>"'))
+                                'each line should have three columns '
+                                'formated as:              '
+                                '"<hostgroup_name> '
+                                '<subnet_1>,<subnet_2>,...,<subnet_n>"'))
         parser.add_option('--name', dest='name', default=None,
                           help='Namme of host group to update or delete')
         parser.add_option('--id', dest='id', default=None,
@@ -36,16 +38,22 @@ class HostGroupApp(AppResponseApp):
         parser.add_option('--hosts', dest='hosts', default=None,
                           help='List of hosts and host-ranges')
         parser.add_option('--disabled', action='store_true', dest='disabled',
-                          default=False, help='Whether host group should be disabled')
+                          default=False, help='Whether host group should be '
+                                              'disabled')
         parser.add_option('--operation',
                           dest='operation', default=None,
-                          help=('Type of operation:                                   '
-                                '    show: render configured hostgroups;              '
-                                '    add: add one hostgroup;                          '
-                                '    update: update one hostgroup;                    '
-                                '    upload: upload a file with hostgroups            '
-                                '    delete: delete one hostgroup                     '
-                                '    clear: clear all hostgroups.                     '))
+                          help=('show: render configured hostgroups'
+                                '                  '
+                                'add: add one hostgroup'
+                                '                              '
+                                'update: update one hostgroup'
+                                '                        '
+                                'upload: upload a file with hostgroups'
+                                '                '
+                                'delete: delete one hostgroup'
+                                '                         '
+                                'clear: clear all hostgroups'
+                                '                         '))
 
     def validate_args(self):
         super(HostGroupApp, self).validate_args()
@@ -53,22 +61,28 @@ class HostGroupApp(AppResponseApp):
         if self.options.operation not in ['show', 'add', 'update',
                                           'delete', 'clear', 'upload']:
             self.parser.error("Operation should be set as one of "
-                              "'show', 'add', 'update', 'upload', 'delete', 'clear'")
+                              "'show', 'add', 'update', 'upload', "
+                              "'delete', 'clear'")
 
         if self.options.operation == 'upload' and not self.options.file:
-            self.parser.error("File needs to be specified for 'upload' operation")
+            self.parser.error("File needs to be specified for 'upload' "
+                              "operation")
 
         if self.options.operation == 'add' and \
                 (not self.options.name or not self.options.hosts):
-            self.parser.error("Hostgroup name and hosts are needed for 'add' operation")
+            self.parser.error("Hostgroup name and hosts are needed for "
+                              "'add' operation")
 
         if self.options.operation == 'update' and \
-                 (not self.options.name and not self.options.id):
-            self.parser.error("Hostgroup Name/ID is needed for 'update' operation.")
+                (not self.options.name and not self.options.id):
+
+            self.parser.error("Hostgroup Name/ID is needed for 'update' "
+                              "operation.")
 
         if self.options.operation == 'delete' and \
                 (not self.options.name and not self.options.id):
-            self.parser.error("Hostgroup name or ID is needed for 'delete' operation.")
+            self.parser.error("Hostgroup name or ID is needed for 'delete' "
+                              "operation.")
 
     def main(self):
 
@@ -77,7 +91,8 @@ class HostGroupApp(AppResponseApp):
         if self.options.operation == 'show':
             headers = ['id', 'name', 'active', 'definition']
             data = [[hg.prop.id, hg.prop.name, hg.prop.enabled, hg.prop.hosts]
-                    for hg in self.appresponse.classification.get_hostgroups()]
+                    for hg in self.appresponse.classification.get_hostgroups()
+                    ]
             Formatter.print_table(data, headers)
 
         elif self.options.operation == 'add':
@@ -90,14 +105,16 @@ class HostGroupApp(AppResponseApp):
 
         elif self.options.operation == 'update':
             if self.options.id:
-                hg = self.appresponse.classification.get_hostgroup_by_id(self.options.id)
+                hg = self.appresponse.classification.get_hostgroup_by_id(
+                    self.options.id)
             else:
-                hg = self.appresponse.classification.get_hostgroup_by_name(self.options.name)
-
+                hg = self.appresponse.classification.get_hostgroup_by_name(
+                    self.options.name)
 
             hgc = HostGroupConfig(name=self.options.name or hg.prop.name,
                                   hosts=(self.options.hosts.split(',')
-                                         if self.options.hosts else hg.prop.hosts),
+                                         if self.options.hosts
+                                         else hg.prop.hosts),
                                   enabled=enabled)
             hg.update(hgc)
             print ("Successfully updated hostgroup '{}'".format(hg.prop.name))
@@ -113,19 +130,22 @@ class HostGroupApp(AppResponseApp):
                                                hosts=hosts.split(','),
                                                enabled=True))
                 self.appresponse.classification.create_hostgroups(hgs)
-                print("Successfully uploaded {} hostgroup definitions.".format(len(hgs)))
+                print("Successfully uploaded {} hostgroup definitions."
+                      .format(len(hgs)))
 
         elif self.options.operation == 'delete':
             if self.options.id:
-                hg = self.appresponse.classification.get_hostgroup_by_id(self.options.id)
+                hg = self.appresponse.classification.get_hostgroup_by_id(
+                    self.options.id)
             else:
-                hg = self.appresponse.classification.get_hostgroup_by_name(self.options.name)
+                hg = self.appresponse.classification.get_hostgroup_by_name(
+                    self.options.name)
 
             hg.delete()
             print("Successfully deleted hostgroup with ID/name {}"
                   .format(self.options.id or self.options.name))
 
-        elif self.options.operation == 'clear': # clear all hostgroups
+        elif self.options.operation == 'clear':  # clear all hostgroups
             self.appresponse.classification.bulk_delete()
             print("Successfully cleared all hostgroups")
 
