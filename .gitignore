@@ -1,0 +1,13 @@
+*~
+
+*.pyc
+
+build
+dist
+steelscript.appresponse.egg-info
+RELEASE-VERSION
+
+*.swp
+.DS_Store
+.idea/
+.tox/
