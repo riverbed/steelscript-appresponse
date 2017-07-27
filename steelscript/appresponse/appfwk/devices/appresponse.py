@@ -8,6 +8,6 @@
 from steelscript.appresponse.core.appresponse import AppResponse
 
 
-def new_device_instance(host, port, auth):
+def new_device_instance(*args, **kwargs):
     ar = AppResponse(*args, **kwargs)
     return ar

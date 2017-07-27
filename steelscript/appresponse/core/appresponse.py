@@ -108,7 +108,7 @@ class AppResponse(InstanceDescriptorMixin):
     AppResponse appliance. Primarity this provides an interface to
     reporting. """
 
-    def __init__(self, host, auth, versions=None):
+    def __init__(self, host, auth, port=443, versions=None):
         """Initialize an AppResponse object.
 
         :param str host: name or IP address of the AppResponse appliance.
@@ -126,6 +126,8 @@ class AppResponse(InstanceDescriptorMixin):
         """
 
         self.host = host
+        if port != 443:
+            self.host = '{0}:{1}'.format(self.host, port)
         self.auth = auth
         self._versions = None
         self.req_versions = versions

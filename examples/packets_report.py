@@ -90,7 +90,8 @@ class PacketsReportApp(AppResponseApp):
             columns.append(Value(col))
             headers.append(col)
 
-        data_def = DataDef(source=source, columns=columns,
+        data_def = DataDef(source=source,
+                           columns=columns,
                            granularity=self.options.granularity,
                            resolution=self.options.resolution,
                            time_range=self.options.timerange)
@@ -99,7 +100,8 @@ class PacketsReportApp(AppResponseApp):
         report.add(data_def)
         report.run()
 
-        data = [[d[k] for k in headers] for d in report.get_data(0)[0]]
+        data = report.get_data()
+        headers = report.get_legend()
 
         if self.options.csvfile:
             with open(self.options.csvfile, 'w') as f:

@@ -75,16 +75,20 @@ class ClipService(ServiceClass):
         :param data_defs: list of DataDef objects
         :return: a Clips object
         """
+        clips = []
         for dd in data_defs:
             if isinstance(dd.source, Job):
                 logger.debug("Creating a Clip object for one data def request "
                              "with capture job '{}'"
                              .format(dd.source.prop['config']['name']))
 
-                dd.source = self.create_clip(dd.source, dd.timefilter,
-                                             from_job=True)
+                clip = self.create_clip(dd.source, dd.timefilter,
+                                        from_job=True)
+                clips.append(clip)
+            else:
+                clips.append(dd.source)
 
-        return Clips([dd.source for dd in data_defs])
+        return Clips(clips)
 
 
 class Clips(object):

@@ -213,7 +213,7 @@ class DataDef(object):
         :param end: epoch endtime in seconds.
         :param duration: string duration of data def request.
         :param time_range: string time range of data def request.
-        :param resolution string: Resoluion in seconds.
+        :param str resolution: Resolution in seconds.
         :param str granularity: granularity value.
         """
         self.source = source
@@ -281,34 +281,26 @@ class Report(object):
         the column name has 'avg' in its name, if yes, then convert it to
         float, otherwise to integer.
 
-        :param result dict: including Mata data for one data def request
+        :param dict result: includes metadata for one data def request
             as well as the response data for the data def request.
         """
 
         logger.debug("Converting string in records into integer/float")
 
+        columns = self.appresponse.reports.columns
         functions = [lambda x: x] * len(result['columns'])
 
-        columns = self.appresponse.reports.columns
-
         for i, col in enumerate(result['columns']):
-
-            col_dict = columns[col]
-
-            if 'subtype' in col_dict and col_dict['subtype'] == 'float':
+            if columns[col]['type'] == 'integer':
+                functions[i] = int
+            elif columns[col]['type'] in ('number', 'duration'):
                 functions[i] = float
 
-            elif (columns[col]['type'] == 'number' or
-                  columns[col]['unit'] != 'none'):
-
-                functions[i] = int
-
-        records = []
-        if 'data' in result:
-            # result['data'] is a list of records
-            records = [dict(zip(result['columns'],
-                                map(lambda x, y: x(y), functions, rec)))
-                       for rec in result['data']]
+        # operate on each column, then zip back into list of tuples
+        datacols = []
+        for i, c in enumerate(zip(*result['data'])):
+            datacols.append(map(functions[i], c))
+        records = zip(*datacols)
 
         return records
 
@@ -323,17 +315,61 @@ class Report(object):
             results = self._instance.get_data()['data_defs']
 
             for i, res in enumerate(results):
+                self._data_defs[i].columns = res['columns']
                 self._data_defs[i].data = self._cast_number(res)
                 logger.debug("Obtained {} records for the {}th data request."
                              .format(len(self._data_defs[i].data), i))
 
-    def get_data(self, index=None):
-        """Return data for the indexed data definition requests. If not set, then
-        data for all data definition requests will be returned."""
-        if not index:
+    def get_data(self, index=0):
+        """Return data for the indexed data definition requests.
+
+        :param int index: Set to None to return data from all data definitions,
+            defaults to returning the data from just the first data def.
+        """
+        if index is None:
             return [dd.data for dd in self._data_defs]
 
         return self._data_defs[index].data
+
+    def get_legend(self, index=0, details=False):
+        """Return legend information for the data definition.
+
+        :param int index: Set to None to return data from all data definitions,
+            defaults to returning the data from just the first data def.
+
+        :param bool details: If True, return complete column dict, otherwise
+            just short label ids for each column will be returned
+        """
+        def get_cols(cols):
+            if details:
+                return [self.appresponse.reports.columns[c] for c in cols]
+            return [c for c in cols]
+
+        if index is None:
+            legend = [get_cols(dd.columns) for dd in self._data_defs]
+
+        else:
+            legend = get_cols(self._data_defs[index].columns)
+
+        return legend
+
+    def get_dataframe(self, index=0):
+        """Return data in pandas DataFrame format for the indexed
+        data definition requests.
+
+        Requires pandas library to be available in environment.
+
+        This will return a single DataFrame for the given index, unlike
+        ``get_data`` and ``get_legend`` which will optionally return info
+        for all data defs in a report.
+
+        :param int index: DataDef to process into DataFrame.  Defaults to 0.
+        """
+        import pandas
+        data = self.get_data(index)
+        columns = self.get_legend(index)
+        df = pandas.DataFrame(data, columns=columns)
+        return df
 
     def delete(self):
         self._instance.delete()
