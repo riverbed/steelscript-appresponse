@@ -10,7 +10,7 @@ import logging
 
 from steelscript.appresponse.core import CommonService, ProbeReportService, \
     CaptureJobService, ClipService, ClassificationService, SystemTimeService, \
-    FileSystemService
+    FileSystemService, PacketExportService
 from steelscript.common.service import Service
 from reschema.servicedef import ServiceDefLoadHook, ServiceDef,\
     ServiceDefManager
@@ -118,6 +118,8 @@ class AppResponse(InstanceDescriptorMixin):
             :py:class:`UserAuth<steelscript.common.service.UserAuth>` or
             :py:class:`OAuth<steelscript.common.service.OAuth>`
 
+        :param port: integer, port number to connect to appliance
+
         :param dict versions: service versions to use, keyed by the service
         name, value is a list of version strings that are required by the
         external application. If unspecified, this will use the latest
@@ -163,6 +165,7 @@ class AppResponse(InstanceDescriptorMixin):
         self.classification = ClassificationService(self)
         self.mgmt_time = SystemTimeService(self)
         self.fs = FileSystemService(self)
+        self.export = PacketExportService(self)
         # At this point, all services have used negotiated versions
         # Except common which is using 1.0 to get supported versions
         # Now reinitialize common service with negotiated versions
@@ -241,3 +244,14 @@ class AppResponse(InstanceDescriptorMixin):
             logger.debug("File {} successfully uploaded.".format(local_file))
 
             return resp
+
+    def create_export(self, source, timefilter, filters):
+        return self.export.create(source, timefilter, filters)
+
+    def download(self, id_, dest_path, overwrite):
+
+        conn = self.service_manager.connection_manager.\
+            find(host=self.host, auth=self.auth)
+        uri = '{}/packets/items/{}'.\
+            format(self.export.servicedef.servicepath, id_)
+        return conn.download(uri, dest_path, overwrite=overwrite)
