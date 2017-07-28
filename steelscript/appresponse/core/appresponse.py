@@ -104,9 +104,7 @@ class AppResponseConnectionHook(ConnectionHook):
 
 
 class AppResponse(InstanceDescriptorMixin):
-    """The AppResponse class is the main interface to interact with a
-    AppResponse appliance. Primarity this provides an interface to
-    reporting. """
+    """Main interface to interact with a AppResponse appliance."""
 
     def __init__(self, host, auth, port=443, versions=None):
         """Initialize an AppResponse object.
@@ -121,10 +119,10 @@ class AppResponse(InstanceDescriptorMixin):
         :param port: integer, port number to connect to appliance
 
         :param dict versions: service versions to use, keyed by the service
-        name, value is a list of version strings that are required by the
-        external application. If unspecified, this will use the latest
-        version of each service supported by both this implementation and
-        the AppResponse appliance.
+            name, value is a list of version strings that are required by the
+            external application. If unspecified, this will use the latest
+            version of each service supported by both this implementation and
+            the AppResponse appliance.
         """
 
         self.host = host
@@ -195,6 +193,7 @@ class AppResponse(InstanceDescriptorMixin):
         return self._versions
 
     def find_service(self, name):
+        """Return a ServiceDef for a given service name."""
         if not self._versions and name == 'common':
             # Initializing appresponse, use hard coded common service version
             version = COMMON_SERVICE_VERSION
@@ -204,15 +203,23 @@ class AppResponse(InstanceDescriptorMixin):
             host=self.host, auth=self.auth, name=name, version=version)
 
     def get_column_names(self):
+        """Get a list of all available reporting columns."""
         return self.reports.get_column_names()
 
     def get_capture_job_by_name(self, name):
+        """Find a capture job by name."""
         return self.capture.get_job_by_name(name)
 
     def get_capture_jobs(self):
+        """Get a list of all existing capture jobs."""
         return self.capture.get_jobs()
 
     def create_report(self, data_def_request):
+        """Helper method to initiate an AppResponse report.
+
+        :param DataDef data_def_request: Single DataDef object defining
+            the report criteria.
+        """
         return self.reports.create_report(data_def_request)
 
     def upload(self, dest_path, local_file):

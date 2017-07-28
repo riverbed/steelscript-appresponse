@@ -36,7 +36,7 @@ class PacketsSource(Source):
 
     def __init__(self, packets_obj):
         if isinstance(packets_obj, Clip):
-            path = 'clips/%s' % packets_obj.prop.id
+            path = 'clips/{}'.format(packets_obj.prop.id)
         elif isinstance(packets_obj, File):
             path = 'fs{}'.format(packets_obj.prop.id)
         elif isinstance(packets_obj, Job):
@@ -201,7 +201,7 @@ class ReportInstance(object):
 
 class DataDef(object):
     """This class provides an interface to build a data definition request
-    as a dict.
+    suitable for uploading to a report.
     """
     def __init__(self, source, columns, start=None, end=None, duration=None,
                  time_range=None, granularity=None, resolution=None):
@@ -213,8 +213,30 @@ class DataDef(object):
         :param end: epoch endtime in seconds.
         :param duration: string duration of data def request.
         :param time_range: string time range of data def request.
-        :param str resolution: Resolution in seconds.
-        :param str granularity: granularity value.
+        :param str granularity: granularity in seconds. Required.
+        :param str resolution: resolution in seconds. Optional
+
+        For defining the overall time for the report, either a
+        single `time_range` string may be used or a combination of
+        `start`/`end`/`duration`.
+
+        Further discussion on `granularity` and `resolution`:
+
+        Granularity refers to the amount of time for which the data source
+        computes a summary of the metrics it received. The data source
+        examines all data and creates summaries for 1 second, 1 minute,
+        5 minute, 15 minute, 1 hour, 6 hour and 1 day, etc.  Greater
+        granularity (shorter time periods) results in greater accuracy.
+        Lesser granularity (1 hour, 6 hours, 1 day) requires less processing
+        and therefore the data is returned faster. Granularity must be
+        specified as number of seconds.
+
+        Resolution must be multiple of the requested granularity. For
+        example, if you specify granularity of 5mins (300 seconds) then the
+        resolution can be set to 5mins, 10mins, 15mins, etc. If the
+        resolution is set to be equal of the granularity then it has no
+        effect to the number of returned samples. The resolution is optional.
+
         """
         self.source = source
         self.columns = columns
@@ -259,7 +281,7 @@ class Report(object):
     """
 
     def __init__(self, appresponse):
-        """Initialize an AppResponse object.
+        """Initialize a new report against the given AppResponse object.
 
         :param appresponse: the AppResponse object.
         """
@@ -357,11 +379,11 @@ class Report(object):
         """Return data in pandas DataFrame format for the indexed
         data definition requests.
 
-        Requires pandas library to be available in environment.
-
         This will return a single DataFrame for the given index, unlike
         ``get_data`` and ``get_legend`` which will optionally return info
         for all data defs in a report.
+
+        **Requires `pandas` library to be available in environment.**
 
         :param int index: DataDef to process into DataFrame.  Defaults to 0.
         """
@@ -372,6 +394,7 @@ class Report(object):
         return df
 
     def delete(self):
+        """Delete the report from the appliance."""
         self._instance.delete()
         self._instance = None
         self._data_defs = []
