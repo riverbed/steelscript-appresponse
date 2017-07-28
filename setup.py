@@ -39,10 +39,9 @@ setup_args = {
     'test_suite': '',
     'include_package_data': True,
     'entry_points': {
-        # Uncomment these lines to enable steel commands for this module
-        # 'steel.commands': [
-        #     'appresponse = steelscript.appresponse.commands'
-        # ],
+        'steel.commands': [
+            'appresponse = steelscript.appresponse.commands'
+        ],
         'portal.plugins': [
             'appresponse = steelscript.appresponse.appfwk.plugin:AppResponsePlugin'
         ],

@@ -22,6 +22,7 @@ class CaptureJobService(ServiceClass):
         self.jobs = None
         self.settings = None
         self.phys_interfaces = None
+        self.mifgs = None
 
     def _bind_resources(self):
 
@@ -32,6 +33,7 @@ class CaptureJobService(ServiceClass):
         self.jobs = self.servicedef.bind('jobs')
         self.settings = self.servicedef.bind('settings')
         self.phys_interfaces = self.servicedef.bind('phys_interfaces')
+        self.mifgs = self.servicedef.bind('mifgs')
 
     def get_jobs(self):
 
@@ -73,6 +75,16 @@ class CaptureJobService(ServiceClass):
             raise AppResponseException(
                 "No capture job found with name '{}'".format(name))
 
+    def get_mifgs(self):
+
+        resp = self.mifgs.execute('get')
+
+        return [self.get_mifg_by_id(item['id'])
+                for item in resp.data['items']]
+
+    def get_mifg_by_id(self, id_):
+        return MIFG(self.servicedef.bind('mifg', id=id_))
+
 
 class Job(object):
     """This class manages single packet capture job."""
@@ -111,3 +123,12 @@ class Job(object):
 
     def get_stats(self):
         return self.datarep.execute('get_stats').data
+
+
+class MIFG(object):
+
+    def __init__(self, datarep):
+        self.datarep = datarep
+        data = self.datarep.execute('get').data
+        self.prop = DictObject.create_from_dict(data)
+        logger.debug('Initialized MIFG object with data {}'.format(data))

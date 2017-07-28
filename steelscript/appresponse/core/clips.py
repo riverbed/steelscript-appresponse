@@ -38,6 +38,9 @@ class ClipService(ServiceClass):
 
         resp = self.clips.execute('get')
 
+        if not resp.data:
+            return []
+
         return [self.get_clip_by_id(item['id'])
                 for item in resp.data['items']]
 

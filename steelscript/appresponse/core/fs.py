@@ -34,8 +34,13 @@ class FileSystemService(ServiceClass):
 
         resp = self.filesystem.execute('get')
 
-        return [self.get_file_by_id(item['id'])
-                for item in resp.data['items'][0]['files']['items']]
+        ret = []
+
+        for directory in resp.data['items']:
+            if 'items' in directory['files']:
+                for file in directory['files']['items']:
+                    ret.append(self.get_file_by_id(file['id']))
+        return ret
 
     def get_file_by_id(self, id_):
 
