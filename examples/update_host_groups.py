@@ -16,6 +16,7 @@ Host Group information on AppResponse appliance:
 5. Delete one host group
 6. Clear all host groups
 """
+import optparse
 
 
 from steelscript.appresponse.core.app import AppResponseApp
@@ -27,35 +28,36 @@ class HostGroupApp(AppResponseApp):
     def add_options(self, parser):
         super(HostGroupApp, self).add_options(parser)
 
-        parser.add_option('--file', dest='file', default=None,
-                          help=('Path to the file with hostgroup info, '
-                                'each line should have three columns '
-                                'formated as:              '
-                                '"<hostgroup_name> '
-                                '<subnet_1>,<subnet_2>,...,<subnet_n>"'))
-        parser.add_option('--name', dest='name', default=None,
-                          help='Namme of host group to update or delete')
-        parser.add_option('--id', dest='id', default=None,
-                          help='ID of the host group to update or delete')
-        parser.add_option('--hosts', dest='hosts', default=None,
-                          help='List of hosts and host-ranges')
-        parser.add_option('--disabled', action='store_true', dest='disabled',
-                          default=False, help='Whether host group should be '
-                                              'disabled')
-        parser.add_option('--operation',
-                          dest='operation', default=None,
-                          help=('show: render configured hostgroups'
-                                '                  '
-                                'add: add one hostgroup'
-                                '                              '
-                                'update: update one hostgroup'
-                                '                        '
-                                'upload: upload a file with hostgroups'
-                                '                '
-                                'delete: delete one hostgroup'
-                                '                         '
-                                'clear: clear all hostgroups'
-                                '                         '))
+        group = optparse.OptionGroup(parser, "HostGroup Options")
+        group.add_option('--file', dest='file', default=None,
+                         help=('Path to the file with hostgroup info, '
+                               'each line should have two columns '
+                               'formated as:              '
+                               '"<hostgroup_name> <subnet_1>,<subnet_2>,..."'))
+        group.add_option('--name', dest='name', default=None,
+                         help='Namme of host group to update or delete')
+        group.add_option('--id', dest='id', default=None,
+                         help='ID of the host group to update or delete')
+        group.add_option('--hosts', dest='hosts', default=None,
+                         help='List of hosts and host-ranges')
+        group.add_option('--disabled', action='store_true', dest='disabled',
+                         default=False, help='Whether host group should be '
+                                             'disabled')
+        group.add_option('--operation',
+                         dest='operation', default=None,
+                         help=('show: render configured hostgroups'
+                               '                  '
+                               'add: add one hostgroup'
+                               '                              '
+                               'update: update one hostgroup'
+                               '                        '
+                               'upload: upload a file with hostgroups'
+                               '                '
+                               'delete: delete one hostgroup'
+                               '                         '
+                               'clear: clear all hostgroups'
+                               '                         '))
+        parser.add_option_group(group)
 
     def validate_args(self):
         super(HostGroupApp, self).validate_args()

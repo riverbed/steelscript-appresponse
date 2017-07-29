@@ -7,9 +7,10 @@
 # as set forth in the License.
 
 """
-Ran a report against sources of 'packets' (capture job, clips, files) on an
+Run a report against sources of 'packets' (capture job, clips, files) on an
 AppResponse 11 appliance.
 """
+import optparse
 
 from steelscript.appresponse.core.app import AppResponseApp
 from steelscript.appresponse.core.types import Key, Value
@@ -20,35 +21,44 @@ from steelscript.common.datautils import Formatter
 class PacketsReportApp(AppResponseApp):
     def add_options(self, parser):
         super(PacketsReportApp, self).add_options(parser)
-        parser.add_option('--sourcetype',
-                          dest='sourcetype', default=None,
-                          help='Type of data source to run report against, '
-                               'i.e. file, clip or job')
-        parser.add_option('--sourceid',
-                          dest='sourceid', default=None,
-                          help='ID of the source to run report against')
-        parser.add_option('--keycolumns',
-                          dest='keycolumns',
-                          default=None,
-                          help='List of key column names separated by comma')
-        parser.add_option('--valuecolumns', dest='valuecolumns',
-                          default=None,
-                          help='List of value column names separated by comma'
-                          )
-        parser.add_option('--timerange', dest='timerange',
-                          help='Time range to analyze, valid formats are: '
-                               '"06/05/17 17:09:00 to 06/05/17 18:09:00" '
-                               'or "17:09:00 to 18:09:00" '
-                               'or "last 1 hour".')
-        parser.add_option('--granularity', dest='granularity',
-                          help='The amount of time in seconds for which the '
-                               'data source computes a summary of the '
-                               'metrics it received.')
-        parser.add_option('--resolution', dest='resolution',
-                          help='Additional granularity in seconds to tell the '
-                               'data source to aggregate further.')
-        parser.add_option('--csvfile', dest='csvfile', default=None,
-                          help='CSV file to store report data')
+
+        group = optparse.OptionGroup(parser, "Source Options")
+        group.add_option('--sourcetype',
+                         dest='sourcetype', default=None,
+                         help='Type of data source to run report against, '
+                              'i.e. file, clip or job')
+        group.add_option('--sourceid',
+                         dest='sourceid', default=None,
+                         help='ID of the source to run report against')
+        group.add_option('--keycolumns',
+                         dest='keycolumns',
+                         default=None,
+                         help='List of key column names separated by comma')
+        group.add_option('--valuecolumns', dest='valuecolumns',
+                         default=None,
+                         help='List of value column names separated by comma'
+                         )
+        parser.add_option_group(group)
+
+        group = optparse.OptionGroup(parser, "Time and Filter Options")
+        group.add_option('--timerange', dest='timerange',
+                         help='Time range to analyze, valid formats are: '
+                              '"06/05/17 17:09:00 to 06/05/17 18:09:00" '
+                              'or "17:09:00 to 18:09:00" '
+                              'or "last 1 hour".')
+        group.add_option('--granularity', dest='granularity',
+                         help='The amount of time in seconds for which the '
+                              'data source computes a summary of the '
+                              'metrics it received.')
+        group.add_option('--resolution', dest='resolution',
+                         help='Additional granularity in seconds to tell the '
+                              'data source to aggregate further.')
+        parser.add_option_group(group)
+
+        group = optparse.OptionGroup(parser, "Output Options")
+        group.add_option('--csvfile', dest='csvfile', default=None,
+                         help='CSV file to store report data')
+        parser.add_option_group(group)
 
     def validate_args(self):
         super(PacketsReportApp, self).validate_args()
