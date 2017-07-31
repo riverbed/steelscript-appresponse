@@ -10,7 +10,7 @@ from setuptools import setup, find_packages
 from gitpy_versioning import get_version
 
 install_requires = (
-    'steelscript>1.3.1',
+    'steelscript>=1.3.1',
     'sleepwalker',
 )
 
