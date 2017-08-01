@@ -15,6 +15,7 @@ class CommonService(object):
 
         # Init resource
         self.services = self.servicedef.bind('services')
+        self.info = self.servicedef.bind('info')
 
     def get_versions(self):
         versions_list = self.services.execute('get').data
@@ -27,3 +28,6 @@ class CommonService(object):
             versions[service['id']] = service['versions']
 
         return versions
+
+    def get_info(self):
+        return self.info.execute('get').data
