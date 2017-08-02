@@ -221,3 +221,98 @@ After creating the data definition object, then we are ready to run a report as 
 
    # Grab the data
    pprint.pprint(report.get_data())
+
+Extending the Example
+---------------------
+
+As a last item to help get started with your own scripts, we will extend our example
+with one helpful feature: table outputs.
+
+Rather than show how to update your existing example script, we will post the new
+script, then walk through key differences that add the feature.
+
+Let us create a file ``table_report.py`` and insert the following code:
+
+.. code-block:: python
+
+   from steelscript.appresponse.core.appresponse import AppResponse
+   from steelscript.common import UserAuth
+   from steelscript.appresponse.core.reports import DataDef, Report
+   from steelscript.appresponse.core.types import Key, Value
+
+   # Import the Formatter class to output data in a table format
+   from steelscript.common.datautils import Formatter
+
+   # Fill these in with appropriate values
+   host = '$host'
+   username = '$username'
+   password = '$password'
+
+   # Open a connection to the appliance and authenticate
+   ar = AppResponse(host, auth=UserAuth(username, password))
+
+   source = ar.get_capture_job_by_name('default_job')
+
+   columns = [Key('start_time'), Value('sum_tcp.total_bytes'), Value('avg_frame.total_bytes')]
+
+   granularity = '10'
+
+   time_range = 'last 1 minute'
+
+   data_def = DataDef(source=source, columns=columns, granularity='10', time_range=time_range)
+
+   report = Report(ar)
+   report.add(data_def)
+   report.run()
+
+   # Get the header of the table
+   header = report.get_legend()
+
+   data = report.get_data()
+
+   # Output the data in a table format
+   Formatter.print_table(data, header)
+
+Be sure to fill in appropriate values for ``$host``, ``$username`` and
+``$password``. Run this script as follows and you should see report
+result is rendered in a table format as the following:
+
+.. code-block:: bash
+
+   $ python table_report.py
+
+    start_time    sum_tcp.total_bytes    avg_frame.total_bytes
+    --------------------------------------------------------------
+    1501681110    4286398.0              267.309
+    1501681120    4825195.0              360.635
+    1501681130    6252248.0              468.954
+    1501681140    4741664.0              332.374
+    1501681150    4386239.0              282.895
+    1501681160    476495.0               292.533
+
+As can be seen from the script, there are 3 differences.
+
+We firstly import the ``Formatter`` class as below:
+
+.. code-block:: python
+
+   from steelscript.common.datautils import Formatter
+
+After the report finished running, we obtain the header of the
+table, which is essentially a list of column names that match the
+report result, shown as below:
+
+.. code-block:: python
+
+   header = report.get_legend()
+
+At last, the ``Formatter`` class is used to render the report result in
+a nice table format, shown as below:
+
+.. code-block:: python
+
+   Formatter.print_table(data, header)
+
+
+
+
