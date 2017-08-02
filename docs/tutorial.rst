@@ -313,6 +313,3 @@ a nice table format, shown as below:
 
    Formatter.print_table(data, header)
 
-
-
-
