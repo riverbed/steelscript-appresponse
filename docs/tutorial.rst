@@ -292,7 +292,7 @@ result is rendered in a table format as the following:
 
 As can be seen from the script, there are 3 differences.
 
-We firstly import the ``Formatter`` class as below:
+First, we import the ``Formatter`` class as below:
 
 .. code-block:: python
 
