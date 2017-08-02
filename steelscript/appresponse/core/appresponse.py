@@ -202,6 +202,10 @@ class AppResponse(InstanceDescriptorMixin):
         return self.service_manager.find_by_name(
             host=self.host, auth=self.auth, name=name, version=version)
 
+    def get_info(self):
+        """Get the basic info of the device."""
+        return self.common.get_info()
+
     def get_column_names(self):
         """Get a list of all available reporting columns."""
         return self.reports.get_column_names()
@@ -262,3 +266,6 @@ class AppResponse(InstanceDescriptorMixin):
         uri = '{}/packets/items/{}'.\
             format(self.export.servicedef.servicepath, id_)
         return conn.download(uri, dest_path, overwrite=overwrite)
+
+    def get_file_by_id(self, id_):
+        return self.fs.get_file_by_id(id_)

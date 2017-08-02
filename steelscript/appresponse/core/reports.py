@@ -314,9 +314,9 @@ class Report(object):
 
         for i, col in enumerate(result['columns']):
             if columns[col]['type'] == 'integer':
-                functions[i] = int
+                functions[i] = lambda x: None if x == 'NULL' else int(x)
             elif columns[col]['type'] in ('number', 'duration'):
-                functions[i] = float
+                functions[i] = lambda x: None if x == 'NULL' else float(x)
 
         # operate on each column, then zip back into list of tuples
         datacols = []

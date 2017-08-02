@@ -66,7 +66,7 @@ class DownloadApp(AppResponseApp):
                 (self.options.jobname is not None) +
                 (self.options.jobid is not None) +
                 (self.options.clipid is not None) != 1):
-            self.parser.error("Select one of --source-file, --job-name, "
+            self.parser.error("Select one of --source-file, --jobname, "
                               "--jobid, --clipid")
 
     def main(self):

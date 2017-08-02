@@ -29,7 +29,9 @@ class PacketsReportApp(AppResponseApp):
                               'i.e. file, clip or job')
         group.add_option('--sourceid',
                          dest='sourceid', default=None,
-                         help='ID of the source to run report against')
+                         help='ID of the source to run report against.'
+                              'If source is a capture job, use the name '
+                              'instead of the ID of the job.')
         group.add_option('--keycolumns',
                          dest='keycolumns',
                          default=None,
