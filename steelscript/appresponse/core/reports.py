@@ -17,7 +17,6 @@ from steelscript.appresponse.core.fs import File
 from steelscript.appresponse.core.capture import Job
 from steelscript.common._fs import SteelScriptDir
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -34,13 +33,17 @@ class Source(object):
 
 class PacketsSource(Source):
 
+    CLIP_PREFIX = 'clips/'
+    JOB_PREFIX = 'jobs/'
+    FILE_PREFIX = 'fs'
+
     def __init__(self, packets_obj):
         if isinstance(packets_obj, Clip):
-            path = 'clips/{}'.format(packets_obj.prop.id)
+            path = '{}{}'.format(self.CLIP_PREFIX, packets_obj.prop.id)
         elif isinstance(packets_obj, File):
-            path = 'fs{}'.format(packets_obj.prop.id)
+            path = '{}{}'.format(self.FILE_PREFIX, packets_obj.prop.id)
         elif isinstance(packets_obj, Job):
-            path = 'jobs/{}'.format(packets_obj.prop.id)
+            path = '{}{}'.format(self.JOB_PREFIX, packets_obj.prop.id)
         else:
             raise AppResponseException(
                 'Can only support job or clip or file packet source')
@@ -313,7 +316,7 @@ class Report(object):
         functions = [lambda x: x] * len(result['columns'])
 
         for i, col in enumerate(result['columns']):
-            if columns[col]['type'] == 'integer':
+            if columns[col]['type'] in ['integer', 'timestamp']:
                 functions[i] = lambda x: None if x == 'NULL' else int(x)
             elif columns[col]['type'] in ('number', 'duration'):
                 functions[i] = lambda x: None if x == 'NULL' else float(x)
