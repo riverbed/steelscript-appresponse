@@ -9,8 +9,8 @@ import logging
 from steelscript.appfwk.apps.datasource.models import \
     DatasourceTable, TableQueryBase, Column, TableField
 
-from steelscript.appfwk.apps.datasource.forms import (
-    fields_add_time_selection, DurationField)
+from steelscript.appfwk.apps.datasource.forms import \
+    fields_add_time_selection, DurationField
 
 from steelscript.appfwk.apps.jobs import QueryComplete
 
@@ -18,8 +18,8 @@ from steelscript.appfwk.apps.devices.devicemanager import DeviceManager
 from steelscript.appfwk.apps.devices.forms import fields_add_device_selection
 from steelscript.appfwk.libs.fields import Function
 from steelscript.appfwk.apps.datasource.forms import IDChoiceField
-from steelscript.appresponse.core.reports import (
-    PacketsSource, DataDef, Report)
+from steelscript.appresponse.core.reports import \
+    PacketsSource, DataDef, Report
 from steelscript.appresponse.core.types import Key, Value
 from steelscript.common.timeutils import datetime_to_seconds
 
@@ -31,7 +31,7 @@ APP_LABEL = 'steelscript.appresponse.appfwk'
 class AppResponseColumn(Column):
     class Meta:
         proxy = True
-        app_label = 'steelscript.appresponse.appfwk'
+        app_label = APP_LABEL
 
     COLUMN_OPTIONS = {'extractor': None}
 
@@ -137,7 +137,7 @@ class AppResponseQuery(TableQueryBase):
             else:
                 col_extractors.append(Value(col.options.extractor))
 
-        start = datetime_to_seconds(criteria.endtime - criteria.duration)
+        start = datetime_to_seconds(criteria.starttime)
         end = datetime_to_seconds(criteria.endtime)
 
         data_def = DataDef(source=source,
