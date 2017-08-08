@@ -152,5 +152,4 @@ class AppResponseQuery(TableQueryBase):
 
         df = report.get_dataframe()
         df.columns = map(lambda x: col_names[x], df.columns)
-        df.to_pickle('/tmp/data.pcl')
         return QueryComplete(df)
