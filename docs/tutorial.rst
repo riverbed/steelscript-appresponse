@@ -1,7 +1,7 @@
 .. py:currentmodule:: steelscript.appresponse.core
 
-Packets Report Tutorial
-=======================
+SteelScript AppResponse Packets Report Tutorial
+===============================================
 
 This tutorial will show you how to run a packets report against
 an AppResponse appliance using SteelScript for Python.
