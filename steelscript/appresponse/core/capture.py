@@ -96,7 +96,7 @@ class Job(object):
         logger.debug('Initialized Job object with data {}'.format(data))
 
     def __repr__(self):
-        return '<{0} {1} on MIFG {2}'.format(
+        return '<{0} {1} on MIFG {2}>'.format(
             self.__class__.__name__,
             self.name,
             self.datarep.data['config']['mifg_id']
@@ -105,6 +105,10 @@ class Job(object):
     @property
     def name(self):
         return self.datarep.data['config']['name']
+
+    @property
+    def status(self):
+        return self.prop.state.status.state
 
     def set(self):
         self.datarep.execute('set')
