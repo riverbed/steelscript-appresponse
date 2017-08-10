@@ -42,7 +42,7 @@ class UploadPcap(AppResponseApp):
         )
         print("File '{}' successfully uploaded."
               .format(self.options.filepath))
-        res = self.appresponse.fs.get_file_by_id(self.options.destname).prop
+        res = self.appresponse.fs.get_file_by_id(self.options.destname)
         print("The properties are {}".format(res))
 
 

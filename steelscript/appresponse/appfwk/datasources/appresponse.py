@@ -48,12 +48,12 @@ def appresponse_source_choices(form, id_, field_kwargs, params):
         choices = []
 
         for job in ar.capture.get_jobs():
-            if job.status == 'RUNNING':
+            if job.data.state.status.state == 'RUNNING':
                 choices.append((PacketsSource(job).path, job.prop.config.name))
 
         if params['include_files']:
             for f in ar.fs.get_files():
-                choices.append((PacketsSource(f).path, f.prop.id))
+                choices.append((PacketsSource(f).path, f.id))
 
     field_kwargs['label'] = 'Source'
     field_kwargs['choices'] = choices

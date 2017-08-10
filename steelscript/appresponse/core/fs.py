@@ -39,19 +39,25 @@ class FileSystemService(ServiceClass):
         for directory in resp.data['items']:
             if 'items' in directory['files']:
                 for file in directory['files']['items']:
-                    ret.append(self.get_file_by_id(file['id']))
+                    ret.append(File.create(data=file,
+                                           servicedef=self.servicedef))
         return ret
 
     def get_file_by_id(self, id_):
 
         logger.debug("Get file object with id {}".format(id_))
-        return File(self.servicedef.bind('file', id=id_))
+        resp = self.servicedef.bind('file', id=id_)
+        return File.create(data=resp.data, datarep=resp)
 
 
-class File(object):
+class File(DictObject):
 
-    def __init__(self, datarep):
-        self.datarep = datarep
-        data = self.datarep.execute('get').data
-        self.prop = DictObject.create_from_dict(data['file'])
-        logger.debug('Initialized File object with data {}'.format(data))
+    @classmethod
+    def create(cls, data, servicedef=None, datarep=None):
+        logger.debug('Creating File object with data {}'.format(data))
+        obj = DictObject.create_from_dict(data)
+        if not datarep:
+            obj.datarep = servicedef.bind('file', id=obj.id)
+        else:
+            obj.datarep = datarep
+        return File(obj)
