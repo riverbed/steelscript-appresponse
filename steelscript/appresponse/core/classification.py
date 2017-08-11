@@ -130,7 +130,7 @@ class HostGroup(ResourceObject):
 
     def __repr__(self):
         return '<%s id: %s, name: %s>'\
-               % (self.__class__.__name__, self.id, self.name)
+               % (self.__class__.__name__, self.data.id, self.data.name)
 
     def update(self, obj):
         """Update the HostGroup on an appresponse appliance.
@@ -141,7 +141,7 @@ class HostGroup(ResourceObject):
         """
 
         resp = self.datarep.execute('set', _data=obj)
-        return HostGroup(data=resp.data, datarep=resp)
+        self.data = DictObject.create_from_dict(resp.data)
 
     def delete(self):
         """Delete the HostGroup on the appresponse appliance."""

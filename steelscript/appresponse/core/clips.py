@@ -67,8 +67,7 @@ class ClipService(ServiceClass):
 
         resp = self.clips.execute('create', _data=data)
 
-        return Clip(data=resp.data, servicedef=self.servicedef,
-                    datarep=resp, from_job=from_job)
+        return Clip(data=resp.data, datarep=resp, from_job=from_job)
 
     def create_clips(self, data_defs):
         """Create a Clips object from a list of data definition requests.
