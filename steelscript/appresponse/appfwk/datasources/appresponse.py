@@ -53,7 +53,7 @@ def appresponse_source_choices(form, id_, field_kwargs, params):
 
         if params['include_files']:
             for f in ar.fs.get_files():
-                choices.append((PacketsSource(f).path, f.data.id))
+                choices.append((PacketsSource(f).path, f.id))
 
     field_kwargs['label'] = 'Source'
     field_kwargs['choices'] = choices

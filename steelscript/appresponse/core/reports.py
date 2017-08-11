@@ -9,7 +9,6 @@ import logging
 
 from collections import OrderedDict
 
-from steelscript.common.datastructures import DictObject
 from steelscript.appresponse.core.types import AppResponseException,\
     ServiceClass, TimeFilter, ResourceObject
 from steelscript.appresponse.core.clips import Clip
@@ -39,11 +38,11 @@ class PacketsSource(Source):
 
     def __init__(self, packets_obj):
         if isinstance(packets_obj, Clip):
-            path = '{}{}'.format(self.CLIP_PREFIX, packets_obj.data.id)
+            path = '{}{}'.format(self.CLIP_PREFIX, packets_obj.id)
         elif isinstance(packets_obj, File):
-            path = '{}{}'.format(self.FILE_PREFIX, packets_obj.data.id)
+            path = '{}{}'.format(self.FILE_PREFIX, packets_obj.id)
         elif isinstance(packets_obj, Job):
-            path = '{}{}'.format(self.JOB_PREFIX, packets_obj.data.id)
+            path = '{}{}'.format(self.JOB_PREFIX, packets_obj.id)
         else:
             raise AppResponseException(
                 'Can only support job or clip or file packet source')
@@ -198,7 +197,7 @@ class ReportInstance(ResourceObject):
     @property
     def status(self):
         logger.debug("Getting status of the report instance with id {}"
-                     .format(self.data.id))
+                     .format(self.id))
         return self.datarep.execute('get_status').data
 
     def get_data(self):

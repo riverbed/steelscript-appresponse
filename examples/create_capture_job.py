@@ -53,7 +53,7 @@ class PacketCaptureApp(AppResponseApp):
             headers = ['id', 'name', 'interfaces']
             data = []
             for mifg in self.appresponse.capture.get_mifgs():
-                data.append([mifg.data.id, mifg.data.config.name,
+                data.append([mifg.id, mifg.name,
                              mifg.data.config.interfaces])
 
             Formatter.print_table(data, headers)
@@ -63,11 +63,11 @@ class PacketCaptureApp(AppResponseApp):
                        'start', 'end', 'size']
             data = []
             for job in self.appresponse.capture.get_jobs():
-                data.append([job.data.id, job.name,
+                data.append([job.id, job.name,
                              job.data.config.mifg_id,
                              getattr(job.data.config, 'filter',
                                      dict(string=None))['string'],
-                             job.data.state.status.state,
+                             job.status,
                              job.data.state.status.packet_start_time,
                              job.data.state.status.packet_end_time,
                              job.data.state.status.capture_size])

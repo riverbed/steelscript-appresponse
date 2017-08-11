@@ -94,7 +94,7 @@ class HostGroupApp(AppResponseApp):
 
         if self.options.operation == 'show':
             headers = ['id', 'name', 'active', 'definition']
-            data = [[hg.data.id, hg.data.name, hg.data.enabled, hg.data.hosts]
+            data = [[hg.id, hg.name, hg.data.enabled, hg.data.hosts]
                     for hg in self.appresponse.classification.get_hostgroups()
                     ]
             Formatter.print_table(data, headers)
@@ -121,7 +121,7 @@ class HostGroupApp(AppResponseApp):
                                          else hg.data.hosts),
                                   enabled=enabled)
             hg.update(hgc)
-            print ("Successfully updated hostgroup '{}'".format(hg.data.name))
+            print ("Successfully updated hostgroup '{}'".format(hg.name))
 
         elif self.options.operation == 'upload':
             with open(self.options.file) as f:

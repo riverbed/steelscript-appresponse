@@ -55,7 +55,7 @@ class ClipService(ServiceClass):
          filter.
         """
 
-        config = dict(job_id=job.data.id,
+        config = dict(job_id=job.id,
                       start_time=timefilter.start,
                       end_time=timefilter.end,
                       description=description)
@@ -110,7 +110,7 @@ class Clips(object):
         for clip in self.clip_objs:
             if isinstance(clip, Clip) and clip.from_job:
                 logger.debug("Deleting Clip object with id {}"
-                             .format(clip.data.id))
+                             .format(clip.id))
                 clip.delete()
 
         self.clip_objs = None

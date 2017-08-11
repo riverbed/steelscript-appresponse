@@ -68,7 +68,7 @@ class CaptureJobService(ServiceClass):
         try:
             logger.debug("Obtaining Job object with id '{}'".format(id_))
             return (j for j in self.get_jobs()
-                    if j.data.id == id_).next()
+                    if j.id == id_).next()
 
         except StopIteration:
             raise AppResponseException(
@@ -89,7 +89,7 @@ class CaptureJobService(ServiceClass):
 
         resp = self.mifgs.execute('get')
 
-        return [Mifg(data=item, servicedef=self.servicedef)
+        return [MIFG(data=item, servicedef=self.servicedef)
                 for item in resp.data['items']]
 
 
@@ -103,10 +103,6 @@ class Job(ResourceObject):
             self.name,
             self.data.config.mifg_id
         )
-
-    @property
-    def name(self):
-        return self.data.config.name
 
     @property
     def status(self):
@@ -131,6 +127,6 @@ class Job(ResourceObject):
         return self.datarep.execute('get_stats').data
 
 
-class Mifg(ResourceObject):
+class MIFG(ResourceObject):
 
     resource = 'mifg'

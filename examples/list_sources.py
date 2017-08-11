@@ -30,7 +30,7 @@ class PacketCaptureApp(AppResponseApp):
                    'start_time', 'end_time', 'size']
         data = []
         for job in self.appresponse.capture.get_jobs():
-            data.append([job.data.id, job.name,
+            data.append([job.id, job.name,
                          job.data.config.mifg_id,
                          getattr(job.data.config, 'filter',
                                  dict(string=None))['string'],
@@ -45,7 +45,7 @@ class PacketCaptureApp(AppResponseApp):
         headers = ['id', 'job_id', 'start_time', 'end_time', 'filters']
         data = []
         for clip in self.appresponse.clips.get_clips():
-            data.append([clip.data.id, clip.data.config.job_id,
+            data.append([clip.id, clip.data.config.job_id,
                          clip.data.config.start_time,
                          clip.data.config.end_time,
                          getattr(clip.data.config, 'filters',
@@ -58,7 +58,7 @@ class PacketCaptureApp(AppResponseApp):
                    'size', 'created', 'modified']
         data = []
         for obj in self.appresponse.fs.get_files():
-            data.append([obj.data.type, obj.data.id, obj.data.link_type,
+            data.append([obj.data.type, obj.id, obj.data.link_type,
                          obj.data.format, obj.data.size,
                          obj.data.created, obj.data.modified])
         self.console('Uploaded Files/PCAPs', data, headers)

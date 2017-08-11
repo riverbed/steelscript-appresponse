@@ -74,7 +74,7 @@ class ClassificationService(ServiceClass):
     def get_hostgroup_by_name(self, name):
         try:
             return (hg for hg in self.get_hostgroups()
-                    if hg.data.name == name).next()
+                    if hg.name == name).next()
         except StopIteration:
             raise ValueError("No hostgroups found with name "
                              "'%s'." % name)
@@ -130,7 +130,7 @@ class HostGroup(ResourceObject):
 
     def __repr__(self):
         return '<%s id: %s, name: %s>'\
-               % (self.__class__.__name__, self.data.id, self.data.name)
+               % (self.__class__.__name__, self.id, self.name)
 
     def update(self, obj):
         """Update the HostGroup on an appresponse appliance.
