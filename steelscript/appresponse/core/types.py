@@ -7,6 +7,7 @@
 import logging
 
 from steelscript.common import timeutils
+from steelscript.common.datastructures import DictObject
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,32 @@ class InstanceDescriptorMixin(object):
         if hasattr(value, '__get__'):
             value = value.__get__(self, self.__class__)
         return value
+
+
+class ResourceObject(object):
+
+    resource = None
+
+    def __init__(self, data, servicedef=None, datarep=None):
+        logger.debug('Initialized {} object with data {}'
+                     .format(self.__class__.__name__, data))
+        self.data = DictObject.create_from_dict(data)
+        if not datarep:
+            self.datarep = servicedef.bind(self.resource, id=self.data.id)
+        else:
+            self.datarep = datarep
+
+    @property
+    def id(self):
+        return self.data.id
+
+    @property
+    def name(self):
+        if hasattr(self.data, 'name'):
+            return self.data.name
+        elif hasattr(self.data.config, 'name'):
+            return self.data.config.name
+        return self.id
 
 
 class Column(object):

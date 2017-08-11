@@ -6,8 +6,7 @@
 
 import logging
 
-from steelscript.common.datastructures import DictObject
-from steelscript.appresponse.core.types import ServiceClass
+from steelscript.appresponse.core.types import ServiceClass, ResourceObject
 from steelscript.appresponse.core.capture import Job
 
 logger = logging.getLogger(__name__)
@@ -38,24 +37,25 @@ class ClipService(ServiceClass):
 
         resp = self.clips.execute('get')
 
-        if not resp.data:
+        if 'items' not in resp.data:
             return []
 
-        return [self.get_clip_by_id(item['id'])
+        return [Clip(data=item, servicedef=self.servicedef)
                 for item in resp.data['items']]
 
     def get_clip_by_id(self, id_):
         """Return the Clip object given an id."""
 
         logger.debug("Getting clip object with id {}".format(id_))
-        return Clip(self.servicedef.bind('clip', id=id_))
+        resp = self.servicedef.bind('clip', id=id_)
+        return Clip(data=resp.data, datarep=resp)
 
     def create_clip(self, job, timefilter, description='', from_job=False):
         """Create a Clip object based on the packet capture job and time
          filter.
         """
 
-        config = dict(job_id=job.prop.id,
+        config = dict(job_id=job.id,
                       start_time=timefilter.start,
                       end_time=timefilter.end,
                       description=description)
@@ -67,7 +67,7 @@ class ClipService(ServiceClass):
 
         resp = self.clips.execute('create', _data=data)
 
-        return Clip(resp, from_job=from_job)
+        return Clip(data=resp.data, datarep=resp, from_job=from_job)
 
     def create_clips(self, data_defs):
         """Create a Clips object from a list of data definition requests.
@@ -83,7 +83,7 @@ class ClipService(ServiceClass):
             if isinstance(dd.source, Job):
                 logger.debug("Creating a Clip object for one data def request "
                              "with capture job '{}'"
-                             .format(dd.source.prop['config']['name']))
+                             .format(dd.source.name))
 
                 clip = self.create_clip(dd.source, dd.timefilter,
                                         from_job=True)
@@ -110,24 +110,19 @@ class Clips(object):
         for clip in self.clip_objs:
             if isinstance(clip, Clip) and clip.from_job:
                 logger.debug("Deleting Clip object with id {}"
-                             .format(clip.prop.id))
+                             .format(clip.id))
                 clip.delete()
 
         self.clip_objs = None
 
 
-class Clip(object):
+class Clip(ResourceObject):
 
-    def __init__(self, datarep, from_job=False):
+    resource = 'clip'
 
-        self.datarep = datarep
-        data = self.datarep.execute('get').data
-        self.prop = DictObject.create_from_dict(data)
+    def __init__(self, data, servicedef=None, datarep=None, from_job=False):
+        super(Clip, self).__init__(data, servicedef, datarep)
         self.from_job = from_job
-        logger.debug("Initialized Clip object with id {}"
-                     .format(self.prop.id))
 
     def delete(self):
         self.datarep.execute('delete')
-        self.prop = None
-        self.datarep = None

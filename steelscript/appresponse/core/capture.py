@@ -6,9 +6,8 @@
 
 import logging
 
-from steelscript.common.datastructures import DictObject
 from steelscript.appresponse.core.types import ServiceClass, \
-    AppResponseException
+    AppResponseException, ResourceObject
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +22,7 @@ class CaptureJobService(ServiceClass):
         self.settings = None
         self.phys_interfaces = None
         self.mifgs = None
+        self._job_objs = None
 
     def _bind_resources(self):
 
@@ -37,20 +37,23 @@ class CaptureJobService(ServiceClass):
 
     def get_jobs(self):
 
-        logger.debug("Getting info of capture jobs via resource "
-                     "'jobs' link 'get'...")
+        if not self._job_objs:
+            logger.debug("Getting info of capture jobs via resource "
+                         "'jobs' link 'get'...")
 
-        resp = self.jobs.execute('get')
+            resp = self.jobs.execute('get')
 
-        return [self.get_job_by_id(item['id'])
-                for item in resp.data['items']]
+            self._job_objs = [Job(data=item, servicedef=self.servicedef)
+                              for item in resp.data['items']]
+
+        return self._job_objs
 
     def create_job(self, config):
 
         logger.debug("Creating one capture job via resource "
                      "'jobs' link 'create' with data {}".format(config))
         resp = self.jobs.execute('create', _data=config)
-        return Job(resp)
+        return Job(data=resp.data, datarep=resp)
 
     def delete_jobs(self):
         return self.jobs.execute('bulk_delete')
@@ -62,14 +65,21 @@ class CaptureJobService(ServiceClass):
         return self.jobs.execute('bulk_stop')
 
     def get_job_by_id(self, id_):
-        return Job(self.servicedef.bind('job', id=id_))
+        try:
+            logger.debug("Obtaining Job object with id '{}'".format(id_))
+            return (j for j in self.get_jobs()
+                    if j.id == id_).next()
+
+        except StopIteration:
+            raise AppResponseException(
+                "No capture job found with ID '{}'".format(id_))
 
     def get_job_by_name(self, name):
 
         try:
             logger.debug("Obtaining Job object with name '{}'".format(name))
             return (j for j in self.get_jobs()
-                    if j.prop.config.name == name).next()
+                    if j.name == name).next()
 
         except StopIteration:
             raise AppResponseException(
@@ -79,36 +89,24 @@ class CaptureJobService(ServiceClass):
 
         resp = self.mifgs.execute('get')
 
-        return [self.get_mifg_by_id(item['id'])
+        return [MIFG(data=item, servicedef=self.servicedef)
                 for item in resp.data['items']]
 
-    def get_mifg_by_id(self, id_):
-        return MIFG(self.servicedef.bind('mifg', id=id_))
 
-
-class Job(object):
+class Job(ResourceObject):
     """This class manages single packet capture job."""
-
-    def __init__(self, datarep):
-        self.datarep = datarep
-        data = self.datarep.execute('get').data
-        self.prop = DictObject.create_from_dict(data)
-        logger.debug('Initialized Job object with data {}'.format(data))
+    resource = 'job'
 
     def __repr__(self):
         return '<{0} {1} on MIFG {2}>'.format(
             self.__class__.__name__,
             self.name,
-            self.datarep.data['config']['mifg_id']
+            self.data.config.mifg_id
         )
 
     @property
-    def name(self):
-        return self.datarep.data['config']['name']
-
-    @property
     def status(self):
-        return self.prop.state.status.state
+        return self.data.state.status.state
 
     def set(self):
         self.datarep.execute('set')
@@ -129,10 +127,6 @@ class Job(object):
         return self.datarep.execute('get_stats').data
 
 
-class MIFG(object):
+class MIFG(ResourceObject):
 
-    def __init__(self, datarep):
-        self.datarep = datarep
-        data = self.datarep.execute('get').data
-        self.prop = DictObject.create_from_dict(data)
-        logger.debug('Initialized MIFG object with data {}'.format(data))
+    resource = 'mifg'

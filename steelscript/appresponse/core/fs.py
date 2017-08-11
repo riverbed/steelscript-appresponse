@@ -6,8 +6,7 @@
 
 import logging
 
-from steelscript.common.datastructures import DictObject
-from steelscript.appresponse.core.types import ServiceClass
+from steelscript.appresponse.core.types import ServiceClass, ResourceObject
 
 logger = logging.getLogger(__name__)
 
@@ -39,19 +38,17 @@ class FileSystemService(ServiceClass):
         for directory in resp.data['items']:
             if 'items' in directory['files']:
                 for file in directory['files']['items']:
-                    ret.append(self.get_file_by_id(file['id']))
+                    ret.append(File(data=file,
+                                    servicedef=self.servicedef))
         return ret
 
     def get_file_by_id(self, id_):
 
         logger.debug("Get file object with id {}".format(id_))
-        return File(self.servicedef.bind('file', id=id_))
+        resp = self.servicedef.bind('file', id=id_)
+        return File(data=resp.data, datarep=resp)
 
 
-class File(object):
+class File(ResourceObject):
 
-    def __init__(self, datarep):
-        self.datarep = datarep
-        data = self.datarep.execute('get').data
-        self.prop = DictObject.create_from_dict(data['file'])
-        logger.debug('Initialized File object with data {}'.format(data))
+    resource = 'file'

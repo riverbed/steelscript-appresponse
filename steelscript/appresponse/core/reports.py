@@ -9,9 +9,8 @@ import logging
 
 from collections import OrderedDict
 
-from steelscript.common.datastructures import DictObject
 from steelscript.appresponse.core.types import AppResponseException,\
-    ServiceClass, TimeFilter
+    ServiceClass, TimeFilter, ResourceObject
 from steelscript.appresponse.core.clips import Clip
 from steelscript.appresponse.core.fs import File
 from steelscript.appresponse.core.capture import Job
@@ -39,11 +38,11 @@ class PacketsSource(Source):
 
     def __init__(self, packets_obj):
         if isinstance(packets_obj, Clip):
-            path = '{}{}'.format(self.CLIP_PREFIX, packets_obj.prop.id)
+            path = '{}{}'.format(self.CLIP_PREFIX, packets_obj.id)
         elif isinstance(packets_obj, File):
-            path = '{}{}'.format(self.FILE_PREFIX, packets_obj.prop.id)
+            path = '{}{}'.format(self.FILE_PREFIX, packets_obj.id)
         elif isinstance(packets_obj, Job):
-            path = '{}{}'.format(self.JOB_PREFIX, packets_obj.prop.id)
+            path = '{}{}'.format(self.JOB_PREFIX, packets_obj.id)
         else:
             raise AppResponseException(
                 'Can only support job or clip or file packet source')
@@ -82,7 +81,7 @@ class ProbeReportService(ServiceClass):
 
         columns_file = ss_dir.get_data(columns_filename)
         if not columns_file.data:
-            self._columns = self.get_columns()
+            self._columns = self._fetch_columns()
             columns_file.data = self._columns
             columns_file.write()
             logger.debug("Wrote columns data into %s" % columns_filename)
@@ -93,13 +92,11 @@ class ProbeReportService(ServiceClass):
 
     @property
     def columns(self):
-        if self._columns:
-            return self._columns
-
-        self._load_columns()
+        if not self._columns:
+            self._load_columns()
         return self._columns
 
-    def get_columns(self):
+    def _fetch_columns(self):
         """Return an ordered dict representing all the columns."""
 
         logger.debug("Obtaining source columns via resource 'source_columns' "
@@ -109,6 +106,9 @@ class ProbeReportService(ServiceClass):
 
         # Create a ordered dict
         return OrderedDict(sorted(zip(map(lambda x: x['id'], cols), cols)))
+
+    def get_columns(self):
+        return self.columns
 
     def get_column_names(self):
         """Return a list of column names."""
@@ -135,8 +135,9 @@ class ProbeReportService(ServiceClass):
             config = dict(data_defs=[dd.to_dict() for dd in data_defs])
             logger.debug("Creating instance with data definitions %s" % config)
 
-            instance = ReportInstance(
-                self.instances.execute('create', _data=config))
+            resp = self.instances.execute('create', _data=config)
+
+            instance = ReportInstance(data=resp.data, datarep=resp)
 
             while not instance.is_complete():
                 time.sleep(1)
@@ -152,8 +153,11 @@ class ProbeReportService(ServiceClass):
 
         resp = self.instances.execute('get')
 
-        return [ReportInstance(self.get_instance_by_id(instance['id'])
-                for instance in resp.data['items'])]
+        if 'items' not in resp.data:
+            return []
+
+        return [ReportInstance(data=item, servicedef=self.servicedef)
+                for item in resp.data['items']]
 
     def bulk_delete(self):
         self.instances.execute('bulk_delete')
@@ -162,15 +166,16 @@ class ProbeReportService(ServiceClass):
         """Return the report instance given the id."""
 
         resp = self.instances.execute(id=id_)
-        return ReportInstance(resp)
+        return ReportInstance(data=resp.data, datarep=resp)
 
 
-class ReportInstance(object):
+class ReportInstance(ResourceObject):
     """Main interface to interact with a probe report instance. """
-    def __init__(self, datarep):
-        self.datarep = datarep
-        data = self.datarep.execute('get').data
-        self.prop = DictObject.create_from_dict(data)
+
+    resource = 'instance'
+
+    def __init__(self, data, servicedef=None, datarep=None):
+        super(ReportInstance, self).__init__(data, servicedef, datarep)
         self.errors = []
 
     def is_complete(self):
@@ -192,7 +197,7 @@ class ReportInstance(object):
     @property
     def status(self):
         logger.debug("Getting status of the report instance with id {}"
-                     .format(self.prop.id))
+                     .format(self.id))
         return self.datarep.execute('get_status').data
 
     def get_data(self):
