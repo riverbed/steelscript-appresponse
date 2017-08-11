@@ -6,8 +6,7 @@
 
 import logging
 
-from steelscript.common.datastructures import DictObject
-from steelscript.appresponse.core.types import ServiceClass
+from steelscript.appresponse.core.types import ServiceClass, ResourceObject
 from steelscript.appresponse.core.capture import Job
 
 logger = logging.getLogger(__name__)
@@ -41,21 +40,22 @@ class ClipService(ServiceClass):
         if 'items' not in resp.data:
             return []
 
-        return [Clip.create(item, self.servicedef)
+        return [Clip(data=item, servicedef=self.servicedef)
                 for item in resp.data['items']]
 
     def get_clip_by_id(self, id_):
         """Return the Clip object given an id."""
 
         logger.debug("Getting clip object with id {}".format(id_))
-        return Clip(self.servicedef.bind('clip', id=id_))
+        resp = self.servicedef.bind('clip', id=id_)
+        return Clip(data=resp.data, datarep=resp)
 
     def create_clip(self, job, timefilter, description='', from_job=False):
         """Create a Clip object based on the packet capture job and time
          filter.
         """
 
-        config = dict(job_id=job.id,
+        config = dict(job_id=job.data.id,
                       start_time=timefilter.start,
                       end_time=timefilter.end,
                       description=description)
@@ -67,8 +67,8 @@ class ClipService(ServiceClass):
 
         resp = self.clips.execute('create', _data=data)
 
-        return Clip.create(data=resp.data, servicedef=self.servicedef,
-                           datarep=resp, from_job=from_job)
+        return Clip(data=resp.data, servicedef=self.servicedef,
+                    datarep=resp, from_job=from_job)
 
     def create_clips(self, data_defs):
         """Create a Clips object from a list of data definition requests.
@@ -111,24 +111,19 @@ class Clips(object):
         for clip in self.clip_objs:
             if isinstance(clip, Clip) and clip.from_job:
                 logger.debug("Deleting Clip object with id {}"
-                             .format(clip.id))
+                             .format(clip.data.id))
                 clip.delete()
 
         self.clip_objs = None
 
 
-class Clip(DictObject):
+class Clip(ResourceObject):
 
-    @classmethod
-    def create(cls, data, servicedef, datarep=None, from_job=False):
-        logger.debug('Creating Clip object with data {}'.format(data))
-        obj = DictObject.create_from_dict(data)
-        if not datarep:
-            obj.datarep = servicedef.bind('clip', id=obj.id)
-        else:
-            obj.datarep = datarep
-        obj.from_job = from_job
-        return Clip(obj)
+    resource = 'clip'
+
+    def __init__(self, data, servicedef=None, datarep=None, from_job=False):
+        super(Clip, self).__init__(data, servicedef, datarep)
+        self.from_job = from_job
 
     def delete(self):
         self.datarep.execute('delete')

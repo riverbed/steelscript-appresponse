@@ -32,7 +32,7 @@ p.add_column('udp_traffic', 'UDP Traffic', datatype='integer',
              extractor='sum_udp.total_bytes')
 report.add_widget(c3.TimeSeriesWidget, p, "Traffic By Type (Bytes)", width=12)
 
-p = AppResponseTable.create(name='Packet Traffic', rows=100)
+p = AppResponseTable.create(name='Packet Traffic', rows=100, include_files=True)
 
 p.add_column('ip_src', label='Source IP', iskey=True, extractor='src_ip.addr',
              datatype='string')

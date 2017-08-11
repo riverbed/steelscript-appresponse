@@ -11,7 +11,7 @@ from collections import OrderedDict
 
 from steelscript.common.datastructures import DictObject
 from steelscript.appresponse.core.types import AppResponseException,\
-    ServiceClass, TimeFilter
+    ServiceClass, TimeFilter, ResourceObject
 from steelscript.appresponse.core.clips import Clip
 from steelscript.appresponse.core.fs import File
 from steelscript.appresponse.core.capture import Job
@@ -39,11 +39,11 @@ class PacketsSource(Source):
 
     def __init__(self, packets_obj):
         if isinstance(packets_obj, Clip):
-            path = '{}{}'.format(self.CLIP_PREFIX, packets_obj.id)
+            path = '{}{}'.format(self.CLIP_PREFIX, packets_obj.data.id)
         elif isinstance(packets_obj, File):
-            path = '{}{}'.format(self.FILE_PREFIX, packets_obj.id)
+            path = '{}{}'.format(self.FILE_PREFIX, packets_obj.data.id)
         elif isinstance(packets_obj, Job):
-            path = '{}{}'.format(self.JOB_PREFIX, packets_obj.id)
+            path = '{}{}'.format(self.JOB_PREFIX, packets_obj.data.id)
         else:
             raise AppResponseException(
                 'Can only support job or clip or file packet source')
@@ -138,7 +138,7 @@ class ProbeReportService(ServiceClass):
 
             resp = self.instances.execute('create', _data=config)
 
-            instance = ReportInstance.create(data=resp.data, datarep=resp)
+            instance = ReportInstance(data=resp.data, datarep=resp)
 
             while not instance.is_complete():
                 time.sleep(1)
@@ -157,7 +157,7 @@ class ProbeReportService(ServiceClass):
         if 'items' not in resp.data:
             return []
 
-        return [ReportInstance.create(data=item, servicedef=self.servicedef)
+        return [ReportInstance(data=item, servicedef=self.servicedef)
                 for item in resp.data['items']]
 
     def bulk_delete(self):
@@ -167,21 +167,17 @@ class ProbeReportService(ServiceClass):
         """Return the report instance given the id."""
 
         resp = self.instances.execute(id=id_)
-        return ReportInstance.create(data=resp.data, datarep=resp)
+        return ReportInstance(data=resp.data, datarep=resp)
 
 
-class ReportInstance(DictObject):
+class ReportInstance(ResourceObject):
     """Main interface to interact with a probe report instance. """
 
-    @classmethod
-    def create(cls, data, servicedef=None, datarep=None):
-        obj = DictObject.create_from_dict(data)
-        if not datarep:
-            obj.datarep = servicedef.bind('instance', id=obj.id)
-        else:
-            obj.datarep = datarep
-        obj.errors = []
-        return ReportInstance(obj)
+    resource = 'instance'
+
+    def __init__(self, data, servicedef=None, datarep=None):
+        super(ReportInstance, self).__init__(data, servicedef, datarep)
+        self.errors = []
 
     def is_complete(self):
 
@@ -202,7 +198,7 @@ class ReportInstance(DictObject):
     @property
     def status(self):
         logger.debug("Getting status of the report instance with id {}"
-                     .format(self.id))
+                     .format(self.data.id))
         return self.datarep.execute('get_status').data
 
     def get_data(self):

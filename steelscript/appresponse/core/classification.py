@@ -7,7 +7,7 @@
 import logging
 
 from steelscript.common.datastructures import DictObject
-from steelscript.appresponse.core.types import ServiceClass
+from steelscript.appresponse.core.types import ServiceClass, ResourceObject
 from steelscript.common.exceptions import RvbdHTTPException
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class ClassificationService(ServiceClass):
 
         if 'items' in resp.data:
 
-            return [HostGroup.create(data=item, servicedef=self.servicedef)
+            return [HostGroup(data=item, servicedef=self.servicedef)
                     for item in resp.data['items']]
 
         return []
@@ -66,7 +66,7 @@ class ClassificationService(ServiceClass):
     def get_hostgroup_by_id(self, id_):
         try:
             resp = self.servicedef.bind('hostgroup', id=id_)
-            return HostGroup.create(data=resp.data, datarep=resp)
+            return HostGroup(data=resp.data, datarep=resp)
         except RvbdHTTPException, e:
             if str(e).startswith('404'):
                 raise ValueError('No hostgroup found with id %s' % id_)
@@ -74,7 +74,7 @@ class ClassificationService(ServiceClass):
     def get_hostgroup_by_name(self, name):
         try:
             return (hg for hg in self.get_hostgroups()
-                    if hg.name == name).next()
+                    if hg.data.name == name).next()
         except StopIteration:
             raise ValueError("No hostgroups found with name "
                              "'%s'." % name)
@@ -87,7 +87,7 @@ class ClassificationService(ServiceClass):
         """
 
         resp = self.hostgroups.execute('create', _data=obj)
-        return HostGroup.create(data=resp.data, datarep=resp)
+        return HostGroup(data=resp.data, datarep=resp)
 
     def create_hostgroups(self, objs):
         """Create multiple hostgroup objects in one go.
@@ -98,14 +98,14 @@ class ClassificationService(ServiceClass):
 
         resp = self.hostgroups.execute('bulk_create', _data=dict(items=objs))
 
-        return [HostGroup.create(data=item, servicedef=self.servicedef)
+        return [HostGroup(data=item, servicedef=self.servicedef)
                 for item in resp.data['items']]
 
     def hierarchy_hostgroups(self, objs):
 
         resp = self.hostgroups.execute('bulk_hierarchy',
                                        _data=dict(items=objs))
-        return [HostGroup.create(data=item, servicedef=self.servicedef)
+        return [HostGroup(data=item, servicedef=self.servicedef)
                 for item in resp.data['items']]
 
     def bulk_delete(self, ids=None):
@@ -122,19 +122,11 @@ class ClassificationService(ServiceClass):
         self.hostgroups.execute('bulk_delete', _data=data)
 
 
-class HostGroup(DictObject):
+class HostGroup(ResourceObject):
     """This class provides an interface to interact with one hostgroup
     on an appresponse appliance.
     """
-    @classmethod
-    def create(cls, data, servicedef=None, datarep=None):
-        logger.debug('Creating HostGroup object with data {}'.format(data))
-        obj = DictObject.create_from_dict(data)
-        if not datarep:
-            obj.datarep = servicedef.bind('hostgroup', id=obj.id)
-        else:
-            obj.datarep = datarep
-        return HostGroup(obj)
+    resource = 'hostgroup'
 
     def __repr__(self):
         return '<%s id: %s, name: %s>'\
@@ -149,7 +141,7 @@ class HostGroup(DictObject):
         """
 
         resp = self.datarep.execute('set', _data=obj)
-        return HostGroup.create(data=resp.data, datarep=resp)
+        return HostGroup(data=resp.data, datarep=resp)
 
     def delete(self):
         """Delete the HostGroup on the appresponse appliance."""

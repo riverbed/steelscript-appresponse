@@ -6,9 +6,8 @@
 
 import logging
 
-from steelscript.common.datastructures import DictObject
 from steelscript.appresponse.core.types import ServiceClass, \
-    AppResponseException
+    AppResponseException, ResourceObject
 
 logger = logging.getLogger(__name__)
 
@@ -38,17 +37,13 @@ class CaptureJobService(ServiceClass):
 
     def get_jobs(self):
 
-        return self.job_objs
-
-    @property
-    def job_objs(self):
         if not self._job_objs:
             logger.debug("Getting info of capture jobs via resource "
                          "'jobs' link 'get'...")
 
             resp = self.jobs.execute('get')
 
-            self._job_objs = [Job.create(data=item, servicedef=self.servicedef)
+            self._job_objs = [Job(data=item, servicedef=self.servicedef)
                               for item in resp.data['items']]
 
         return self._job_objs
@@ -58,7 +53,7 @@ class CaptureJobService(ServiceClass):
         logger.debug("Creating one capture job via resource "
                      "'jobs' link 'create' with data {}".format(config))
         resp = self.jobs.execute('create', _data=config)
-        return Job.create(self.servicedef, resp.data)
+        return Job(data=resp.data, datarep=resp)
 
     def delete_jobs(self):
         return self.jobs.execute('bulk_delete')
@@ -72,8 +67,8 @@ class CaptureJobService(ServiceClass):
     def get_job_by_id(self, id_):
         try:
             logger.debug("Obtaining Job object with id '{}'".format(id_))
-            return (j for j in self.job_objs
-                    if j.id == id_).next()
+            return (j for j in self.get_jobs()
+                    if j.data.id == id_).next()
 
         except StopIteration:
             raise AppResponseException(
@@ -83,8 +78,8 @@ class CaptureJobService(ServiceClass):
 
         try:
             logger.debug("Obtaining Job object with name '{}'".format(name))
-            return (j for j in self.job_objs
-                    if j.config.name == name).next()
+            return (j for j in self.get_jobs()
+                    if j.name == name).next()
 
         except StopIteration:
             raise AppResponseException(
@@ -94,37 +89,28 @@ class CaptureJobService(ServiceClass):
 
         resp = self.mifgs.execute('get')
 
-        return [MIFG.create(self.servicedef, item)
+        return [Mifg(data=item, servicedef=self.servicedef)
                 for item in resp.data['items']]
 
 
-class Job(DictObject):
+class Job(ResourceObject):
     """This class manages single packet capture job."""
-
-    @classmethod
-    def create(cls, data, servicedef, datarep=None):
-        logger.debug('Initialized Job object with data {}'.format(data))
-        obj = DictObject.create_from_dict(data)
-        if not datarep:
-            obj.datarep = servicedef.bind('job', id=obj.id)
-        else:
-            obj.datarep = datarep
-        return Job(obj)
+    resource = 'job'
 
     def __repr__(self):
         return '<{0} {1} on MIFG {2}>'.format(
             self.__class__.__name__,
             self.name,
-            self.config.mifg_id
+            self.data.config.mifg_id
         )
 
     @property
     def name(self):
-        return self.config.name
+        return self.data.config.name
 
     @property
     def status(self):
-        return self.prop.state.status.state
+        return self.data.state.status.state
 
     def set(self):
         self.datarep.execute('set')
@@ -145,12 +131,6 @@ class Job(DictObject):
         return self.datarep.execute('get_stats').data
 
 
-class MIFG(DictObject):
+class Mifg(ResourceObject):
 
-    @classmethod
-    def create(cls, servicedef, data):
-        data['datarep'] = None
-        logger.debug('Initialized MIFG object with data {}'.format(data))
-        obj = DictObject.create_from_dict(data)
-        obj.datarep = servicedef.bind('mifg', id=obj.id)
-        return MIFG(obj)
+    resource = 'mifg'
