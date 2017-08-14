@@ -149,7 +149,7 @@ class AppResponseQuery(TableQueryBase):
             else:
                 col_extractors.append(Value(col.options.extractor))
 
-        # If the data source if of file type and entire PCAP
+        # If the data source is of file type and entire PCAP
         # is set True, then set start end times to None
 
         if isinstance(source, File) and criteria.entire_pcap:
