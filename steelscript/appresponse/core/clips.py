@@ -89,7 +89,7 @@ class ClipService(ServiceClass):
                 clip = self.create_clip(dd.source, dd.timefilter,
                                         from_job=True)
                 if clip.data.status.packets_written == 0:
-                    msg = ('Found no packets in storage for job {} and {}'
+                    msg = ('No packets found for job {} and {}'
                            .format(dd.source.name, dd.timefilter))
                     raise AppResponseException(msg)
 
