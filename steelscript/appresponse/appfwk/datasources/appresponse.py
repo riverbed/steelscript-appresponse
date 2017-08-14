@@ -6,6 +6,8 @@
 
 import logging
 
+from django import forms
+
 from steelscript.appfwk.apps.datasource.models import \
     DatasourceTable, TableQueryBase, Column, TableField
 
@@ -22,6 +24,7 @@ from steelscript.appresponse.core.reports import \
     PacketsSource, DataDef, Report
 from steelscript.appresponse.core.types import Key, Value
 from steelscript.common.timeutils import datetime_to_seconds
+from steelscript.appresponse.core.fs import File
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +84,8 @@ class AppResponseTable(DatasourceTable):
     _column_class = 'AppResponseColumn'
     _query_class = 'AppResponseQuery'
 
-    TABLE_OPTIONS = {'include_files': False}
+    TABLE_OPTIONS = {'include_files': False,
+                     'show_entire_pcap': True}
 
     FIELD_OPTIONS = {'duration': '1m',
                      'granularity': '1s'}
@@ -111,6 +115,13 @@ class AppResponseTable(DatasourceTable):
 
         fields_add_granularity(self, initial=field_options['granularity'])
 
+        if self.options.show_entire_pcap:
+            TableField.create(keyword='entire_pcap', obj=self,
+                              field_cls=forms.BooleanField,
+                              label='Entire PCAP',
+                              initial=True,
+                              required=False)
+
 
 class AppResponseQuery(TableQueryBase):
 
@@ -138,8 +149,15 @@ class AppResponseQuery(TableQueryBase):
             else:
                 col_extractors.append(Value(col.options.extractor))
 
-        start = datetime_to_seconds(criteria.starttime)
-        end = datetime_to_seconds(criteria.endtime)
+        # If the data source if of file type and entire PCAP
+        # is set True, then set start end times to None
+
+        if isinstance(source, File) and criteria.entire_pcap:
+            start = None
+            end = None
+        else:
+            start = datetime_to_seconds(criteria.starttime)
+            end = datetime_to_seconds(criteria.endtime)
 
         data_def = DataDef(source=source,
                            columns=col_extractors,
