@@ -6,7 +6,8 @@
 
 import logging
 
-from steelscript.appresponse.core.types import ServiceClass, ResourceObject
+from steelscript.appresponse.core.types import ServiceClass, ResourceObject, \
+    AppResponseException
 from steelscript.appresponse.core.capture import Job
 
 logger = logging.getLogger(__name__)
@@ -87,6 +88,11 @@ class ClipService(ServiceClass):
 
                 clip = self.create_clip(dd.source, dd.timefilter,
                                         from_job=True)
+                if clip.data.status.packets_written == 0:
+                    msg = ('Found no packets in storage for job {} and {}'
+                           .format(dd.source.name, dd.timefilter))
+                    raise AppResponseException(msg)
+
                 clips.append(clip)
             else:
                 clips.append(dd.source)
