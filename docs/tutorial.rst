@@ -44,7 +44,7 @@ Once in the python shell, let's create an AppReponse object:
 
 .. code-block:: python
 
-   >>> from steelscript.appresponse.core import AppResponse
+   >>> from steelscript.appresponse.core.appresponse import AppResponse
    >>> from steelscript.common import UserAuth
 
    >>> ar = AppResponse('$host', auth=UserAuth('$username', '$password'))
