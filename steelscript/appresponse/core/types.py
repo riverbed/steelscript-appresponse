@@ -119,11 +119,13 @@ class TrafficFilter(object):
             raise AppResponseException(msg)
 
         if type_ and type_.upper() not in self.valid_types:
-            msg = 'Traffic filter type needs to be one of {}'.format(self.valid_types)
+            msg = ('Traffic filter type needs to be one of {}'
+                   .format(self.valid_types))
             raise AppResponseException(msg)
 
         if context and context.upper() not in self.valid_contexts:
-            msg = 'Traffic filter context needs to be one of {}'.format(self.valid_contexts)
+            msg = ('Traffic filter context needs to be one of {}'
+                   .format(self.valid_contexts))
             raise AppResponseException(msg)
 
         if type_.upper() == 'WIRESHARK' and not id_:
