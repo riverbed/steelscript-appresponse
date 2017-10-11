@@ -357,7 +357,10 @@ class Report(object):
 
             for i, res in enumerate(results):
                 self._data_defs[i].columns = res['columns']
-                self._data_defs[i].data = self._cast_number(res)
+                if 'data' in res:
+                    self._data_defs[i].data = self._cast_number(res)
+                else:
+                    self._data_defs[i].data = []
                 logger.debug("Obtained {} records for the {}th data request."
                              .format(len(self._data_defs[i].data), i))
 

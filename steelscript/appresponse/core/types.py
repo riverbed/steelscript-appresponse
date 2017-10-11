@@ -126,7 +126,14 @@ class TrafficFilter(object):
             msg = 'Traffic filter context needs to be one of {}'.format(self.valid_contexts)
             raise AppResponseException(msg)
 
-        self.id = id_
+        if type_.upper() == 'WIRESHARK' and not id_:
+            # Wireshark filters are checked via ID to ensure they are
+            # identical across multiple data defs within one report instance.
+            # Use value as the ID if no id is provided to distinguish between
+            # other wireshark filters in the same data def
+            self.id = value
+        else:
+            self.id = id_
         self.type = type_.upper() if type_ else None
         self.value = value
         self.context = context.upper() if context else None
