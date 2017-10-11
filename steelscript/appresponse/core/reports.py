@@ -252,6 +252,7 @@ class DataDef(object):
         self.resolution = resolution
         self.timefilter = TimeFilter(start=start, end=end,
                                      duration=duration, time_range=time_range)
+        self._filters = []
         self._data = None
 
     def to_dict(self):
@@ -271,7 +272,17 @@ class DataDef(object):
 
         data_def['columns'] = [col.name for col in self.columns]
 
+        if self._filters:
+            data_def['filters'] = self._filters
+
         return data_def
+
+    def add_filter(self, filter):
+        """Add one traffic filter to the data def.
+
+        :param filter: types.TrafficFilter object
+        """
+        self._filters.append(filter.as_dict())
 
     @property
     def data(self):

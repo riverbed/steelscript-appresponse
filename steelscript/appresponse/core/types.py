@@ -98,6 +98,50 @@ class Value(Column):
         super(Value, self).__init__(name, key=False)
 
 
+class TrafficFilter(object):
+
+    valid_types = ['STEELFILTER', 'WIRESHARK', 'BPF']
+    valid_contexts = ['NONE', 'INTERNAL', 'USER', 'DRILL_DOWN']
+
+    def __init__(self, id_=None, type_=None, value=None, context=None):
+        """Initialize a TrafficFilter object.
+
+        :param id: string, ID of the filter, optional
+        :param type: string, 'STEELFILTER' or 'WIRESHARK' or 'BPF', defaults
+            to 'STEELFILTER'
+        :param value: string, the actual filter expression
+        :param context: string, optional, 'NONE', 'INTERNAL',
+        'USER', 'DRILL_DOWN'
+
+        """
+        if not value:
+            msg = 'Traffic filter expression required.'
+            raise AppResponseException(msg)
+
+        if type_ and type_.upper() not in self.valid_types:
+            msg = 'Traffic filter type needs to be one of {}'.format(self.valid_types)
+            raise AppResponseException(msg)
+
+        if context and context.upper() not in self.valid_contexts:
+            msg = 'Traffic filter context needs to be one of {}'.format(self.valid_contexts)
+            raise AppResponseException(msg)
+
+        self.id = id_
+        self.type = type_.upper() if type_ else None
+        self.value = value
+        self.context = context.upper() if context else None
+
+    def as_dict(self):
+        """Convert the object into dictionary"""
+
+        ret = {}
+        for k in ['id', 'type', 'value', 'context']:
+            v = getattr(self, k, None)
+            if v:
+                ret[k] = v
+        return ret
+
+
 class TimeFilter(object):
 
     def __init__(self, start=None, end=None, duration=None, time_range=None):
