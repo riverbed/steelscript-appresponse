@@ -101,17 +101,17 @@ class Value(Column):
 class TrafficFilter(object):
 
     valid_types = ['STEELFILTER', 'WIRESHARK', 'BPF']
-    valid_contexts = ['NONE', 'INTERNAL', 'USER', 'DRILL_DOWN']
 
-    def __init__(self, id_=None, type_=None, value=None, context=None):
+    def __init__(self, value, type_=None, id_=None):
         """Initialize a TrafficFilter object.
 
-        :param id: string, ID of the filter, optional
-        :param type: string, 'STEELFILTER' or 'WIRESHARK' or 'BPF', defaults
-            to 'STEELFILTER'
         :param value: string, the actual filter expression
-        :param context: string, optional, 'NONE', 'INTERNAL',
-        'USER', 'DRILL_DOWN'
+        :param type_: string, 'STEELFILTER' or 'WIRESHARK' or 'BPF', defaults
+            to 'STEELFILTER'
+            example STEELFILTER expression: ip.addr==1.2.3.4
+            example WIRESHARK expression: ip.addr==1.2.3.4
+            example BPF expression: host 1.2.3.4
+        :param id_: string, ID of the filter, optional
 
         """
         if not value:
@@ -123,12 +123,7 @@ class TrafficFilter(object):
                    .format(self.valid_types))
             raise AppResponseException(msg)
 
-        if context and context.upper() not in self.valid_contexts:
-            msg = ('Traffic filter context needs to be one of {}'
-                   .format(self.valid_contexts))
-            raise AppResponseException(msg)
-
-        if type_.upper() == 'WIRESHARK' and not id_:
+        if type_ and type_.upper() == 'WIRESHARK' and not id_:
             # Wireshark filters are checked via ID to ensure they are
             # identical across multiple data defs within one report instance.
             # Use value as the ID if no id is provided to distinguish between
@@ -138,13 +133,12 @@ class TrafficFilter(object):
             self.id = id_
         self.type = type_.upper() if type_ else None
         self.value = value
-        self.context = context.upper() if context else None
 
     def as_dict(self):
         """Convert the object into dictionary"""
 
         ret = {}
-        for k in ['id', 'type', 'value', 'context']:
+        for k in ['id', 'type', 'value']:
             v = getattr(self, k, None)
             if v:
                 ret[k] = v
