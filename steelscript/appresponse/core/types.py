@@ -98,6 +98,57 @@ class Value(Column):
         super(Value, self).__init__(name, key=False)
 
 
+class TrafficFilter(object):
+
+    valid_types = ['STEELFILTER', 'WIRESHARK', 'BPF']
+
+    def __init__(self, value, type_=None, id_=None):
+        """Initialize a TrafficFilter object.
+
+        :param value: string, the actual filter expression
+        :param type_: string, 'STEELFILTER' or 'WIRESHARK' or 'BPF', defaults
+            to 'STEELFILTER'
+
+            example STEELFILTER expression:
+                ip.addr==1.2.3.4 OR ip.addr==1.1.1.1
+
+            example WIRESHARK expression: ip.addr==1.2.3.4 or ip.addr==1.1.1.1
+
+            example BPF expression: host 1.2.3.4 or host 1.1.1.1
+        :param id_: string, ID of the filter, optional
+
+        """
+        if not value:
+            msg = 'Traffic filter expression required.'
+            raise AppResponseException(msg)
+
+        if type_ and type_.upper() not in self.valid_types:
+            msg = ('Traffic filter type needs to be one of {}'
+                   .format(self.valid_types))
+            raise AppResponseException(msg)
+
+        if type_ and type_.upper() == 'WIRESHARK' and not id_:
+            # Wireshark filters are checked via ID to ensure they are
+            # identical across multiple data defs within one report instance.
+            # Use value as the ID if no id is provided to distinguish between
+            # other wireshark filters in the same data def
+            self.id = value
+        else:
+            self.id = id_
+        self.type = type_.upper() if type_ else None
+        self.value = value
+
+    def as_dict(self):
+        """Convert the object into dictionary"""
+
+        ret = {}
+        for k in ['id', 'type', 'value']:
+            v = getattr(self, k, None)
+            if v:
+                ret[k] = v
+        return ret
+
+
 class TimeFilter(object):
 
     def __init__(self, start=None, end=None, duration=None, time_range=None):

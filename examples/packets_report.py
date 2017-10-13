@@ -13,7 +13,7 @@ AppResponse 11 appliance.
 import optparse
 
 from steelscript.appresponse.core.app import AppResponseApp
-from steelscript.appresponse.core.types import Key, Value
+from steelscript.appresponse.core.types import Key, Value, TrafficFilter
 from steelscript.appresponse.core.reports import DataDef, Report
 from steelscript.common.datautils import Formatter
 
@@ -55,6 +55,12 @@ class PacketsReportApp(AppResponseApp):
         group.add_option('--resolution', dest='resolution',
                          help='Additional granularity in seconds to tell the '
                               'data source to aggregate further.')
+        group.add_option('--filtertype', dest='filtertype',
+                         help="Traffic filter type, needs to be one of "
+                              "'steelfilter', 'wireshark', 'bpf', defaults"
+                              " to 'steelfilter'")
+        group.add_option('--filterexpr', dest='filterexpr',
+                         help="Traffic filter expression")
         parser.add_option_group(group)
 
         group = optparse.OptionGroup(parser, "Output Options")
@@ -107,6 +113,10 @@ class PacketsReportApp(AppResponseApp):
                            granularity=self.options.granularity,
                            resolution=self.options.resolution,
                            time_range=self.options.timerange)
+
+        if self.options.filterexpr:
+            data_def.add_filter(TrafficFilter(type_=self.options.filtertype,
+                                              value=self.options.filterexpr))
 
         report = Report(self.appresponse)
         report.add(data_def)
