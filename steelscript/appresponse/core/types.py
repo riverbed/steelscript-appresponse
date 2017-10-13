@@ -108,9 +108,13 @@ class TrafficFilter(object):
         :param value: string, the actual filter expression
         :param type_: string, 'STEELFILTER' or 'WIRESHARK' or 'BPF', defaults
             to 'STEELFILTER'
-            example STEELFILTER expression: ip.addr==1.2.3.4
-            example WIRESHARK expression: ip.addr==1.2.3.4
-            example BPF expression: host 1.2.3.4
+
+            example STEELFILTER expression:
+                ip.addr==1.2.3.4 OR ip.addr==1.1.1.1
+
+            example WIRESHARK expression: ip.addr==1.2.3.4 or ip.addr==1.1.1.1
+
+            example BPF expression: host 1.2.3.4 or host 1.1.1.1
         :param id_: string, ID of the filter, optional
 
         """
