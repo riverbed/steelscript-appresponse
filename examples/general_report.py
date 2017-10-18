@@ -23,6 +23,11 @@ class GeneralReportApp(AppResponseApp):
         super(GeneralReportApp, self).add_options(parser)
 
         group = optparse.OptionGroup(parser, "Source Options")
+
+        group.add_option('--showsources',
+                         dest='showsources',
+                         default=False, action='store_true',
+                         help='Display the set of source names')
         group.add_option('--sourcename',
                          dest='sourcename', default=None,
                          help='Name of source to run report against, '
@@ -66,6 +71,9 @@ class GeneralReportApp(AppResponseApp):
     def validate_args(self):
         super(GeneralReportApp, self).validate_args()
 
+        if self.options.showsources:
+            return
+
         if self.options.sourcename is None:
             self.parser.error("Source name must be provided.")
 
@@ -79,6 +87,13 @@ class GeneralReportApp(AppResponseApp):
             self.parser.error("Time range must be provided.")
 
     def main(self):
+
+        if self.options.showsources:
+            svcdef = self.appresponse.find_service('npm.reports')
+            dr = svcdef.bind('source_names')
+            source_names = dr.execute('get').data
+            print '\n'.join(source_names)
+            return
 
         source = Source(self.options.sourcename)
 
