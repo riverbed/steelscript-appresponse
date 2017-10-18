@@ -8,7 +8,7 @@ import os
 import yaml
 import logging
 
-from steelscript.appresponse.core import CommonService, ProbeReportService, \
+from steelscript.appresponse.core import CommonService, ReportService, \
     CaptureJobService, ClipService, ClassificationService, SystemTimeService, \
     FileSystemService, PacketExportService
 from steelscript.common.service import Service
@@ -159,7 +159,7 @@ class AppResponse(InstanceDescriptorMixin):
         self.common = CommonService(self)
         self.capture = CaptureJobService(self)
         self.clips = ClipService(self)
-        self.reports = ProbeReportService(self)
+        self.reports = ReportService(self)
         self.classification = ClassificationService(self)
         self.mgmt_time = SystemTimeService(self)
         self.fs = FileSystemService(self)

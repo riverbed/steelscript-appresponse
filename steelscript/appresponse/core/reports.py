@@ -10,7 +10,7 @@ import logging
 from collections import OrderedDict
 
 from steelscript.appresponse.core.types import AppResponseException,\
-    ServiceClass, TimeFilter, ResourceObject
+     TimeFilter, ResourceObject
 from steelscript.appresponse.core.clips import Clip
 from steelscript.appresponse.core.fs import File
 from steelscript.appresponse.core.capture import Job
@@ -18,16 +18,25 @@ from steelscript.common._fs import SteelScriptDir
 
 logger = logging.getLogger(__name__)
 
+PACKETS_REPORT_SERVICE_NAME = 'npm.probe.reports'
+GENERAL_REPORT_SERVICE_NAME = 'npm.reports'
+
 
 class Source(object):
 
-    def __init__(self, name, path, packets_obj):
+    def __init__(self, name, path=None, type_=None, origin=None):
         self.name = name
         self.path = path
-        self.packets_obj = packets_obj
+        self.type = type_
+        self.origin = origin
 
     def to_dict(self):
-        return dict(name=self.name, path=self.path)
+        ret = {}
+        for k in vars(self):
+            v = getattr(self, k)
+            if v:
+                ret[k] = v
+        return ret
 
 
 class PacketsSource(Source):
@@ -47,48 +56,48 @@ class PacketsSource(Source):
             raise AppResponseException(
                 'Can only support job or clip or file packet source')
 
-        super(PacketsSource, self).__init__(name='packets', path=path,
-                                            packets_obj=packets_obj)
+        super(PacketsSource, self).__init__(name='packets', path=path)
 
 
-class ProbeReportService(ServiceClass):
-
-    SOURCE_NAME = 'packets'
-    SERVICE_NAME = 'npm.probe.reports'
+class ReportService(object):
 
     def __init__(self, appresponse):
         self.appresponse = appresponse
-        self.servicedef = None
-        self.instances = None
-        self.source_columns = None
-        self._columns = None
+        self._columns = {}
 
-    def _bind_resources(self):
+    def get_source_names(self):
 
-        # Init service
-        self.servicedef = self.appresponse.find_service(self.SERVICE_NAME)
-
-        # Init resources
-        self.instances = self.servicedef.bind('instances')
-        self.source_columns = self.servicedef.bind('source_columns',
-                                                   name=self.SOURCE_NAME)
+        svcdef = self.appresponse.find_service(PACKETS_REPORT_SERVICE_NAME)
+        datarep = svcdef.bind('source_names')
+        return ['packets'] + datarep.execute('get').data
 
     def _load_columns(self):
         """Load columns data from local cache file."""
         ss_dir = SteelScriptDir('AppResponse', 'files')
-        version = self.appresponse.versions[self.SERVICE_NAME]
-        columns_filename = self.SOURCE_NAME + '-columns-' + version + '.pcl'
 
-        columns_file = ss_dir.get_data(columns_filename)
-        if not columns_file.data:
-            self._columns = self._fetch_columns()
-            columns_file.data = self._columns
-            columns_file.write()
-            logger.debug("Wrote columns data into %s" % columns_filename)
-        else:
-            logger.debug("Loading columns data from %s" % columns_filename)
-            columns_file.read()
-            self._columns = columns_file.data
+        for service_name in [PACKETS_REPORT_SERVICE_NAME,
+                             GENERAL_REPORT_SERVICE_NAME]:
+
+            svcdef = self.appresponse.find_service(service_name)
+
+            for source_name in svcdef.bind('source_names').data:
+
+                version = self.appresponse.versions[service_name]
+                columns_filename = source_name + '-columns-' + version + '.pcl'
+
+                columns_file = ss_dir.get_data(columns_filename)
+                if not columns_file.data:
+                    self._columns[source_name] = \
+                        self._fetch_columns(svcdef, source_name)
+                    columns_file.data = self._columns[source_name]
+                    columns_file.write()
+                    logger.debug("Wrote columns data into {}"
+                                 .format(columns_filename))
+                else:
+                    logger.debug("Loading columns data from {}"
+                                 .format(columns_filename))
+                    columns_file.read()
+                    self._columns[source_name] = columns_file.data
 
     @property
     def columns(self):
@@ -96,13 +105,15 @@ class ProbeReportService(ServiceClass):
             self._load_columns()
         return self._columns
 
-    def _fetch_columns(self):
+    def _fetch_columns(self, service_def, source_name):
         """Return an ordered dict representing all the columns."""
 
-        logger.debug("Obtaining source columns via resource 'source_columns' "
-                     "via link 'get'")
+        logger.debug("Obtaining source columns for source {} via resource "
+                     "'source_columns' via link 'get' within service {}"
+                     .format(source_name, service_def.servicedef.name))
 
-        cols = self.source_columns.execute('get').data['items']
+        datarep = service_def.bind('source_columns', name=source_name)
+        cols = datarep.execute('get').data['items']
 
         # Create a ordered dict
         return OrderedDict(sorted(zip(map(lambda x: x['id'], cols), cols)))
@@ -126,19 +137,38 @@ class ProbeReportService(ServiceClass):
     def create_instance(self, data_defs):
         """Create a report instance with multiple data definition requests.
 
-        Currenly only support data definition requests with capture jobs
-        as the packets source. Will need to support packets source in
-        formats of file, clips, etc.
+        :param data_defs: list of DataDef objects
+        :return: one ReportInstance object
         """
-        with self.appresponse.clips.create_clips(data_defs):
+        if not data_defs:
+            msg = 'No data definitions are provided.'
+            raise AppResponseException(msg)
+
+        if (any(dd.source.name == 'packets' for dd in data_defs)
+                and any(dd.source.name != 'packets' for dd in data_defs)):
+            # Two report instance needs to be created, one uses 'npm.reports'
+            # service, the other one uses 'npm.probe.reports' service
+            # it would create unnecessary complexity to support this case
+            # thus report error and let the user to create two separate
+            # report instances
+
+            msg = ('Both packets data source and non-packets data source are '
+                   'being queried in this report, which is not supported. The '
+                   'data source names include {}'
+                   .format(', '.join(set([dd.source.name
+                                          for dd in data_defs]))))
+            raise AppResponseException(msg)
+
+        def _create_and_run(service_name, data_defs):
 
             config = dict(data_defs=[dd.to_dict() for dd in data_defs])
             logger.debug("Creating instance with data definitions %s" % config)
 
-            resp = self.instances.execute('create', _data=config)
+            svcdef = self.appresponse.find_service(service_name)
+            datarep = svcdef.bind('instances')
+            resp = datarep.execute('create', _data=config)
 
             instance = ReportInstance(data=resp.data, datarep=resp)
-
             while not instance.is_complete():
                 time.sleep(1)
 
@@ -148,25 +178,17 @@ class ProbeReportService(ServiceClass):
 
             return instance
 
-    def get_instances(self):
-        """Return all report instances."""
-
-        resp = self.instances.execute('get')
-
-        if 'items' not in resp.data:
-            return []
-
-        return [ReportInstance(data=item, servicedef=self.servicedef)
-                for item in resp.data['items']]
-
-    def bulk_delete(self):
-        self.instances.execute('bulk_delete')
-
-    def get_instance_by_id(self, id_):
-        """Return the report instance given the id."""
-
-        resp = self.instances.execute(id=id_)
-        return ReportInstance(data=resp.data, datarep=resp)
+        if isinstance(data_defs[0].source, (Clip, File, Job)):
+            # Needs to create a clip for for capture job packets source
+            # Keep the clip till the instance is completed
+            with self.appresponse.clips.create_clips(data_defs):
+                # capture job data_defs are modified in place
+                instance = _create_and_run(PACKETS_REPORT_SERVICE_NAME,
+                                           data_defs)
+        else:
+            instance = _create_and_run(GENERAL_REPORT_SERVICE_NAME,
+                                       data_defs)
+        return instance
 
 
 class ReportInstance(ResourceObject):
@@ -215,7 +237,8 @@ class DataDef(object):
                  time_range=None, granularity=None, resolution=None):
         """Initialize a data definition request object.
 
-        :param source: packet source object, i.e. packet capture job.
+        :param source: packet source object, i.e. packet capture job;
+            Source object for non-packets data sources.
         :param columns: list Key/Value column objects.
         :param start: epoch start time in seconds.
         :param end: epoch endtime in seconds.
@@ -256,8 +279,14 @@ class DataDef(object):
         self._data = None
 
     def to_dict(self):
+
         data_def = dict()
-        data_def['source'] = PacketsSource(self.source).to_dict()
+
+        if isinstance(self.source, Source):
+            data_def['source'] = self.source.to_dict()
+        else:
+            data_def['source'] = PacketsSource(self.source).to_dict()
+
         data_def['group_by'] = [col.name for col in self.columns if col.key]
         data_def['time'] = dict()
         for k in ['start', 'end']:
@@ -316,7 +345,7 @@ class Report(object):
                      .format(data_def_request.to_dict()))
         self._data_defs.append(data_def_request)
 
-    def _cast_number(self, result):
+    def _cast_number(self, result, source_name):
         """ Check records and convert string to integer/float. If the type
         of the column is 'number' or unit is not 'none', then check if
         the column name has 'avg' in its name, if yes, then convert it to
@@ -324,11 +353,12 @@ class Report(object):
 
         :param dict result: includes metadata for one data def request
             as well as the response data for the data def request.
+        :param string source_name: name of the source.
         """
 
         logger.debug("Converting string in records into integer/float")
 
-        columns = self.appresponse.reports.columns
+        columns = self.appresponse.reports.columns[source_name]
         functions = [lambda x: x] * len(result['columns'])
 
         for i, col in enumerate(result['columns']):
@@ -356,9 +386,14 @@ class Report(object):
             results = self._instance.get_data()['data_defs']
 
             for i, res in enumerate(results):
+                if isinstance(self._data_defs[i].source, Source):
+                    source_name = self._data_defs[i].source.name
+                else:
+                    source_name = 'packets'
                 self._data_defs[i].columns = res['columns']
                 if 'data' in res:
-                    self._data_defs[i].data = self._cast_number(res)
+                    self._data_defs[i].data = self._cast_number(res,
+                                                                source_name)
                 else:
                     self._data_defs[i].data = []
                 logger.debug("Obtained {} records for the {}th data request."
