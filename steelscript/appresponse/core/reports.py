@@ -65,11 +65,15 @@ class ReportService(object):
         self.appresponse = appresponse
         self._columns = {}
 
-    def get_source_names(self):
-
-        svcdef = self.appresponse.find_service(PACKETS_REPORT_SERVICE_NAME)
-        datarep = svcdef.bind('source_names')
-        return ['packets'] + datarep.execute('get').data
+    def get_sources(self):
+        """Get the names and granularites of sources."""
+        ret = []
+        for svc in [PACKETS_REPORT_SERVICE_NAME,
+                    GENERAL_REPORT_SERVICE_NAME]:
+            svcdef = self.appresponse.find_service(svc)
+            datarep = svcdef.bind('sources')
+            ret.extend(datarep.execute('get').data['items'])
+        return ret
 
     def _load_columns(self):
         """Load columns data from local cache file."""
