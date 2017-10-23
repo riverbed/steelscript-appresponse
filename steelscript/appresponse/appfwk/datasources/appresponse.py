@@ -84,7 +84,8 @@ class AppResponseTable(DatasourceTable):
     _column_class = 'AppResponseColumn'
     _query_class = 'AppResponseQuery'
 
-    TABLE_OPTIONS = {'include_files': False,
+    TABLE_OPTIONS = {'source': 'packets',
+                     'include_files': False,
                      'show_entire_pcap': True}
 
     FIELD_OPTIONS = {'duration': '1m',
@@ -97,30 +98,30 @@ class AppResponseTable(DatasourceTable):
                                     label='AppResponse', module='appresponse',
                                     enabled=True)
 
-        func = Function(appresponse_source_choices,
-                        self.options)
+        if self.options.source == 'packets':
+            func = Function(appresponse_source_choices, self.options)
 
-        TableField.create(
-            keyword='appresponse_source', label='Source',
-            obj=self,
-            field_cls=IDChoiceField,
-            field_kwargs={'widget_attrs': {'class': 'form-control'}},
-            parent_keywords=['appresponse_device'],
-            dynamic=True,
-            pre_process_func=func
-        )
+            TableField.create(
+                keyword='appresponse_source', label='Source',
+                obj=self,
+                field_cls=IDChoiceField,
+                field_kwargs={'widget_attrs': {'class': 'form-control'}},
+                parent_keywords=['appresponse_device'],
+                dynamic=True,
+                pre_process_func=func
+            )
+
+            if self.options.show_entire_pcap:
+                TableField.create(keyword='entire_pcap', obj=self,
+                                  field_cls=forms.BooleanField,
+                                  label='Entire PCAP',
+                                  initial=True,
+                                  required=False)
+
+            fields_add_granularity(self, initial=field_options['granularity'])
 
         fields_add_time_selection(self, show_end=True,
                                   initial_duration=field_options['duration'])
-
-        fields_add_granularity(self, initial=field_options['granularity'])
-
-        if self.options.show_entire_pcap:
-            TableField.create(keyword='entire_pcap', obj=self,
-                              field_cls=forms.BooleanField,
-                              label='Entire PCAP',
-                              initial=True,
-                              required=False)
 
 
 class AppResponseQuery(TableQueryBase):
@@ -130,14 +131,19 @@ class AppResponseQuery(TableQueryBase):
 
         ar = DeviceManager.get_device(criteria.appresponse_device)
 
-        source_path = criteria.appresponse_source
+        if self.table.options.source == 'packets':
 
-        if source_path.startswith(SourceProxy.JOB_PREFIX):
-            job_id = source_path.lstrip(SourceProxy.JOB_PREFIX)
-            source = ar.capture.get_job_by_id(job_id)
+            source_name = criteria.appresponse_source
+
+            if source_name.startswith(SourceProxy.JOB_PREFIX):
+                job_id = source_name.lstrip(SourceProxy.JOB_PREFIX)
+                source = ar.capture.get_job_by_id(job_id)
+            else:
+                file_id = source_name.lstrip(SourceProxy.FILE_PREFIX)
+                source = ar.fs.get_file_by_id(file_id)
+
         else:
-            file_id = source_path.lstrip(SourceProxy.FILE_PREFIX)
-            source = ar.fs.get_file_by_id(file_id)
+            source = SourceProxy(self.table.options.source)
 
         col_extractors, col_names = [], {}
 
@@ -161,9 +167,11 @@ class AppResponseQuery(TableQueryBase):
 
         data_def = DataDef(source=SourceProxy(source),
                            columns=col_extractors,
-                           granularity=criteria.granularity.total_seconds(),
                            start=start,
                            end=end)
+
+        if hasattr(criteria, 'granularity'):
+            data_def.granularity = criteria.granularity.total_seconds()
 
         report = Report(ar)
         report.add(data_def)
