@@ -29,7 +29,7 @@ class Command(AppResponseApp):
         headers = ['Name', 'Filters Supported on Metric Columns',
                    'Granularities in Seconds']
         data = [[s['name'], str(s['filters_on_metrics']),
-                 ', '.join(s['granularities']) if s['granularities'] else None]
+                 ', '.join(s['granularities']) if s['granularities'] else '---']
                 for s in self.appresponse.reports.sources.values()]
         data.sort()
         Formatter.print_table(data,
