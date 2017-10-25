@@ -63,63 +63,7 @@ class ReportService(object):
 
     def __init__(self, appresponse):
         self.appresponse = appresponse
-        self._columns = {}
         self._sources = {}
-
-    def _load_columns(self):
-        """Load columns data from local cache file."""
-        ss_dir = SteelScriptDir('AppResponse', 'files')
-
-        for service_name in [PACKETS_REPORT_SERVICE_NAME,
-                             GENERAL_REPORT_SERVICE_NAME]:
-
-            svcdef = self.appresponse.find_service(service_name)
-
-            for source_name in svcdef.bind('source_names').data:
-
-                version = self.appresponse.versions[service_name]
-                columns_filename = source_name + '-columns-' + version + '.pcl'
-
-                columns_file = ss_dir.get_data(columns_filename)
-                if not columns_file.data:
-                    self._columns[source_name] = \
-                        self._fetch_columns(svcdef, source_name)
-                    columns_file.data = self._columns[source_name]
-                    columns_file.write()
-                    logger.debug("Wrote columns data into {}"
-                                 .format(columns_filename))
-                else:
-                    logger.debug("Loading columns data from {}"
-                                 .format(columns_filename))
-                    columns_file.read()
-                    self._columns[source_name] = columns_file.data
-
-    @property
-    def columns(self):
-        if not self._columns:
-            self._load_columns()
-        return self._columns
-
-    def _fetch_columns(self, service_def, source_name):
-        """Return an ordered dict representing all the columns."""
-
-        logger.debug("Obtaining source columns for source {} via resource "
-                     "'source_columns' via link 'get' within service {}"
-                     .format(source_name, service_def.servicedef.name))
-
-        datarep = service_def.bind('source_columns', name=source_name)
-        cols = datarep.execute('get').data['items']
-
-        # Create a ordered dict
-        return OrderedDict(sorted(zip(map(lambda x: x['id'], cols), cols)))
-
-    def get_columns(self):
-        return self.columns
-
-    def get_column_names(self):
-        """Return a list of column names."""
-
-        return self.columns.keys()
 
     @property
     def sources(self):

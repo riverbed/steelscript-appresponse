@@ -206,10 +206,6 @@ class AppResponse(InstanceDescriptorMixin):
         """Get the basic info of the device."""
         return self.common.get_info()
 
-    def get_column_names(self):
-        """Get a list of all available reporting columns."""
-        return self.reports.get_column_names()
-
     def get_capture_job_by_name(self, name):
         """Find a capture job by name."""
         return self.capture.get_job_by_name(name)
