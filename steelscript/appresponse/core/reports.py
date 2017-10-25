@@ -64,16 +64,7 @@ class ReportService(object):
     def __init__(self, appresponse):
         self.appresponse = appresponse
         self._columns = {}
-
-    def get_sources(self):
-        """Get the names and granularites of sources."""
-        ret = []
-        for svc in [PACKETS_REPORT_SERVICE_NAME,
-                    GENERAL_REPORT_SERVICE_NAME]:
-            svcdef = self.appresponse.find_service(svc)
-            datarep = svcdef.bind('sources')
-            ret.extend(datarep.execute('get').data['items'])
-        return ret
+        self._sources = {}
 
     def _load_columns(self):
         """Load columns data from local cache file."""
@@ -129,6 +120,47 @@ class ReportService(object):
         """Return a list of column names."""
 
         return self.columns.keys()
+
+    @property
+    def sources(self):
+        if not self._sources:
+            self._load_sources()
+        return self._sources
+
+    def _load_sources(self):
+        """Get the names and granularites of sources."""
+        ss_dir = SteelScriptDir('AppResponse', 'files')
+
+        for svc in [PACKETS_REPORT_SERVICE_NAME,
+                    GENERAL_REPORT_SERVICE_NAME]:
+            svcdef = self.appresponse.find_service(svc)
+            version = self.appresponse.versions[svc]
+            sources_filename = '{}-sources-{}.pcl'.format(svc, version)
+            sources_file = ss_dir.get_data(sources_filename)
+
+            if not sources_file.data:
+                sources = svcdef.bind('sources').execute('get').data['items']
+
+                for source in sources:
+                    cols = source['columns']
+                    source['columns'] = \
+                        OrderedDict(sorted(zip(map(lambda x: x['id'], cols),
+                                               cols)))
+                    source['filters_on_metrics'] = \
+                        source['capabilities']['filters_on_metrics']
+                    if 'granularities' not in source:
+                        source['granularities'] = None
+
+                    self._sources[source['name']] = source
+                sources_file.data = self._sources
+                sources_file.write()
+                logger.debug("Wrote sources data into {}"
+                             .format(sources_filename))
+            else:
+                logger.debug("Loading sources data from {}"
+                             .format(sources_filename))
+                sources_file.read()
+                self._sources = sources_file.data
 
     def create_report(self, data_def_request):
         """Create a report instance with just one data definition request."""

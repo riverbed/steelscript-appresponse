@@ -30,7 +30,7 @@ class Command(AppResponseApp):
 
     def main(self):
         headers = ['ID', 'Description', 'Type']
-        cols = self.appresponse.reports.get_columns()[self.options.source]
+        cols = self.appresponse.reports.sources[self.options.source]['columns']
         data = [(c['id'], c['description'], c['type']) for c in cols.values()]
         data.sort()
         Formatter.print_table(data,

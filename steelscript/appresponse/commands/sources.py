@@ -28,16 +28,9 @@ class Command(AppResponseApp):
     def main(self):
         headers = ['Name', 'Filters Supported on Metric Columns',
                    'Granularities in Seconds']
-        sources = self.appresponse.reports.get_sources()
-        data = []
-        for s in sources:
-            rec = [s['name'], str(s['capabilities']['filters_on_metrics'])]
-            print 'granularities' in s
-            if 'granularities' in s:
-                rec.append(', '.join(s['granularities']))
-            else:
-                rec.append(None)
-            data.append(rec)
+        data = [[s['name'], str(s['filters_on_metrics']),
+                 ', '.join(s['granularities']) if s['granularities'] else None]
+                for s in self.appresponse.reports.sources.values()]
         data.sort()
         Formatter.print_table(data,
                               headers,
