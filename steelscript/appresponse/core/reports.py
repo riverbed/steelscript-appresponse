@@ -91,7 +91,17 @@ class ReportService(object):
         return self._sources
 
     def _load_sources(self):
-        """Get the names and granularites of sources."""
+        """Get the names and granularites of sources. The hierarchy of the
+        data looks like below:
+
+            { "source1" : { "name": string,
+                            "filters_on_metrics": boolean,
+                            "columns": [source_column],
+                             "granularities": [string],
+              ...
+            }
+
+        """
         ss_dir = SteelScriptDir('AppResponse', 'files')
 
         for svc in [PACKETS_REPORT_SERVICE_NAME,
