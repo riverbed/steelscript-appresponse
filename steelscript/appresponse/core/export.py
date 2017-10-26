@@ -6,7 +6,7 @@
 
 import logging
 
-from steelscript.appresponse.core.reports import PacketsSource
+from steelscript.appresponse.core.reports import DataSource
 from steelscript.appresponse.core.types import ServiceClass
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class PacketExportService(ServiceClass):
 
     def create(self, source, timefilter, filters):
 
-        config = dict(path=PacketsSource(source).path,
+        config = dict(path=DataSource(source).path,
                       start_time=timefilter.start,
                       end_time=timefilter.end,
                       filters=dict(items=filters))

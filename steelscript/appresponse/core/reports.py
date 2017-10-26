@@ -9,7 +9,7 @@ import logging
 
 from collections import OrderedDict
 
-from steelscript.appresponse.core.types import AppResponseException,\
+from steelscript.appresponse.core.types import AppResponseException, \
      TimeFilter, ResourceObject
 from steelscript.appresponse.core.clips import Clip
 from steelscript.appresponse.core.fs import File
@@ -22,41 +22,60 @@ PACKETS_REPORT_SERVICE_NAME = 'npm.probe.reports'
 GENERAL_REPORT_SERVICE_NAME = 'npm.reports'
 
 
-class Source(object):
-
-    def __init__(self, name, path=None, type_=None, origin=None):
-        self.name = name
-        self.path = path
-        self.type = type_
-        self.origin = origin
-
-    def to_dict(self):
-        ret = {}
-        for k in vars(self):
-            v = getattr(self, k)
-            if v:
-                ret[k] = v
-        return ret
-
-
-class PacketsSource(Source):
+class DataSource(object):
 
     CLIP_PREFIX = 'clips/'
     JOB_PREFIX = 'jobs/'
     FILE_PREFIX = 'fs'
 
-    def __init__(self, packets_obj):
-        if isinstance(packets_obj, Clip):
-            path = '{}{}'.format(self.CLIP_PREFIX, packets_obj.id)
-        elif isinstance(packets_obj, File):
-            path = '{}{}'.format(self.FILE_PREFIX, packets_obj.id)
-        elif isinstance(packets_obj, Job):
-            path = '{}{}'.format(self.JOB_PREFIX, packets_obj.id)
-        else:
-            raise AppResponseException(
-                'Can only support job or clip or file packet source')
+    def __init__(self, packets_obj=None, name=None, path=None):
+        """Initialize a data source for reports to run against.
 
-        super(PacketsSource, self).__init__(name='packets', path=path)
+        :param packets_obj: Clip or File or Job object
+        :param str name: Name of general report sources
+        :param str path: Path of the packets data source
+        """
+
+        if not packets_obj and not name:
+            raise AppResponseException("Either packets_obj or name is "
+                                       "required to be a valid data source.")
+        if packets_obj:
+            if isinstance(packets_obj, Clip):
+                path = '{}{}'.format(self.CLIP_PREFIX, packets_obj.id)
+            elif isinstance(packets_obj, File):
+                path = '{}{}'.format(self.FILE_PREFIX, packets_obj.id)
+            elif isinstance(packets_obj, Job):
+                path = '{}{}'.format(self.JOB_PREFIX, packets_obj.id)
+            else:
+                raise AppResponseException(
+                    'Can only support job or clip or file packet source')
+
+            self.name = 'packets'
+            self.path = path
+        else:
+            self.name = name
+            self.path = path
+
+    def __str__(self):
+        return "<{} name:{} path:{}>".format(self.__class__,
+                                             self.name, self.path)
+
+    def __repr__(self):
+        return "{}(name='{}', path='{}')".format(
+            self.__class__.__name__, self.name, self.path
+        )
+
+    def to_dict(self):
+        ret = {}
+        for k, v in vars(self).iteritems():
+            if v:
+                ret[k] = v
+        return ret
+
+
+# Still defines the PacketsSource to be backwards compatible.
+class PacketsSource(DataSource):
+    pass
 
 
 class ReportService(object):
@@ -158,7 +177,7 @@ class ReportService(object):
 
             return instance
 
-        if isinstance(data_defs[0].source, (Clip, File, Job)):
+        if data_defs[0].source.name == 'packets':
             # Needs to create a clip for for capture job packets source
             # Keep the clip till the instance is completed
             with self.appresponse.clips.create_clips(data_defs):
@@ -217,8 +236,7 @@ class DataDef(object):
                  time_range=None, granularity=None, resolution=None):
         """Initialize a data definition request object.
 
-        :param source: packet source object, i.e. packet capture job;
-            Source object for non-packets data sources.
+        :param source: DataSource object.
         :param columns: list Key/Value column objects.
         :param start: epoch start time in seconds.
         :param end: epoch endtime in seconds.
@@ -262,10 +280,7 @@ class DataDef(object):
 
         data_def = dict()
 
-        if isinstance(self.source, Source):
-            data_def['source'] = self.source.to_dict()
-        else:
-            data_def['source'] = PacketsSource(self.source).to_dict()
+        data_def['source'] = self.source.to_dict()
 
         data_def['group_by'] = [col.name for col in self.columns if col.key]
         data_def['time'] = dict()
@@ -338,7 +353,7 @@ class Report(object):
 
         logger.debug("Converting string in records into integer/float")
 
-        columns = self.appresponse.reports.columns[source_name]
+        columns = self.appresponse.reports.sources[source_name]['columns']
         functions = [lambda x: x] * len(result['columns'])
 
         for i, col in enumerate(result['columns']):
@@ -366,10 +381,7 @@ class Report(object):
             results = self._instance.get_data()['data_defs']
 
             for i, res in enumerate(results):
-                if isinstance(self._data_defs[i].source, Source):
-                    source_name = self._data_defs[i].source.name
-                else:
-                    source_name = 'packets'
+                source_name = self._data_defs[i].source.name
                 self._data_defs[i].columns = res['columns']
                 if 'data' in res:
                     self._data_defs[i].data = self._cast_number(res,

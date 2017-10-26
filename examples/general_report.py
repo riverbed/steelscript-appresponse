@@ -14,7 +14,7 @@ import optparse
 
 from steelscript.appresponse.core.app import AppResponseApp
 from steelscript.appresponse.core.types import Key, Value, TrafficFilter
-from steelscript.appresponse.core.reports import DataDef, Report, Source
+from steelscript.appresponse.core.reports import DataDef, Report, DataSource
 from steelscript.common.datautils import Formatter
 
 
@@ -95,7 +95,7 @@ class GeneralReportApp(AppResponseApp):
             print '\n'.join(source_names)
             return
 
-        source = Source(self.options.sourcename)
+        source = DataSource(name=self.options.sourcename)
 
         columns = []
         headers = []
