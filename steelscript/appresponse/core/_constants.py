@@ -4,6 +4,8 @@
 # accompanying the software ("License").  This software is distributed "AS IS"
 # as set forth in the License.
 
+from collections import OrderedDict
+
 # Define report groups to ensure the ordering in GUI
 report_groups = ['Packets',
                  'Application Stream Analysis',
@@ -13,15 +15,14 @@ report_groups = ['Packets',
                  'System Metrics',
                  'Other']
 
-
-report_sources = {
-    'Packets': ['packets'],
-    'Application Stream Analysis': ['aggregates', 'flow_tcp'],
-    "Web Transaction Analysis": ['aggregates', 'wtapages', 'wtapageobjects'],
-    "DB Analysis": ['dbsession_summaries', 'sql_summaries',
-                    'sqlsessions', 'sqlqueries'],
-    'UC Analysis': ['aggregates', 'voip_rtp_channels', 'voip_calls'],
-    'System Metrics': [
+report_sources = OrderedDict([
+    ('Packets', ['packets']),
+    ('Application Stream Analysis', ['aggregates', 'flow_tcp']),
+    ('Web Transaction Analysis', ['aggregates', 'wtapages', 'wtapageobjects']),
+    ('DB Analysis', ['dbsession_summaries', 'sql_summaries',
+                     'sqlsessions', 'sqlqueries']),
+    ('UC Analysis', ['aggregates', 'voip_rtp_channels', 'voip_calls']),
+    ('System Metrics', [
                'system_metrics.mipmaps',
                'system_metrics.cpu',
                'system_metrics.chassis',
@@ -46,14 +47,16 @@ report_sources = {
                'system_metrics.swap',
                'system_metrics.disk',
                'system_metrics.memory',
-               'system_metrics.tds'],
-    'Other': ['tdstest', 'alert_list'],
-}
+               'system_metrics.tds']),
+    ('Other', ['tdstest', 'alert_list']),
+])
 
-# Consolidate source names into one list
-report_source_names = set([])
+report_source_names = []
+for source_names in report_sources.values():
+    report_source_names.extend(source_names)
 
-for sources in report_sources.values():
-    report_source_names = report_source_names.union(set(tuple(sources)))
-
-report_source_names = list(report_source_names)
+# There are three 'aggregates' sources
+indices = [idx for idx, source in enumerate(report_source_names)
+           if source == 'aggregates']
+report_source_names.pop(indices[2])
+report_source_names.pop(indices[1])

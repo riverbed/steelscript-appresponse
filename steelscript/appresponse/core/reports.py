@@ -97,7 +97,8 @@ class ReportService(object):
             { "source1" : { "name": string,
                             "filters_on_metrics": boolean,
                             "columns": [source_column],
-                             "granularities": [string],
+                            "granularities": [string],
+                          }
               ...
             }
 

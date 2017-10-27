@@ -13,6 +13,7 @@ List all the sources that the given AppResponse appliance supports.
 
 from steelscript.appresponse.core.app import AppResponseApp
 from steelscript.common.datautils import Formatter
+from steelscript.appresponse.core._constants import report_source_names
 
 
 class Command(AppResponseApp):
@@ -28,10 +29,15 @@ class Command(AppResponseApp):
     def main(self):
         headers = ['Name', 'Filters Supported on Metric Columns',
                    'Granularities in Seconds']
-        data = [[s['name'], str(s['filters_on_metrics']),
-                 ', '.join(s['granularities']) if s['granularities'] else '---']
-                for s in self.appresponse.reports.sources.values()]
-        data.sort()
+
+        data = []
+        for name in report_source_names:
+            s = self.appresponse.reports.sources[name]
+
+            data.append([s['name'], str(s['filters_on_metrics']),
+                         ', '.join(s['granularities'])
+                         if s['granularities'] else '---'])
+
         Formatter.print_table(data,
                               headers,
                               padding=2,
