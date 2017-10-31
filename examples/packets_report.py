@@ -14,7 +14,7 @@ import optparse
 
 from steelscript.appresponse.core.app import AppResponseApp
 from steelscript.appresponse.core.types import Key, Value, TrafficFilter
-from steelscript.appresponse.core.reports import DataDef, Report, DataSource
+from steelscript.appresponse.core.reports import DataDef, Report, SourceProxy
 from steelscript.common.datautils import Formatter
 
 
@@ -98,7 +98,7 @@ class PacketsReportApp(AppResponseApp):
             source = self.appresponse.clips.\
                 get_clip_by_id(self.options.sourceid)
 
-        data_source = DataSource(source)
+        data_source = SourceProxy(source)
         columns = []
         headers = []
         for col in self.options.keycolumns.split(','):

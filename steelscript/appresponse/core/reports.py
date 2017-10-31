@@ -22,7 +22,7 @@ PACKETS_REPORT_SERVICE_NAME = 'npm.probe.reports'
 GENERAL_REPORT_SERVICE_NAME = 'npm.reports'
 
 
-class DataSource(object):
+class SourceProxy(object):
 
     CLIP_PREFIX = 'clips/'
     JOB_PREFIX = 'jobs/'
@@ -74,7 +74,7 @@ class DataSource(object):
 
 
 # Still defines the PacketsSource to be backwards compatible.
-class PacketsSource(DataSource):
+class PacketsSource(SourceProxy):
     pass
 
 
@@ -134,7 +134,7 @@ class ReportService(object):
                 logger.debug("Loading sources data from {}"
                              .format(sources_filename))
                 sources_file.read()
-                self._sources = sources_file.data
+                self._sources.update(sources_file.data)
 
     def create_report(self, data_def_request):
         """Create a report instance with just one data definition request."""
@@ -247,7 +247,7 @@ class DataDef(object):
                  time_range=None, granularity=None, resolution=None):
         """Initialize a data definition request object.
 
-        :param source: DataSource object.
+        :param source: SourceProxy object.
         :param columns: list Key/Value column objects.
         :param start: epoch start time in seconds.
         :param end: epoch endtime in seconds.

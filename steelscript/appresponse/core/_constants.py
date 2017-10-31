@@ -6,15 +6,19 @@
 
 from collections import OrderedDict
 
-# Define report groups to ensure the ordering in GUI
-report_groups = ['Packets',
-                 'Application Stream Analysis',
-                 'Web Transaction Analysis',
-                 'DB Analysis',
-                 'UC Analysis',
-                 'System Metrics',
-                 'Other']
+# Using OrderedDict to ensure the ordering in GUI and CLI
 
+# Mapping from group name to group title
+report_groups = OrderedDict([
+    ('packets', 'Packets'),
+    ('asa', 'Application Stream Analysis'),
+    ('wta', 'Web Transaction Analysis'),
+    ('db', 'DB Analysis'),
+    ('uc', 'UC Analysis'),
+    ('system', 'System Metrics'),
+    ('other', 'Other')])
+
+# Mapping from group title to group sources
 report_sources = OrderedDict([
     ('Packets', ['packets']),
     ('Application Stream Analysis', ['aggregates', 'flow_tcp']),
@@ -51,6 +55,7 @@ report_sources = OrderedDict([
     ('Other', ['tdstest', 'alert_list']),
 ])
 
+# List of all report source names
 report_source_names = []
 for source_names in report_sources.values():
     report_source_names.extend(source_names)
