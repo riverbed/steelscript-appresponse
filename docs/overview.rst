@@ -14,7 +14,7 @@ parameters, and then used as the object for all follow-on operations.
 
 Detailed documentation may be found on the following pages:
 
-* Packets Report Tutrial
+* Report Tutrial
 
   * :doc:`tutorial`
 

@@ -1,9 +1,9 @@
 .. py:currentmodule:: steelscript.appresponse.core
 
-SteelScript AppResponse Packets Report Tutorial
-===============================================
+SteelScript AppResponse Report Tutorial
+=======================================
 
-This tutorial will show you how to run a packets report against
+This tutorial will show you how to run a report against
 an AppResponse appliance using SteelScript for Python.
 This tutorial assumes a basic understanding of Python.
 
@@ -23,14 +23,14 @@ precisely what you see in this tutorial.
 AppResponse Object
 ------------------
 
-As with any Python code, the first step is to import the module(s) to
-be used. The SteelScript code for working with AppResponse
-appliances resides in a module called
-:py:mod:`steelscript.appresponse.core`.  The main class in this module is
-:py:class:`AppResponse <steelscript.netshark.core.AppResponse>`.
-This object represents a connection to an AppResponse appliance.
+Interacting with an AppResponse Applicance leverages two key classes:
 
-To start, start python from the shell or command line:
+* :py:class:`AppResponse <appresponse.AppResponse>` - provides the primary interface to the appliance, handling initialization, setup,
+and communication via REST API calls.
+
+* :py:class:`Report <report.Report>` - talks through the AppResponse object to create new report and pull data when the report is completed.
+
+To start, start Python from the shell or command line:
 
 .. code-block:: bash
 
@@ -49,6 +49,8 @@ Once in the python shell, let's create an AppReponse object:
 
    >>> ar = AppResponse('$host', auth=UserAuth('$username', '$password'))
 
+In the above code snippet, we have created an AppResponse object, which
+represents a connection to an AppResponse appliance.
 The first argument is the hostname or IP address of the AppResponse
 appliance.  The second argument is a named parameter and identifies
 the authentication method to use -- in this case, simple
@@ -84,8 +86,8 @@ of the AppResponse appliance that we just connected to:
     u'sw_version': u'11.2.0 #13859'}
 
 
-Packets Report
---------------
+Creating a Report Script
+------------------------
 
 Let's create our first script. We're going to write a simple script that
 runs a report against a packets capture job on our AppResponse
@@ -105,6 +107,7 @@ Now create a file called ``report.py`` and insert the following code:
    from steelscript.common import UserAuth
    from steelscript.appresponse.core.reports import DataDef, Report
    from steelscript.appresponse.core.types import Key, Value
+   from steelscript.appresponse.core.reports import SourceProxy
 
    # Fill these in with appropriate values
    host = '$host'
@@ -114,7 +117,9 @@ Now create a file called ``report.py`` and insert the following code:
    # Open a connection to the appliance and authenticate
    ar = AppResponse(host, auth=UserAuth(username, password))
 
-   source = ar.get_capture_job_by_name('default_job')
+   packets_source = ar.get_capture_job_by_name('default_job')
+
+   source = SourceProxy(packets_source)
 
    columns = [Key('start_time'), Value('sum_tcp.total_bytes'), Value('avg_frame.total_bytes')]
 
@@ -143,8 +148,12 @@ like the following:
     (u'1501610750', 4110080.0, 254.337),
     (u'1501610760', 2802668.0, 251.946)]
 
-Let's take a closer look at what this script is doing. The first few
-lines are simply importing a few libraries that we will be using:
+Let's take a closer look at what this script is doing.
+
+Importing Classes
+^^^^^^^^^^^^^^^^^
+
+The first few lines are simply importing a few classes that we will be using:
 
 .. code-block:: python
 
@@ -154,6 +163,10 @@ lines are simply importing a few libraries that we will be using:
    from steelscript.common import UserAuth
    from steelscript.appresponse.core.reports import DataDef, Report
    from steelscript.appresponse.core.types import Key, Value
+   from steelscript.appresponse.core.reports import SourceProxy
+
+Creating an AppResponse object
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Next, we create an AppResponse object that establishes our connection to
 the target appliance:
@@ -163,48 +176,167 @@ the target appliance:
    # Open a connection to the appliance and authenticate
    ar = AppResponse(host, auth=UserAuth(username, password))
 
-The next section describes how to create a data definition object.
+Creating a Data Definition Object
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This section describes how to create a data definition object.
+
+Creating a SourceProxy object
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Now we need to create a SourceProxy object which carries the information
+of source where data will be fetched.
 
 .. code-block:: python
 
-   source = ar.get_capture_job_by_name('default_job')
+   packets_source = ar.get_capture_job_by_name('default_job')
+
+   source = SourceProxy(packets_source)
+
+We first obtain a packet capture job object by using the name of the capture job.
+
+.. code-block:: python
+
+   packets_source = ar.get_capture_job_by_name('default_job')
+
+To run a report against a Pcap file source, the file object can be derived as below:
+
+.. code-block:: python
+
+   packets_source = ar.get_file_by_id('$file_id')
+
+Then we need to initialize a SourceProxy object as below:
+
+.. code-block:: python
+
+   source_proxy = SourceProxy(packets_source)
+
+To run a report against a non-packets source, the SourceProxy object is initialized by
+just using the name of the source as below:
+
+.. code-block:: python
+
+   source_proxy = SourceProxy('$source_name')
+
+To know the available source names, just execute the following command in shell:
+
+.. code-block:: bash
+
+   steel appresponse sources $host -u $username -p $password --group $group_name
+
+where ``$group_name`` should be replaced with one of ``packets``, ``asa``, ``wta``, ``db``,
+``uc``, ``system`` and ``other``. In those group acronyms, ``asa`` references "Application
+Stream Analysis". ``wta`` references "Web Transaction Analysis". ``db`` references "DB Analysis".
+``uc`` references "UC Analysis". ``system`` references "System Metrics". Note that these names
+are just used to group the sources based on their general application. They are invented only
+for the ease of exhibition.
+
+For instance, running the command in shell should render the information as below:
+
+.. code-block:: bash
+
+   $ steel appresponse sources $host -u $username -p $password --group wta
+
+   Name            Filters Supported on Metric Columns  Granularities in Seconds
+   ----------------------------------------------------------------------------------
+   aggregates      True                                 60, 300, 3600, 21600, 86400
+   wtapages        False                                ---
+   wtapageobjects  False                                ---
+
+It shows that under the ``wta`` group, there exists 3 sources, ``aggregates``,
+``wtapages``, ``wtapageobjects``. Note that ``aggregates`` source belongs to
+the following groups: ``asa``, ``wta`` and ``uc``. ``packets`` group only
+has one source named ``packets``.
+
+Choosing Columns
+>>>>>>>>>>>>>>>>
+
+Then we select the set of columns that we are interested in collecting. Note
+that AppResponse has dozens of sources. Each source supports a different set
+of columns.  Each column can be either a key column or a value column.
+Each row of data will be aggregated according to the set of key columns selected.
+The value columns define the set of additional data to collect per row. In this
+example, we are asking to collect total bytes for tcp packets and average total
+packet length for each resolution bucket.
+
+To help identify which columns are available, just execute the helper command
+as below in your shell prompt.
+
+.. code-block:: bash
+
+   $ steel appresponse columns $host -u $usernmae -p $password --source $source_name
+
+For instance, to know the available columns within source ``packets``, we execute the
+command in shell as:
+
+.. code-block:: bash
+
+   $ steel appresponse columns $host -u $username -p $password --source packets
+
+     ID                                                Description                                        Type       Is Key
+     ------------------------------------------------------------------------------------------------------------------------
+     ...
+     avg_frame.total_bytes                             Total packet length                                number     False
+     ...
+     start_time                                        Used for time series data. Indicates the           timestamp  True
+                                                       beginning of a resolution bucket.
+     ...
+     sum_tcp.total_bytes                               Number of total bytes for TCP traffic              integer    False
+
+Note that it would be better to pipe the output using ``| more`` as there can be more
+than 1000 columns.
+
+Construct a list of columns, including both key columns and value columns in
+your script as shown below.
+
+.. code-block:: python
 
    columns = [Key('start_time'), Value('sum_tcp.total_bytes'), Value('avg_frame.total_bytes')]
+
+Setting Time Fields
+>>>>>>>>>>>>>>>>>>>
+
+Now it is time to set the time related criteria fields. We firstly need to see the possible
+granularity values that the interested source supports. Running the below command in shell.
+
+.. code-block:: bash
+
+   $ steel appresponse sources $host -u $username -p $password --group wta
+
+   Name            Filters Supported on Metric Columns  Granularities in Seconds
+   ----------------------------------------------------------------------------------
+   aggregates      True                                 60, 300, 3600, 21600, 86400
+   wtapages        False                                ---
+   wtapageobjects  False                                ---
+
+As can be seen, the ``aggregates`` source supports graunularity values as ``60``,
+``300``, ``3600``, ``21600`` and ``86400`` (as in seconds). On the other hand,
+``wtapages`` and ``wtapageobjects`` do not support aggregation. Thus the argument
+``granularity`` should not be used when initializing a ``DataDef`` object for sources
+that do not support granularity.
+
+.. code-block:: python
 
    granularity = '10'
 
    time_range = 'last 1 minute'
 
-   data_def = DataDef(source=source, columns=columns, granularity='10', time_range=time_range)
-
-We first obtain a packet capture job object by using the name of the capture job.
-To run a report against a pcap file source, the file object can be derived as below:
-
-.. code-block:: python
-
-   source = ar.get_file_by_id('$file_id')
-
-Then we select the set of columns that we are interested in collecting. Note
-that AppResponse supports numerous columns and any column can be either a key
-column or a value column. Each row of data will be aggregated according to the
-set of key columns selected. The value columns define the set of additional
-data to collect per row. In this example, we are asking to collect total bytes
-for tcp packets and average total packet length for each resolution bucket.
-
-To help identify which columns are available, we could execute the helper command
-as below.
-
-.. code-block:: bash
-
-   steel appresponse columns $hostname -u $usernmae -p $password
-
-
-Setting granularity to ``10`` precision means the data source computes a
+Setting granularity to ``10`` means the data source computes a
 summary of the metrics it received based on intervals of ``10`` seconds.
 
 The parameter ``time_range`` specifies the time range for which the data source computes
 the metrics. Other valid formats include ``this minute``, ``previous hour`` and
 ``06/05/17 17:09:00 to 06/05/17 18:09:00``.
+
+Initializing Data Definition Object
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+With all the above values derived, we can now create a ``DataDef`` object as below.
+
+.. code-block:: python
+
+   data_def = DataDef(source=source, columns=columns, granularity=granularity, time_range=time_range)
+
+Running a report
+>>>>>>>>>>>>>>>>
 
 After creating the data definition object, then we are ready to run a report as below:
 
@@ -221,6 +353,11 @@ After creating the data definition object, then we are ready to run a report as 
 
    # Grab the data
    pprint.pprint(report.get_data())
+
+Currently, we only support one data definition per each report instance. Next release
+will include the ability to run multiple data definitions per each report instance. The
+reason for running multiple data definitions is to reuse same data source between data
+definitions and yield much performance gain as a result.
 
 Extending the Example
 ---------------------
@@ -239,7 +376,7 @@ Let us create a file ``table_report.py`` and insert the following code:
    from steelscript.common import UserAuth
    from steelscript.appresponse.core.reports import DataDef, Report
    from steelscript.appresponse.core.types import Key, Value
-
+   from steelscript.appresponse.core.reports import SourceProxy
    # Import the Formatter class to output data in a table format
    from steelscript.common.datautils import Formatter
 
@@ -251,7 +388,9 @@ Let us create a file ``table_report.py`` and insert the following code:
    # Open a connection to the appliance and authenticate
    ar = AppResponse(host, auth=UserAuth(username, password))
 
-   source = ar.get_capture_job_by_name('default_job')
+   packets_source = ar.get_capture_job_by_name('default_job')
+
+   source_proxy = SourceProxy(packets_source)
 
    columns = [Key('start_time'), Value('sum_tcp.total_bytes'), Value('avg_frame.total_bytes')]
 
@@ -259,7 +398,7 @@ Let us create a file ``table_report.py`` and insert the following code:
 
    time_range = 'last 1 minute'
 
-   data_def = DataDef(source=source, columns=columns, granularity='10', time_range=time_range)
+   data_def = DataDef(source=source_proxy, columns=columns, granularity='10', time_range=time_range)
 
    report = Report(ar)
    report.add(data_def)
