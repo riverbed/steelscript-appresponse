@@ -238,10 +238,10 @@ To download packets from a capture job, we use slightly different options.
 ``packets_report.py``
 ---------------------
 
-This example provides a quick means to generate a report against a given source
-on AppResponse.  The sources could be a file, clip, or running capture job, and
-the query can take the form of virtually any combination of key and value
-columns.
+This example provides a quick means to generate a report against a given
+packets source on AppResponse.  The sources could be a file, clip, or running
+capture job, and the query can take the form of virtually any combination of
+key and value columns.
 
 The availble options for this script:
 
@@ -281,7 +281,7 @@ of the rows are grouped and ensure they will be unique -- think of them as Key
 columns to a SQL table.  The Value columns will be any value that matches up
 with the Keys.
 
-A simple report using `src_ip` and `dest_ip` as the keys, and bytes and packets as
+A simple packets report using `src_ip` and `dest_ip` as the keys, and bytes and packets as
 the values:
 
 .. code-block:: none
@@ -313,6 +313,65 @@ the values:
  For a complete listing of the available columns to choose, see the output
  of the builtin command ``steel appresponse columns``.
 
+
+.. _general_report_example:
+
+``general_report.py``
+---------------------
+
+This example provides a quick means to generate a report against a given non-packets
+source on AppResponse. The source could be any one of the supported sources except
+``packets``, and the query can take the form of virtually any combination of key and value
+columns that are supported by the selected source.
+
+The availble options for this script:
+
+.. code-block:: none
+
+  Source Options:
+    --showsources       Display the set of source names
+    --sourcename=SOURCENAME
+                        Name of source to run report against, i.e. aggregates,
+                        flow_tcp, etc.
+    --keycolumns=KEYCOLUMNS
+                        List of key column names separated by comma
+    --valuecolumns=VALUECOLUMNS
+                        List of value column names separated by comma
+
+  Time and Filter Options:
+    --timerange=TIMERANGE
+                        Time range to analyze, valid formats are: "06/05/17
+                        17:09:00 to 06/05/17 18:09:00" or "17:09:00 to
+                        18:09:00" or "last 1 hour".
+    --granularity=GRANULARITY
+                        The amount of time in seconds for which the data
+                        source computes a summary of the metrics it received.
+    --resolution=RESOLUTION
+                        Additional granularity in seconds to tell the data
+                        source to aggregate further.
+    --filtertype=FILTERTYPE
+                        Traffic filter type, needs to be one of 'steelfilter',
+                        'wireshark', 'bpf', defaults to 'steelfilter'
+    --filterexpr=FILTEREXPR
+                        Traffic filter expression
+
+  Output Options:
+    --csvfile=CSVFILE   CSV file to store report data
+
+A simple general repor that uses ``start_time`` as the key column, ``sum_tcp.payload_bytes``
+and ``sum_tcp.payload_packets`` as value columns, against the ``flow_tcp`` source:
+
+.. code-block:: none
+
+   $ python general_report.py ar11.example.com -u admin -p admin --sourcename flow_tcp
+     --keycolumns start_time --valuecolumns sum_tcp.payload_bytes,sum_tcp.payload_packets
+     --timerange 'last 1 min'
+
+    start_time,sum_tcp.payload_bytes,sum_tcp.payload_packets
+    1509590160,23181326,41931
+
+For a complete list of available source names to choose from, see the ouput of the built-in
+command `steel appresponse sources <file:///Users/wguo/ws/steelscript/docs/_build/html/appresponse/tutorial.html#creating-an-appresponse-object>`_.
 
 .. _update_host_groups_example:
 

@@ -29,9 +29,14 @@ class Command(AppResponseApp):
                           help="name of source to which the columns belong")
 
     def main(self):
-        headers = ['ID', 'Description', 'Type']
+        headers = ['ID', 'Description', 'Type', 'Is Key']
         cols = self.appresponse.reports.sources[self.options.source]['columns']
-        data = [(c['id'], c['description'], c['type']) for c in cols.values()]
+
+        data = []
+        for c in cols.values():
+            is_key = not c['metric'] if 'metric' in c else True
+            data.append((c['id'], c['description'], c['type'], is_key))
+
         data.sort()
         Formatter.print_table(data,
                               headers,

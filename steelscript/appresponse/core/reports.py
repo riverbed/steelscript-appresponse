@@ -73,11 +73,6 @@ class SourceProxy(object):
         return ret
 
 
-# Still defines the PacketsSource to be backwards compatible.
-class PacketsSource(SourceProxy):
-    pass
-
-
 class ReportService(object):
 
     def __init__(self, appresponse):
