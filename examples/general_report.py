@@ -18,20 +18,20 @@ from steelscript.appresponse.core.reports import DataDef, Report, SourceProxy
 from steelscript.common.datautils import Formatter
 
 
-class PacketsReportApp(AppResponseApp):
+class GeneralReportApp(AppResponseApp):
     def add_options(self, parser):
-        super(PacketsReportApp, self).add_options(parser)
+        super(GeneralReportApp, self).add_options(parser)
 
         group = optparse.OptionGroup(parser, "Source Options")
-        group.add_option('--sourcetype',
-                         dest='sourcetype', default=None,
-                         help='Type of data source to run report against, '
-                              'i.e. file, clip or job')
-        group.add_option('--sourceid',
-                         dest='sourceid', default=None,
-                         help='ID of the source to run report against.'
-                              'If source is a capture job, use the name '
-                              'instead of the ID of the job.')
+
+        group.add_option('--showsources',
+                         dest='showsources',
+                         default=False, action='store_true',
+                         help='Display the set of source names')
+        group.add_option('--sourcename',
+                         dest='sourcename', default=None,
+                         help='Name of source to run report against, '
+                              'i.e. aggregates, flow_tcp, etc.')
         group.add_option('--keycolumns',
                          dest='keycolumns',
                          default=None,
@@ -69,36 +69,34 @@ class PacketsReportApp(AppResponseApp):
         parser.add_option_group(group)
 
     def validate_args(self):
-        super(PacketsReportApp, self).validate_args()
+        super(GeneralReportApp, self).validate_args()
 
-        if self.options.sourcetype not in ['file', 'clip', 'job']:
-            self.parser.error("Source type should be set as "
-                              "one of 'file', 'clip', 'job'")
+        if self.options.showsources:
+            return
 
-        if self.options.sourceid is None:
-            self.parser.error("Name of the source must be provided")
+        if self.options.sourcename is None:
+            self.parser.error("Source name must be provided.")
 
         if self.options.keycolumns is None:
-            self.parser.error("Key column names must be provided")
+            self.parser.error("Key column names must be provided.")
 
         if self.options.valuecolumns is None:
-            self.parser.error("Value column names must be provided")
+            self.parser.error("Value column names must be provided.")
 
-        if (self.options.timerange is None and
-                self.options.sourcetype == 'job'):
-            self.parser.error("Time range must be provided for 'job' source")
+        if self.options.timerange is None:
+            self.parser.error("Time range must be provided.")
 
     def main(self):
-        if self.options.sourcetype == 'file':
-            source = self.appresponse.fs.get_file_by_id(self.options.sourceid)
-        elif self.options.sourcetype == 'job':
-            source = self.appresponse.capture.\
-                get_job_by_name(self.options.sourceid)
-        else:
-            source = self.appresponse.clips.\
-                get_clip_by_id(self.options.sourceid)
 
-        data_source = SourceProxy(source)
+        if self.options.showsources:
+            svcdef = self.appresponse.find_service('npm.reports')
+            dr = svcdef.bind('source_names')
+            source_names = dr.execute('get').data
+            print '\n'.join(source_names)
+            return
+
+        source = SourceProxy(name=self.options.sourcename)
+
         columns = []
         headers = []
         for col in self.options.keycolumns.split(','):
@@ -109,7 +107,7 @@ class PacketsReportApp(AppResponseApp):
             columns.append(Value(col))
             headers.append(col)
 
-        data_def = DataDef(source=data_source,
+        data_def = DataDef(source=source,
                            columns=columns,
                            granularity=self.options.granularity,
                            resolution=self.options.resolution,
@@ -136,5 +134,5 @@ class PacketsReportApp(AppResponseApp):
 
 
 if __name__ == "__main__":
-    app = PacketsReportApp()
+    app = GeneralReportApp()
     app.run()

@@ -25,11 +25,13 @@ class Command(AppResponseApp):
                           help="truncate description column, don't wrap")
         parser.add_option('-w', '--table-width', default=120,
                           help="max char width of table output, default: 120")
+        parser.add_option('--source', default='packets',
+                          help="name of source to which the columns belong")
 
     def main(self):
         headers = ['ID', 'Description', 'Type']
-        data = [(c['id'], c['description'], c['type'])
-                for c in self.appresponse.reports.get_columns().values()]
+        cols = self.appresponse.reports.sources[self.options.source]['columns']
+        data = [(c['id'], c['description'], c['type']) for c in cols.values()]
         data.sort()
         Formatter.print_table(data,
                               headers,

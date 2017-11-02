@@ -21,7 +21,7 @@ from steelscript.appfwk.apps.devices.forms import fields_add_device_selection
 from steelscript.appfwk.libs.fields import Function
 from steelscript.appfwk.apps.datasource.forms import IDChoiceField
 from steelscript.appresponse.core.reports import \
-    PacketsSource, DataDef, Report
+    SourceProxy, DataDef, Report
 from steelscript.appresponse.core.types import Key, Value
 from steelscript.common.timeutils import datetime_to_seconds
 from steelscript.appresponse.core.fs import File
@@ -52,11 +52,11 @@ def appresponse_source_choices(form, id_, field_kwargs, params):
 
         for job in ar.capture.get_jobs():
             if job.status == 'RUNNING':
-                choices.append((PacketsSource(job).path, job.name))
+                choices.append((SourceProxy(job).path, job.name))
 
         if params['include_files']:
             for f in ar.fs.get_files():
-                choices.append((PacketsSource(f).path, f.id))
+                choices.append((SourceProxy(f).path, f.id))
 
     field_kwargs['label'] = 'Source'
     field_kwargs['choices'] = choices
@@ -132,11 +132,11 @@ class AppResponseQuery(TableQueryBase):
 
         source_path = criteria.appresponse_source
 
-        if source_path.startswith(PacketsSource.JOB_PREFIX):
-            job_id = source_path.lstrip(PacketsSource.JOB_PREFIX)
+        if source_path.startswith(SourceProxy.JOB_PREFIX):
+            job_id = source_path.lstrip(SourceProxy.JOB_PREFIX)
             source = ar.capture.get_job_by_id(job_id)
         else:
-            file_id = source_path.lstrip(PacketsSource.FILE_PREFIX)
+            file_id = source_path.lstrip(SourceProxy.FILE_PREFIX)
             source = ar.fs.get_file_by_id(file_id)
 
         col_extractors, col_names = [], {}
@@ -159,7 +159,7 @@ class AppResponseQuery(TableQueryBase):
             start = datetime_to_seconds(criteria.starttime)
             end = datetime_to_seconds(criteria.endtime)
 
-        data_def = DataDef(source=source,
+        data_def = DataDef(source=SourceProxy(source),
                            columns=col_extractors,
                            granularity=criteria.granularity.total_seconds(),
                            start=start,
