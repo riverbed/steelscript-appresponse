@@ -371,7 +371,7 @@ and ``sum_tcp.payload_packets`` as value columns, against the ``flow_tcp`` sourc
     1509590160,23181326,41931
 
 For a complete list of available source names to choose from, see the ouput of the built-in
-command ``steel appresponse sources``.
+command `steel appresponse sources <file:///Users/wguo/ws/steelscript/docs/_build/html/appresponse/tutorial.html#creating-an-appresponse-object>`_.
 
 .. _update_host_groups_example:
 

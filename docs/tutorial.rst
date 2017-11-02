@@ -28,7 +28,7 @@ Interacting with an AppResponse Applicance leverages two key classes:
 * :py:class:`AppResponse <appresponse.AppResponse>` - provides the primary interface to the appliance, handling initialization, setup,
 and communication via REST API calls.
 
-* :py:class:`Report <report.Report>` - talks through the AppResponse object to create new report and pull data when the report is completed.
+* :py:class:`Report <reports.Report>` - talks through the AppResponse object to create new report and pull data when the report is completed.
 
 To start, start Python from the shell or command line:
 
@@ -451,4 +451,3 @@ a nice table format, shown as below:
 .. code-block:: python
 
    Formatter.print_table(data, header)
-
