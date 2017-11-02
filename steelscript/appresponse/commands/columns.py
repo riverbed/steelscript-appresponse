@@ -34,8 +34,8 @@ class Command(AppResponseApp):
 
         data = []
         for c in cols.values():
-            metric = not c['metric'] if 'metric' in c else True
-            data.append((c['id'], c['description'], c['type'], metric))
+            is_key = not c['metric'] if 'metric' in c else True
+            data.append((c['id'], c['description'], c['type'], is_key))
 
         data.sort()
         Formatter.print_table(data,
