@@ -20,13 +20,13 @@ report_groups = OrderedDict([
 
 # Mapping from group title to group sources
 report_sources = OrderedDict([
-    ('Packets', ['packets']),
-    ('Application Stream Analysis', ['aggregates', 'flow_tcp']),
-    ('Web Transaction Analysis', ['aggregates', 'wtapages', 'wtapageobjects']),
-    ('DB Analysis', ['dbsession_summaries', 'sql_summaries',
-                     'sqlsessions', 'sqlqueries']),
-    ('UC Analysis', ['aggregates', 'voip_rtp_channels', 'voip_calls']),
-    ('System Metrics', [
+    ('packets', ['packets']),
+    ('asa', ['aggregates', 'flow_tcp']),
+    ('wta', ['aggregates', 'wtapages', 'wtapageobjects']),
+    ('db', ['dbsession_summaries', 'sql_summaries',
+            'sqlsessions', 'sqlqueries']),
+    ('uc', ['aggregates', 'voip_rtp_channels', 'voip_calls']),
+    ('system', [
                'system_metrics.mipmaps',
                'system_metrics.cpu',
                'system_metrics.chassis',
@@ -52,7 +52,7 @@ report_sources = OrderedDict([
                'system_metrics.disk',
                'system_metrics.memory',
                'system_metrics.tds']),
-    ('Other', ['tdstest', 'alert_list']),
+    ('other', ['tdstest', 'alert_list']),
 ])
 
 # List of all report source names

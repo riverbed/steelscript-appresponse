@@ -64,8 +64,7 @@ class Command(AppResponseApp):
                    'Granularities in Seconds']
 
         if self.options.group:
-            group_title = report_groups[self.options.group]
-            source_names = report_sources[group_title]
+            source_names = report_sources[self.options.group]
         else:
             source_names = report_source_names
 
