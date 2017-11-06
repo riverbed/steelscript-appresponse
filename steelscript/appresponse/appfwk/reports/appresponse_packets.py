@@ -12,7 +12,7 @@ import steelscript.appfwk.apps.report.modules.tables as tables
 from steelscript.appresponse.appfwk.datasources.appresponse import \
     AppResponseTable
 
-report = Report.create("AppResponse Packets Report")
+report = Report.create("AppResponse Packets")
 
 report.add_section()
 

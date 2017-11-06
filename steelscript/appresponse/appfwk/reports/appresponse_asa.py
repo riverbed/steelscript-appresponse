@@ -12,7 +12,7 @@ import steelscript.appfwk.apps.report.modules.tables as tables
 from steelscript.appresponse.appfwk.datasources.appresponse import \
     AppResponseTable
 
-report = Report.create("AppResponse General Report")
+report = Report.create("AppResponse Application Stream Analysis")
 
 report.add_section()
 
