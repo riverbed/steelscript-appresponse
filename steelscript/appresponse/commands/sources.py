@@ -14,7 +14,7 @@ List all the sources that the given AppResponse appliance supports.
 from steelscript.appresponse.core.app import AppResponseApp
 from steelscript.common.datautils import Formatter
 from steelscript.appresponse.core._constants import report_groups, \
-    report_source_names, report_sources
+    report_sources, report_source_to_groups
 
 
 class Command(AppResponseApp):
@@ -30,7 +30,7 @@ class Command(AppResponseApp):
                                "all sources will be shown. "
                                "The mapping of each name is as below."
                                "                                           "
-                               "--------------------------------------------- "
+                               "---------------------------------------------- "
                                "packets: Packets                      "
                                "                       "
                                "asa: Application Stream Analysis"
@@ -48,8 +48,8 @@ class Command(AppResponseApp):
                           )
         parser.add_option('--truncate', default=False, action='store_true',
                           help="truncate description column, don't wrap")
-        parser.add_option('-w', '--table-width', default=120,
-                          help="max char width of table output, default: 120")
+        parser.add_option('-w', '--table-width', default=150,
+                          help="max char width of table output, default: 150")
 
     def validate_args(self):
         super(Command, self).validate_args()
@@ -60,19 +60,21 @@ class Command(AppResponseApp):
                                   .format(', '.join(report_groups.keys())))
 
     def main(self):
-        headers = ['Name', 'Filters Supported on Metric Columns',
+        headers = ['Name', 'Groups', 'Filters Supported on Metric Columns',
                    'Granularities in Seconds']
 
         if self.options.group:
             source_names = report_sources[self.options.group]
         else:
-            source_names = report_source_names
+            source_names = report_source_to_groups.keys()
 
         data = []
         for name in source_names:
             s = self.appresponse.reports.sources[name]
 
-            data.append([s['name'], str(s['filters_on_metrics']),
+            data.append([s['name'],
+                         ', '.join(report_source_to_groups[name]),
+                         str(s['filters_on_metrics']),
                          ', '.join(s['granularities'])
                          if s['granularities'] else '---'])
 

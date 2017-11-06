@@ -55,13 +55,10 @@ report_sources = OrderedDict([
     ('other', ['tdstest', 'alert_list']),
 ])
 
-# List of all report source names
-report_source_names = []
-for source_names in report_sources.values():
-    report_source_names.extend(source_names)
-
-# There are three 'aggregates' sources
-indices = [idx for idx, source in enumerate(report_source_names)
-           if source == 'aggregates']
-report_source_names.pop(indices[2])
-report_source_names.pop(indices[1])
+report_source_to_groups = OrderedDict()
+for group, sources in report_sources.iteritems():
+    for source in sources:
+        if source in report_source_to_groups:
+            report_source_to_groups[source].append(report_groups[group])
+        else:
+            report_source_to_groups[source] = [report_groups[group]]
