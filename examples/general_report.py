@@ -55,12 +55,10 @@ class GeneralReportApp(AppResponseApp):
         group.add_option('--resolution', dest='resolution',
                          help='Additional granularity in seconds to tell the '
                               'data source to aggregate further.')
-        group.add_option('--filtertype', dest='filtertype',
-                         help="Traffic filter type, needs to be one of "
-                              "'steelfilter', 'wireshark', 'bpf', defaults"
-                              " to 'steelfilter'")
         group.add_option('--filterexpr', dest='filterexpr',
-                         help="Traffic filter expression")
+                         help="steelfilter traffic filter expression. "
+                              "bpf and wireshark filters are not supported "
+                              "for non-packets sources.")
         parser.add_option_group(group)
 
         group = optparse.OptionGroup(parser, "Output Options")
@@ -112,7 +110,7 @@ class GeneralReportApp(AppResponseApp):
                            time_range=self.options.timerange)
 
         if self.options.filterexpr:
-            data_def.add_filter(TrafficFilter(type_=self.options.filtertype,
+            data_def.add_filter(TrafficFilter(type_='steelfilter',
                                               value=self.options.filterexpr))
 
         report = Report(self.appresponse)

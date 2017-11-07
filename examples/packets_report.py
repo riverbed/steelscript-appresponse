@@ -56,6 +56,7 @@ class PacketsReportApp(AppResponseApp):
                          help='Additional granularity in seconds to tell the '
                               'data source to aggregate further.')
         group.add_option('--filtertype', dest='filtertype',
+                         default='steelfilter',
                          help="Traffic filter type, needs to be one of "
                               "'steelfilter', 'wireshark', 'bpf', defaults"
                               " to 'steelfilter'")
