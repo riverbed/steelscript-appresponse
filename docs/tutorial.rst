@@ -301,11 +301,12 @@ granularity values that the interested source supports. Running the below comman
 
    $ steel appresponse sources $host -u $username -p $password --group wta
 
-   Name            Filters Supported on Metric Columns  Granularities in Seconds
-   ----------------------------------------------------------------------------------
-   aggregates      True                                 60, 300, 3600, 21600, 86400
-   wtapages        False                                ---
-   wtapageobjects  False                                ---
+   Name            Groups                                                              Filters Supported on Metric Columns  Granularities in Seconds
+   ------------------------------------------------------------------------------------------------------------------------------------------------------
+   aggregates      Application Stream Analysis, Web Transaction Analysis, UC           True                                 60, 300, 3600, 21600, 86400
+                   Analysis
+   wtapages        Web Transaction Analysis                                            False                                ---
+   wtapageobjects  Web Transaction Analysis                                            False                                ---
 
 As can be seen, the ``aggregates`` source supports graunularity values as ``60``,
 ``300``, ``3600``, ``21600`` and ``86400`` (as in seconds). On the other hand,
