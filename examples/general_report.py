@@ -77,9 +77,6 @@ class GeneralReportApp(AppResponseApp):
         if self.options.sourcename is None:
             self.parser.error("Source name must be provided.")
 
-        if self.options.keycolumns is None:
-            self.parser.error("Key column names must be provided.")
-
         if self.options.valuecolumns is None:
             self.parser.error("Value column names must be provided.")
 
@@ -99,9 +96,10 @@ class GeneralReportApp(AppResponseApp):
 
         columns = []
         headers = []
-        for col in self.options.keycolumns.split(','):
-            columns.append(Key(col))
-            headers.append(col)
+        if self.options.keycolumns:
+            for col in self.options.keycolumns.split(','):
+                columns.append(Key(col))
+                headers.append(col)
 
         for col in self.options.valuecolumns.split(','):
             columns.append(Value(col))

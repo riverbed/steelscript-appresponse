@@ -110,7 +110,11 @@ class TrafficFilter(object):
             to 'STEELFILTER'
 
             example STEELFILTER expression:
-                ip.addr==1.2.3.4 OR ip.addr==1.1.1.1
+                <column_id>==1.2.3.4 OR <column_id>==1.1.1.1
+            where "column_id" refers to the ID of the column of which the
+            records are filtered. The column should be supported by the
+            source, and is either a key column or a metric column if
+            the source supports filters on metric columns.
 
             example WIRESHARK expression: ip.addr==1.2.3.4 or ip.addr==1.1.1.1
 

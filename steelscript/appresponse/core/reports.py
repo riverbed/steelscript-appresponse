@@ -364,7 +364,8 @@ class Report(object):
 
         for i, col in enumerate(result['columns']):
             if columns[col]['type'] in ['integer', 'timestamp']:
-                functions[i] = lambda x: None if x == 'NULL' else int(x)
+                functions[i] = (lambda x: None if x == 'NULL'
+                                else int(x) if x.isdigit() else x)
             elif columns[col]['type'] in ('number', 'duration'):
                 functions[i] = lambda x: None if x == 'NULL' else float(x)
 
@@ -372,6 +373,7 @@ class Report(object):
         datacols = []
         for i, c in enumerate(zip(*result['data'])):
             datacols.append(map(functions[i], c))
+
         records = zip(*datacols)
 
         return records
