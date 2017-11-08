@@ -106,7 +106,7 @@ Now create a file called ``report.py`` and insert the following code:
    from steelscript.appresponse.core.appresponse import AppResponse
    from steelscript.common import UserAuth
    from steelscript.appresponse.core.reports import DataDef, Report
-   from steelscript.appresponse.core.types import Key, Value
+   from steelscript.appresponse.core.types import Key, Value, TrafficFilter
    from steelscript.appresponse.core.reports import SourceProxy
 
    # Fill these in with appropriate values
@@ -128,6 +128,8 @@ Now create a file called ``report.py`` and insert the following code:
    time_range = 'last 1 minute'
 
    data_def = DataDef(source=source, columns=columns, granularity='10', time_range=time_range)
+
+   data_def.add_filter(TrafficFilter('tcp.port==80'))
 
    report = Report(ar)
    report.add(data_def)
@@ -162,7 +164,7 @@ The first few lines are simply importing a few classes that we will be using:
    from steelscript.appresponse.core.appresponse import AppResponse
    from steelscript.common import UserAuth
    from steelscript.appresponse.core.reports import DataDef, Report
-   from steelscript.appresponse.core.types import Key, Value
+   from steelscript.appresponse.core.types import Key, Value, TrafficFilter
    from steelscript.appresponse.core.reports import SourceProxy
 
 Creating an AppResponse object
@@ -235,16 +237,22 @@ For instance, running the command in shell should render the information as belo
 
    $ steel appresponse sources $host -u $username -p $password --group wta
 
-   Name            Filters Supported on Metric Columns  Granularities in Seconds
-   ----------------------------------------------------------------------------------
-   aggregates      True                                 60, 300, 3600, 21600, 86400
-   wtapages        False                                ---
-   wtapageobjects  False                                ---
+   Name            Groups                                                              Filters Supported on Metric Columns  Granularities in Seconds
+   ------------------------------------------------------------------------------------------------------------------------------------------------------
+   aggregates      Application Stream Analysis, Web Transaction Analysis, UC           True                                 60, 300, 3600, 21600, 86400
+                   Analysis
+   wtapages        Web Transaction Analysis                                            False                                ---
+   wtapageobjects  Web Transaction Analysis                                            False                                ---
 
 It shows that under the ``wta`` group, there exists 3 sources, ``aggregates``,
 ``wtapages``, ``wtapageobjects``. Note that ``aggregates`` source belongs to
 the following groups: ``asa``, ``wta`` and ``uc``. ``packets`` group only
-has one source named ``packets``.
+has one source named ``packets``. Filters can be applied on the metric
+columns of the source ``aggregates``, while it is not possible to do so
+with ``wtapages`` and ``wtapageobjects`` sources. ``aggregates`` source
+supports multiple granularity values, such as 60 seconds, 300 seconds,
+3600 seconds, 21600 seconds and 86400 seconds.
+
 
 Choosing Columns
 >>>>>>>>>>>>>>>>
@@ -271,15 +279,15 @@ command in shell as:
 
    $ steel appresponse columns $host -u $username -p $password --source packets
 
-     ID                                                Description                                        Type       Is Key
-     ------------------------------------------------------------------------------------------------------------------------
+     ID                                                Description                                        Type       Metric   Key/Value
+     ----------------------------------------------------------------------------------------------------------------------------------
      ...
-     avg_frame.total_bytes                             Total packet length                                number     False
+     avg_frame.total_bytes                             Total packet length                                number     True     Value
      ...
-     start_time                                        Used for time series data. Indicates the           timestamp  True
+     start_time                                        Used for time series data. Indicates the           timestamp  ----     Key
                                                        beginning of a resolution bucket.
      ...
-     sum_tcp.total_bytes                               Number of total bytes for TCP traffic              integer    False
+     sum_tcp.total_bytes                               Number of total bytes for TCP traffic              integer    True     Value
 
 Note that it would be better to pipe the output using ``| more`` as there can be more
 than 1000 columns.
@@ -336,6 +344,32 @@ With all the above values derived, we can now create a ``DataDef`` object as bel
 
    data_def = DataDef(source=source, columns=columns, granularity=granularity, time_range=time_range)
 
+Adding Traffic filters
+>>>>>>>>>>>>>>>>>>>>>>
+
+To filter the data, it is easy to add traffic filters to the ``DataDef`` object. Firstly let us
+create a traffic filter as below.
+
+.. code-block:: python
+
+   tf = TrafficFilter('tcp.port==80')
+
+The above filter is a ``steelfilter`` traffic filter that output records with ``tcp.port == 80``.
+Note that running the ``sources`` commmand script can show whether filters can be applied on metric
+columns for each source.
+
+Note that ``packets`` source also accepts ``bpf`` filter and ``wireshark`` filter. They both have
+their own syntax and set of filter fields. Other sources do not support either ``bpf`` filter or
+``wireshark`` filter.
+
+Now we can add the filter to the ``DataDef`` object.
+
+.. code-block:: python
+
+   data_def.add_filter(tf)
+
+You can create multiple filters and add them to the ``DataDef`` object one by one using the above method.
+
 Running a report
 >>>>>>>>>>>>>>>>
 
@@ -376,7 +410,7 @@ Let us create a file ``table_report.py`` and insert the following code:
    from steelscript.appresponse.core.appresponse import AppResponse
    from steelscript.common import UserAuth
    from steelscript.appresponse.core.reports import DataDef, Report
-   from steelscript.appresponse.core.types import Key, Value
+   from steelscript.appresponse.core.types import Key, Value, TrafficFilter
    from steelscript.appresponse.core.reports import SourceProxy
    # Import the Formatter class to output data in a table format
    from steelscript.common.datautils import Formatter
@@ -400,6 +434,8 @@ Let us create a file ``table_report.py`` and insert the following code:
    time_range = 'last 1 minute'
 
    data_def = DataDef(source=source_proxy, columns=columns, granularity='10', time_range=time_range)
+
+   data_def.add_filter(TrafficFilter('tcp.port==80'))
 
    report = Report(ar)
    report.add(data_def)

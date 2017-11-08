@@ -288,7 +288,8 @@ the values:
 
     $ python packets_report.py ar11.example.com -u admin -p admin --sourcetype=job \
     --sourceid=default_job --keycolumns=src_ip.addr,dst_ip.addr \
-    --valuecolumns=sum_traffic.total_bytes,sum_traffic.packets --timerange='last 10 seconds' --granularity=1
+    --valuecolumns=sum_traffic.total_bytes,sum_traffic.packets --timerange='last 10 seconds' --granularity=1 \
+    --filterexpr 'tcp.port==80'
 
     src_ip.addr,dst_ip.addr,sum_traffic.total_bytes,sum_traffic.packets
     3ffe::300:ff:fe00:62,3ffe::200:ff:fe00:2,888,12
@@ -365,7 +366,7 @@ and ``sum_tcp.payload_packets`` as value columns, against the ``flow_tcp`` sourc
 
    $ python general_report.py ar11.example.com -u admin -p admin --sourcename flow_tcp
      --keycolumns start_time --valuecolumns sum_tcp.payload_bytes,sum_tcp.payload_packets
-     --timerange 'last 1 min'
+     --timerange 'last 1 min' --filterexpr 'cli_tcp.port==80'
 
     start_time,sum_tcp.payload_bytes,sum_tcp.payload_packets
     1509590160,23181326,41931
