@@ -358,9 +358,16 @@ The above filter is a ``steelfilter`` traffic filter that output records with ``
 Note that running the ``sources`` commmand script can show whether filters can be applied on metric
 columns for each source.
 
-Note that ``packets`` source also accepts ``bpf`` filter and ``wireshark`` filter. They both have
-their own syntax and set of filter fields. Other sources do not support either ``bpf`` filter or
-``wireshark`` filter.
+It is worth mentioning that ``packets`` source also supports ``bpf`` filter and ``wireshark`` filter.
+They both have their own syntax and set of filter fields. Other sources do not support either ``bpf``
+filter or ``wireshark`` filter.
+
+``bpf`` filter and ``wireshark`` filter can be created as below.
+
+.. code-block:: python
+
+   bpf_filter = TrafficFilter('port 80', _type='bpf')
+   wireshark_filter = TrafficFilter('tcp.port==80', _type='wireshark')
 
 Now we can add the filter to the ``DataDef`` object.
 
