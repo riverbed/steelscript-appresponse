@@ -1,0 +1,18 @@
+CHANGELOG
+=========
+
+[1.1]
+ * Support filters for reports
+ * Reports for non-packets sources
+ * Add/update command scripts
+ * Add general_reports.py script
+
+[1.0]
+ * Add tutorial
+ * Performance enhancement: remove unnecessary REST calls
+ * Add Appfwk reports for packets report
+
+[0.5]
+ * Support packets reports
+ * Add example scripts
+ * Support CRUD for host group
