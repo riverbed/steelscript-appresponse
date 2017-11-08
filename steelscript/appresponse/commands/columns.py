@@ -29,13 +29,15 @@ class Command(AppResponseApp):
                           help="name of source to which the columns belong")
 
     def main(self):
-        headers = ['ID', 'Description', 'Type', 'Key/Value']
+        headers = ['ID', 'Description', 'Type', 'Metric', 'Key/Value']
         cols = self.appresponse.reports.sources[self.options.source]['columns']
 
         data = []
         for c in cols.values():
             v = 'Key' if 'grouped_by' in c and c['grouped_by'] else 'Value'
-            data.append((c['id'], c['description'], c['type'], v))
+            metric = c['metric'] if 'metric' in c else '---'
+            data.append((c['id'], c['description'], c['type'],
+                         metric, v))
 
         data.sort()
         Formatter.print_table(data,
