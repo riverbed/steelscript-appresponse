@@ -253,6 +253,8 @@ with ``wtapages`` and ``wtapageobjects`` sources. ``aggregates`` source
 supports multiple granularity values, such as 60 seconds, 300 seconds,
 3600 seconds, 21600 seconds and 86400 seconds.
 
+We will support native methods for accessing source information via Python
+in an upcoming release.
 
 Choosing Columns
 >>>>>>>>>>>>>>>>
@@ -290,7 +292,7 @@ command in shell as:
      sum_tcp.total_bytes                               Number of total bytes for TCP traffic              integer    True     Value
 
 Note that it would be better to pipe the output using ``| more`` as there can be more
-than 1000 columns.
+than 1000 rows.
 
 Construct a list of columns, including both key columns and value columns in
 your script as shown below.
@@ -298,6 +300,8 @@ your script as shown below.
 .. code-block:: python
 
    columns = [Key('start_time'), Value('sum_tcp.total_bytes'), Value('avg_frame.total_bytes')]
+
+We will support native methods for accessing column information via Python in an upcoming release.
 
 Setting Time Fields
 >>>>>>>>>>>>>>>>>>>
@@ -366,8 +370,8 @@ filter or ``wireshark`` filter.
 
 .. code-block:: python
 
-   bpf_filter = TrafficFilter('port 80', _type='bpf')
-   wireshark_filter = TrafficFilter('tcp.port==80', _type='wireshark')
+   bpf_filter = TrafficFilter('port 80', type_='bpf')
+   wireshark_filter = TrafficFilter('tcp.port==80', type_='wireshark')
 
 Now we can add the filter to the ``DataDef`` object.
 
