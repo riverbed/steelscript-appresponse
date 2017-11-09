@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-[1.1]
+[1.1.1]
  * Support filters for reports
  * Reports for non-packets sources
  * Add/update command scripts
