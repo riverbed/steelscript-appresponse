@@ -15,6 +15,7 @@ from steelscript.appresponse.core.clips import Clip
 from steelscript.appresponse.core.fs import File
 from steelscript.appresponse.core.capture import Job
 from steelscript.common._fs import SteelScriptDir
+from steelscript.appresponse.core._constants import report_source_to_groups
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +112,8 @@ class ReportService(object):
                 sources = svcdef.bind('sources').execute('get').data['items']
 
                 for source in sources:
+                    if source['name'] not in report_source_to_groups:
+                        continue
                     cols = source['columns']
                     source['columns'] = \
                         OrderedDict(sorted(zip(map(lambda x: x['id'], cols),

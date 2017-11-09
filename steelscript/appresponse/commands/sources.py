@@ -25,8 +25,8 @@ class Command(AppResponseApp):
         parser.add_option('--group', default=None,
                           help="Name of group that sources belong to, "
                                "needs to be one of the following: "
-                               "'packets', 'asa', 'wta', 'db', 'uc',"
-                               "'system' and 'other'. If not provided, "
+                               "'packets', 'asa', 'wta', 'db' and 'uc'."
+                               "If not provided, "
                                "all sources will be shown. "
                                "The mapping of each name is as below."
                                "                                           "
@@ -40,10 +40,7 @@ class Command(AppResponseApp):
                                "db: DB Analysis"
                                "                                         "
                                "uc: UC Analysis"
-                               "                                     "
-                               "system: System Metrics"
-                               "                                     "
-                               "other: Other Sources "
+                               "                                         "
                                "--------------------------------------------- "
                           )
         parser.add_option('--truncate', default=False, action='store_true',

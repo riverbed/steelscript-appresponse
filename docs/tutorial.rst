@@ -225,9 +225,9 @@ To know the available source names, just execute the following command in shell:
    steel appresponse sources $host -u $username -p $password --group $group_name
 
 where ``$group_name`` should be replaced with one of ``packets``, ``asa``, ``wta``, ``db``,
-``uc``, ``system`` and ``other``. In those group acronyms, ``asa`` references "Application
+``uc``. In those group acronyms, ``asa`` references "Application
 Stream Analysis". ``wta`` references "Web Transaction Analysis". ``db`` references "DB Analysis".
-``uc`` references "UC Analysis". ``system`` references "System Metrics". Note that these names
+``uc`` references "UC Analysis". Note that these names
 are just used to group the sources based on their general application. They are invented only
 for the ease of exhibition.
 
@@ -260,7 +260,7 @@ Choosing Columns
 >>>>>>>>>>>>>>>>
 
 Then we select the set of columns that we are interested in collecting. Note
-that AppResponse has dozens of sources. Each source supports a different set
+that AppResponse supports multiple sources. Each source supports a different set
 of columns.  Each column can be either a key column or a value column.
 Each row of data will be aggregated according to the set of key columns selected.
 The value columns define the set of additional data to collect per row. In this

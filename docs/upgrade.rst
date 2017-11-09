@@ -10,7 +10,7 @@ Support New Data Sources
 steelscript.appresponse 1.0 only supports reporting against packets sources, such as capture jobs,
 clips and Pcap files. The 1.1 release adds support for reporting for all the remaining data
 sources, which falls into groups such as **Application Stream Analysis**, **Web Transaction Analysis**,
-**DB Analysis**, **UC Analysis**, **System Metrics** and **Other**.
+**DB Analysis**, **UC Analysis**.
 
 Add Example Script
 ^^^^^^^^^^^^^^^^^^
