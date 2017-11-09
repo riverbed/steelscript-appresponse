@@ -31,7 +31,7 @@ report_sources = OrderedDict([
 # EXPERIMENT is a shell variable dictating whether to include
 # sources from 'system' and 'other' group
 
-if os.environ.get('EXPERIMENT', 'False').lower() == 'true':
+if os.environ.get('AR11_EXPERIMENTAL_FEATURES', 'False').lower() == 'true':
     exp_groups = OrderedDict([
         ('system', 'System Metrics'),
         ('other', 'Other')])
@@ -65,7 +65,7 @@ if os.environ.get('EXPERIMENT', 'False').lower() == 'true':
                    'system_metrics.disk',
                    'system_metrics.memory',
                    'system_metrics.tds']),
-        ('other', ['tdstest', 'alert_list']),
+        ('other', ['alert_list']),
     ])
 
     report_sources.update(exp_sources)
