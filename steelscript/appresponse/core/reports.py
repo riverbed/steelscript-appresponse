@@ -103,17 +103,25 @@ class ReportService(object):
 
         for svc in [PACKETS_REPORT_SERVICE_NAME,
                     GENERAL_REPORT_SERVICE_NAME]:
-            svcdef = self.appresponse.find_service(svc)
-            version = self.appresponse.versions[svc]
-            sources_filename = '{}-sources-{}.pcl'.format(svc, version)
+            svc_version = self.appresponse.versions[svc]
+            sw_version = (self.appresponse.get_info()['sw_version']
+                          .replace(' ', ''))
+            sources_filename = ('{}-sources-{}-{}.pcl'
+                                .format(svc, svc_version, sw_version))
             sources_file = ss_dir.get_data(sources_filename)
 
+            sources_file.read()
+
             if not sources_file.data:
+                svcdef = self.appresponse.find_service(svc)
+
+                # sources is a list of dictionaries
                 sources = svcdef.bind('sources').execute('get').data['items']
 
+                # the whole set of sources for current service
+                all_sources = {}
+
                 for source in sources:
-                    if source['name'] not in report_source_to_groups:
-                        continue
                     cols = source['columns']
                     source['columns'] = \
                         OrderedDict(sorted(zip(map(lambda x: x['id'], cols),
@@ -123,16 +131,25 @@ class ReportService(object):
                     if 'granularities' not in source:
                         source['granularities'] = None
 
-                    self._sources[source['name']] = source
-                sources_file.data = self._sources
+                    all_sources[source['name']] = source
+
+                    if source['name'] in report_source_to_groups:
+                        self._sources[source['name']] = source
+
+                # source_file writes the whole set of sources to disk
+                sources_file.data = all_sources
                 sources_file.write()
                 logger.debug("Wrote sources data into {}"
                              .format(sources_filename))
             else:
                 logger.debug("Loading sources data from {}"
                              .format(sources_filename))
-                sources_file.read()
-                self._sources.update(sources_file.data)
+                # Only load valid sources based on settings
+                for k, v in sources_file.data.iteritems():
+                    if k in report_source_to_groups:
+                        self._sources[k] = v
+
+        return
 
     def create_report(self, data_def_request):
         """Create a report instance with just one data definition request."""

@@ -364,7 +364,7 @@ A simple general report that outputs applications with response time larger than
 
 .. code-block:: none
 
-   $ python general_report.py 680-valloy14.lab.nbttech.com -u admin -p admin \
+   $ python general_report.py ar11.example.com -u admin -p admin \
      --keycolumns app.id --valuecolumns app.name,avg_tcp.srv_response_time,avg_tcp.user_response_time \
      --source aggregates --timerange 'last 1 min' --granularity 60 \
      --filterexpr 'avg_tcp.user_response_time>1'
