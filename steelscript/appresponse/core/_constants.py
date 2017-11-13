@@ -19,13 +19,23 @@ report_groups = OrderedDict([
     ('uc', 'UC Analysis')])
 
 # Mapping from group title to group sources
-report_sources = OrderedDict([
-    ('packets', ['packets']),
-    ('asa', ['aggregates', 'flow_tcp']),
-    ('wta', ['aggregates', 'wtapages', 'wtapageobjects']),
-    ('db', ['dbsession_summaries', 'sql_summaries',
-            'sqlsessions', 'sqlqueries']),
-    ('uc', ['aggregates', 'voip_rtp_channels', 'voip_calls'])])
+if os.environ.get('AR11_ADVANCED_FEATURES', 'False').lower() == 'true':
+    report_sources = OrderedDict([
+        ('packets', ['packets']),
+        ('asa', ['aggregates', 'flow_tcp']),
+        ('wta', ['aggregates', 'wtapages', 'wtapageobjects']),
+        ('db',  ['dbsession_summaries', 'sql_summaries',
+                 'sqlsessions', 'sqlqueries']),
+        ('uc', ['aggregates', 'voip_rtp_channels', 'voip_calls'])])
+
+else:
+    report_sources = OrderedDict([
+        ('packets', ['packets']),
+        ('asa', ['aggregates']),
+        ('wta', ['aggregates']),
+        ('db', ['dbsession_summaries', 'sql_summaries']),
+        ('uc', ['aggregates'])
+    ])
 
 
 # EXPERIMENT is a shell variable dictating whether to include
