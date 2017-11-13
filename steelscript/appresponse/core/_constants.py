@@ -19,6 +19,9 @@ report_groups = OrderedDict([
     ('uc', 'UC Analysis')])
 
 # Mapping from group title to group sources
+# AR11_ADVANCED_FEATURES is a shell variable telling
+# whether advanced sources should be exposed or not.
+
 if os.environ.get('AR11_ADVANCED_FEATURES', 'False').lower() == 'true':
     report_sources = OrderedDict([
         ('packets', ['packets']),
