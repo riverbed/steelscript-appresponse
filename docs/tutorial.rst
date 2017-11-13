@@ -222,36 +222,23 @@ To know the available source names, just execute the following command in shell:
 
 .. code-block:: bash
 
-   steel appresponse sources $host -u $username -p $password --group $group_name
+   $ steel appresponse sources $host -u $username -p $password
 
-where ``$group_name`` should be replaced with one of ``packets``, ``asa``, ``wta``, ``db``,
-``uc``. In those group acronyms, ``asa`` references "Application
-Stream Analysis". ``wta`` references "Web Transaction Analysis". ``db`` references "DB Analysis".
-``uc`` references "UC Analysis". Note that these names
-are just used to group the sources based on their general application. They are invented only
-for the ease of exhibition.
-
-For instance, running the command in shell should render the information as below:
-
-.. code-block:: bash
-
-   $ steel appresponse sources $host -u $username -p $password --group wta
-
-   Name            Groups                                                              Filters Supported on Metric Columns  Granularities in Seconds
+   Name                 Groups                                       Filters Supported on Metric Columns  Granularities in Seconds
    ------------------------------------------------------------------------------------------------------------------------------------------------------
-   aggregates      Application Stream Analysis, Web Transaction Analysis, UC           True                                 60, 300, 3600, 21600, 86400
-                   Analysis
-   wtapages        Web Transaction Analysis                                            False                                ---
-   wtapageobjects  Web Transaction Analysis                                            False                                ---
+   packets              Packets                                      False                                0.1, 0.01, 0.001, 1, 10, 60, 600, 3600, 86400
+   aggregates           Application Stream Analysis, Web             True                                 60, 300, 3600, 21600, 86400
+                        Transaction Analysis, UC Analysis
+   dbsession_summaries  DB Analysis                                  False                                60, 300, 3600, 21600, 86400
+   sql_summaries        DB Analysis                                  False                                60, 300, 3600, 21600, 86400
 
-It shows that under the ``wta`` group, there exists 3 sources, ``aggregates``,
-``wtapages``, ``wtapageobjects``. Note that ``aggregates`` source belongs to
-the following groups: ``asa``, ``wta`` and ``uc``. ``packets`` group only
-has one source named ``packets``. Filters can be applied on the metric
-columns of the source ``aggregates``, while it is not possible to do so
-with ``wtapages`` and ``wtapageobjects`` sources. ``aggregates`` source
-supports multiple granularity values, such as 60 seconds, 300 seconds,
-3600 seconds, 21600 seconds and 86400 seconds.
+It shows that there are totally 4 supported sources. Note the following:
+
+- Source ``aggregates`` belongs to the 3 groups: Application Stream Analysis, Web Transaction Analysis and UC Analysis.
+
+- Filters can be applied on the metric columns for the source ``aggregates``.
+
+- Filters are not supported on metric columns for source ``packets``, ``dbsession_summaries`` and ``sql_summaries``.
 
 We will support native methods for accessing source information via Python
 in an upcoming release.
@@ -311,20 +298,18 @@ granularity values that the interested source supports. Running the below comman
 
 .. code-block:: bash
 
-   $ steel appresponse sources $host -u $username -p $password --group wta
+   $ steel appresponse sources $host -u $username -p $password
 
-   Name            Groups                                                              Filters Supported on Metric Columns  Granularities in Seconds
+   Name                 Groups                                       Filters Supported on Metric Columns  Granularities in Seconds
    ------------------------------------------------------------------------------------------------------------------------------------------------------
-   aggregates      Application Stream Analysis, Web Transaction Analysis, UC           True                                 60, 300, 3600, 21600, 86400
-                   Analysis
-   wtapages        Web Transaction Analysis                                            False                                ---
-   wtapageobjects  Web Transaction Analysis                                            False                                ---
+   packets              Packets                                      False                                0.1, 0.01, 0.001, 1, 10, 60, 600, 3600, 86400
+   aggregates           Application Stream Analysis, Web             True                                 60, 300, 3600, 21600, 86400
+                        Transaction Analysis, UC Analysis
+   dbsession_summaries  DB Analysis                                  False                                60, 300, 3600, 21600, 86400
+   sql_summaries        DB Analysis                                  False                                60, 300, 3600, 21600, 86400
 
-As can be seen, the ``aggregates`` source supports graunularity values as ``60``,
-``300``, ``3600``, ``21600`` and ``86400`` (as in seconds). On the other hand,
-``wtapages`` and ``wtapageobjects`` do not support aggregation. Thus the argument
-``granularity`` should not be used when initializing a ``DataDef`` object for sources
-that do not support granularity.
+As can be seen, source ``packets`` supports graunularity values of ``0.1``,
+``0.01``, ``0.001``, ``1``, ``10``, ``60``, ``600``, ``3600`` and ``86400`` (as in seconds).
 
 .. code-block:: python
 
@@ -336,8 +321,8 @@ Setting granularity to ``10`` means the data source computes a
 summary of the metrics it received based on intervals of ``10`` seconds.
 
 The parameter ``time_range`` specifies the time range for which the data source computes
-the metrics. Other valid formats include ``this minute``, ``previous hour`` and
-``06/05/17 17:09:00 to 06/05/17 18:09:00``.
+the metrics. Other valid formats include "``this minute``", "``previous hour``" and
+"``06/05/17 17:09:00 to 06/05/17 18:09:00``".
 
 Initializing Data Definition Object
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

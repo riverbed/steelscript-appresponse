@@ -370,7 +370,9 @@ class Report(object):
                 functions[i] = (lambda x: None if x == 'NULL'
                                 else int(x) if x.isdigit() else x)
             elif columns[col]['type'] in ('number', 'duration'):
-                functions[i] = lambda x: None if x == 'NULL' else float(x)
+                functions[i] = (lambda x: None if x == 'NULL'
+                                else float(x) if
+                                x.replace('.', '', 1).isdigit() else x)
 
         # operate on each column, then zip back into list of tuples
         datacols = []

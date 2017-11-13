@@ -311,8 +311,8 @@ the values:
 
     .... snipped ....
 
- For a complete listing of the available columns to choose, see the output
- of the builtin command ``steel appresponse columns``.
+For a complete listing of the available columns to choose, see the output of the builtin command
+`steel appresponse columns <https://support.riverbed.com/apis/steelscript/appresponse/tutorial.html#creating-an-appresponse-object>`_.
 
 
 .. _general_report_example:
@@ -359,20 +359,25 @@ The availble options for this script:
   Output Options:
     --csvfile=CSVFILE   CSV file to store report data
 
-A simple general repor that uses ``start_time`` as the key column, ``sum_tcp.payload_bytes``
-and ``sum_tcp.payload_packets`` as value columns, against the ``flow_tcp`` source:
+A simple general report that outputs applications with response time larger than
+1 second over the last 1 minute can be run as follows:
 
 .. code-block:: none
 
-   $ python general_report.py ar11.example.com -u admin -p admin --sourcename flow_tcp
-     --keycolumns start_time --valuecolumns sum_tcp.payload_bytes,sum_tcp.payload_packets
-     --timerange 'last 1 min' --filterexpr 'cli_tcp.port==80'
+   $ python general_report.py 680-valloy14.lab.nbttech.com -u admin -p admin \
+     --keycolumns app.id --valuecolumns app.name,avg_tcp.srv_response_time,avg_tcp.user_response_time \
+     --source aggregates --timerange 'last 1 min' --granularity 60 \
+     --filterexpr 'avg_tcp.user_response_time>1'
 
-    start_time,sum_tcp.payload_bytes,sum_tcp.payload_packets
-    1509590160,23181326,41931
+    app.id,app.name,avg_tcp.srv_response_time,avg_tcp.user_response_time
+    1000,Quantcast,2.108343132,3.559153813
+    1002,Rambler.ru,0.332615682,6.157294029
+    1003,Rapleaf,0.759893196,8.380697625
+
+    .... snipped ....
 
 For a complete list of available source names to choose from, see the ouput of the built-in
-command `steel appresponse sources <file:///Users/wguo/ws/steelscript/docs/_build/html/appresponse/tutorial.html#creating-an-appresponse-object>`_.
+command `steel appresponse sources <https://support.riverbed.com/apis/steelscript/appresponse/tutorial.html#creating-a-data-definition-object>`_.
 
 .. _update_host_groups_example:
 
