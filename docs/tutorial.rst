@@ -324,10 +324,10 @@ summary of the metrics it received based on intervals of ``10`` seconds.
 
 Resolution is an additional to granularity setting that tells the
 data source to aggregate the data further. Its numeric value must be
-multiple of the requested granularity value. In this case, the data
+multiple of the requested granularity value. In the script, the data
 will be aggregated on 20-second intervals. Setting resolution is optional.
 
-If resolution is taken out from the above script, the output would consist of
+If resolution is taken out from the script, the output would consist of
 10-second summaries instead of 20-second aggregated records, similar as below.
 
 .. code-block:: bash
