@@ -125,9 +125,12 @@ Now create a file called ``report.py`` and insert the following code:
 
    granularity = '10'
 
+   resolution = '20'
+
    time_range = 'last 1 minute'
 
-   data_def = DataDef(source=source, columns=columns, granularity='10', time_range=time_range)
+   data_def = DataDef(source=source, columns=columns, granularity=granularity,
+                      resolution=resolution, time_range=time_range)
 
    data_def.add_filter(TrafficFilter('tcp.port==80'))
 
@@ -143,12 +146,9 @@ like the following:
 .. code-block:: bash
 
    $ python report.py
-   [(u'1501610710', 4272341.0, 245.138),
-    (u'1501610720', 4130029.0, 255.536),
-    (u'1501610730', 4391768.0, 263.485),
-    (u'1501610740', 4560534.0, 260.836),
-    (u'1501610750', 4110080.0, 254.337),
-    (u'1501610760', 2802668.0, 251.946)]
+    [(1510685000, 3602855, 772.979),
+     (1510685020, 4109306, 754.001),
+     (1510685040, 657524, 779.057)]
 
 Let's take a closer look at what this script is doing.
 
@@ -315,10 +315,30 @@ As can be seen, source ``packets`` supports graunularity values of ``0.1``,
 
    granularity = '10'
 
+   resolution = '20'
+
    time_range = 'last 1 minute'
 
 Setting granularity to ``10`` means the data source computes a
 summary of the metrics it received based on intervals of ``10`` seconds.
+
+Resolution is an additional to granularity setting that tells the
+data source to aggregate the data further. Its numeric value must be
+multiple of the requested granularity value. In this case, the data
+will be aggregated on 20-second intervals. Setting resolution is optional.
+
+If resolution is taken out from the above script, the output would consist of
+10-second summaries instead of 20-second aggregated records, similar as below.
+
+.. code-block:: bash
+
+   $ python report.py
+    [(1510687770, 911456, 784.386),
+     (1510687780, 1672581, 780.85),
+     (1510687790, 1709843, 776.143),
+     (1510687800, 1338178, 797.484),
+     (1510687810, 1368713, 771.541),
+     (1510687820, 545244, 791.356)]
 
 The parameter ``time_range`` specifies the time range for which the data source computes
 the metrics. Other valid formats include "``this minute``", "``previous hour``" and
@@ -427,9 +447,12 @@ Let us create a file ``table_report.py`` and insert the following code:
 
    granularity = '10'
 
+   resolution = '20'
+
    time_range = 'last 1 minute'
 
-   data_def = DataDef(source=source_proxy, columns=columns, granularity='10', time_range=time_range)
+   data_def = DataDef(source=source_proxy, columns=columns, granularity=granularity,
+                      resolution=resolution, time_range=time_range)
 
    data_def.add_filter(TrafficFilter('tcp.port==80'))
 
@@ -455,12 +478,9 @@ result is rendered in a table format as the following:
 
     start_time    sum_tcp.total_bytes    avg_frame.total_bytes
     --------------------------------------------------------------
-    1501681110    4286398.0              267.309
-    1501681120    4825195.0              360.635
-    1501681130    6252248.0              468.954
-    1501681140    4741664.0              332.374
-    1501681150    4386239.0              282.895
-    1501681160    476495.0               292.533
+    1510685000    3602855                772.979
+    1510685020    4109306                754.001
+    1510685040    657524                 779.057
 
 As can be seen from the script, there are 3 differences.
 
