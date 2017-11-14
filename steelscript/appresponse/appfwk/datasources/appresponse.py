@@ -137,13 +137,13 @@ class AppResponseQuery(TableQueryBase):
 
             if source_name.startswith(SourceProxy.JOB_PREFIX):
                 job_id = source_name.lstrip(SourceProxy.JOB_PREFIX)
-                source = ar.capture.get_job_by_id(job_id)
+                source = SourceProxy(ar.capture.get_job_by_id(job_id))
             else:
                 file_id = source_name.lstrip(SourceProxy.FILE_PREFIX)
-                source = ar.fs.get_file_by_id(file_id)
+                source = SourceProxy(ar.fs.get_file_by_id(file_id))
 
         else:
-            source = SourceProxy(self.table.options.source)
+            source = SourceProxy(name=self.table.options.source)
 
         col_extractors, col_names = [], {}
 
@@ -165,7 +165,7 @@ class AppResponseQuery(TableQueryBase):
             start = datetime_to_seconds(criteria.starttime)
             end = datetime_to_seconds(criteria.endtime)
 
-        data_def = DataDef(source=SourceProxy(source),
+        data_def = DataDef(source=source,
                            columns=col_extractors,
                            start=start,
                            end=end)
