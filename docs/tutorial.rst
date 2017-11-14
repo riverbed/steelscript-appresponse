@@ -216,7 +216,7 @@ just using the name of the source as below:
 
 .. code-block:: python
 
-   source_proxy = SourceProxy('$source_name')
+   source_proxy = SourceProxy(name='$source_name')
 
 To know the available source names, just execute the following command in shell:
 
