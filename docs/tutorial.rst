@@ -322,7 +322,7 @@ As can be seen, source ``packets`` supports graunularity values of ``0.1``,
 Setting granularity to ``10`` means the data source computes a
 summary of the metrics it received based on intervals of ``10`` seconds.
 
-Resolution is an additional to granularity setting that tells the
+Resolution is a setting in addition to granularity that tells the
 data source to aggregate the data further. Its numeric value must be
 multiple of the requested granularity value. In the script, the data
 will be aggregated on 20-second intervals. Setting resolution is optional.
