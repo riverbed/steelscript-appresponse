@@ -176,12 +176,12 @@ class AppResponseQuery(TableQueryBase):
             start = datetime_to_seconds(criteria.starttime)
             end = datetime_to_seconds(criteria.endtime)
 
-        data_def = DataDef(source=source,
-                           columns=col_extractors,
-                           start=start,
-                           end=end)
-
-        data_def.granularity = criteria.granularity.total_seconds()
+        data_def = DataDef(
+            source=source,
+            columns=col_extractors,
+            granularity=str(criteria.granularity.total_seconds()),
+            start=start,
+            end=end)
 
         report = Report(ar)
         report.add(data_def)
