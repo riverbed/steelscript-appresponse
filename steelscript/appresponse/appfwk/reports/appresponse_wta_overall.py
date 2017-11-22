@@ -19,7 +19,8 @@ report = Report.create("AppResponse WTA Overall")
 report.add_section()
 
 # t1 is used to derive the overall metrics over the duration
-t1 = AppResponseTable.create('wta-overall', source='aggregates')
+t1 = AppResponseTable.create('wta-overall', source='aggregates',
+                             sort_col_name='pages', ascending=False)
 t1.add_column('page_family_id', 'Web Page Family ID',
               datatype='string', iskey=True,
               extractor='web.page.family.id')

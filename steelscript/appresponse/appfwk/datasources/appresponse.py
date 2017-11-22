@@ -96,7 +96,9 @@ class AppResponseTable(DatasourceTable):
 
     TABLE_OPTIONS = {'source': 'packets',
                      'include_files': False,
-                     'show_entire_pcap': True}
+                     'show_entire_pcap': True,
+                     'sort_col_name': None,
+                     'ascending': False}
 
     FIELD_OPTIONS = {'duration': '1h',
                      'granularity': '1m'}
@@ -203,6 +205,12 @@ class AppResponseQuery(TableQueryBase):
                 df[col.name] = df[col.name].apply(lambda x: to_float(x))
             elif col.datatype == Column.DATATYPE_INTEGER:
                 df[col.name] = df[col.name].apply(lambda x: to_int(x))
+
+        if self.table.options.sort_col_name:
+            df.sort(columns=self.table.options.sort_col_name,
+                    ascending=self.table.options.ascending,
+                    inplace=True)
+
         return QueryComplete(df)
 
 
@@ -272,6 +280,7 @@ class AppResponseTimeSeriesQuery(AnalysisQuery):
 
             # Add pivot column to the data frame
             sub_df = df[df[pivot_column] == pivot]
+
             # extract time column and value column
             sub_df = sub_df[[time_col_name,
                              self.table.options.value_column_name]]
@@ -281,6 +290,7 @@ class AppResponseTimeSeriesQuery(AnalysisQuery):
                          self.table.options.value_column_name: pivot},
                 inplace=True
             )
+
             sub_dfs.append(sub_df)
 
         df_final = reduce(
