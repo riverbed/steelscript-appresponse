@@ -6,7 +6,6 @@
 
 import logging
 import pandas
-import socket
 import functools
 
 from django import forms
