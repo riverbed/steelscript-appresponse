@@ -6,7 +6,7 @@
 # as set forth in the License.
 
 from steelscript.appfwk.apps.report.models import Report
-import steelscript.appfwk.apps.report.modules.c3 as c3
+import steelscript.appfwk.apps.report.modules.yui3 as yui3
 
 from steelscript.appresponse.appfwk.datasources.appresponse import \
     AppResponseTable, AppResponseTimeSeriesTable
@@ -33,12 +33,12 @@ t1 = AppResponseTimeSeriesTable.create('web-pages',
                                        pivot_column_name='page_family_name',
                                        value_column_name='pages')
 
-report.add_widget(c3.TimeSeriesWidget, t1, 'Number of Pages',
+report.add_widget(yui3.TimeSeriesWidget, t1, 'Number of Pages',
                   width=12)
 
 t2 = AppResponseTimeSeriesTable.create('web-page-bps',
                                        tables={'base': t},
                                        pivot_column_name='page_family_name',
                                        value_column_name='page_bps')
-report.add_widget(c3.TimeSeriesWidget, t2, 'Average Page Throughput',
+report.add_widget(yui3.TimeSeriesWidget, t2, 'Average Page Throughput',
                   width=12)
