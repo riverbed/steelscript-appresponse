@@ -395,15 +395,13 @@ class AppResponseLinkQuery(AnalysisQuery):
         duration = criteria.duration.seconds
         endtime = datetime_to_seconds(criteria.endtime)
         granularity = criteria.granularity.seconds
-        hostname = socket.gethostname()
 
         def make_report_link(mod, v):
-            hostname = '127.0.0.1:30080'
-            s = ('<a href="http://{}/report/appresponse/{}/?'
+            s = ('<a href="/report/appresponse/{}/?'
                  'duration={}&appresponse_device={}&endtime={}&'
                  'pivot_column_names={}&granularity={}&auto_run=true" '
                  'target="_blank">{}</a>'
-                 .format(hostname, mod, duration, devid, endtime, v,
+                 .format(mod, duration, devid, endtime, v,
                          granularity, v))
             return s
 
