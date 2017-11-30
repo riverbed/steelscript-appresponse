@@ -208,6 +208,8 @@ class AppResponseQuery(TableQueryBase):
                 df[col.name] = df[col.name].apply(lambda x: to_int(x))
             elif col.datatype == Column.DATATYPE_TIME:
                 if granularity < 1:
+                    # The fractional epoch time values are in string
+                    # Thus needs to be converted to float
                     df[col.name] = df[col.name].apply(float)
 
         if self.table.options.sort_col_name:
