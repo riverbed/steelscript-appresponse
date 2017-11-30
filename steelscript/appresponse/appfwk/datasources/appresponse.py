@@ -177,10 +177,12 @@ class AppResponseQuery(TableQueryBase):
             start = datetime_to_seconds(criteria.starttime)
             end = datetime_to_seconds(criteria.endtime)
 
+        granularity = criteria.granularity.total_seconds()
+
         data_def = DataDef(
             source=source,
             columns=col_extractors,
-            granularity=str(criteria.granularity.total_seconds()),
+            granularity=str(granularity),
             start=start,
             end=end)
 
@@ -204,12 +206,14 @@ class AppResponseQuery(TableQueryBase):
                 df[col.name] = df[col.name].apply(lambda x: to_float(x))
             elif col.datatype == Column.DATATYPE_INTEGER:
                 df[col.name] = df[col.name].apply(lambda x: to_int(x))
+            elif col.datatype == Column.DATATYPE_TIME:
+                if granularity < 1:
+                    df[col.name] = df[col.name].apply(float)
 
         if self.table.options.sort_col_name:
             df.sort(columns=self.table.options.sort_col_name,
                     ascending=self.table.options.ascending,
                     inplace=True)
-
         return QueryComplete(df)
 
 
