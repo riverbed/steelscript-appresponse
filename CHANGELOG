@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+[1.2]
+ * Add App Framework support for all data sources
+ * Documentation updates
+ * Better support for sources and columns caching
+ * Bug fixes
+
 [1.1.1]
  * Support filters for reports
  * Reports for non-packets sources
