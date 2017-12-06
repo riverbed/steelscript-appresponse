@@ -184,8 +184,8 @@ class TimeFilter(object):
                 invalid = True
             else:
                 start, end = timeutils.parse_range(time_range)
-                self.start = start.strftime('%s')
-                self.end = end.strftime('%s')
+                self.start = timeutils.datetime_to_seconds(start)
+                self.end = timeutils.datetime_to_seconds(end)
 
         elif duration:
             if not start and not end:

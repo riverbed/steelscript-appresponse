@@ -14,9 +14,6 @@ class AppResponseApp(Application):
         super(AppResponseApp, self).__init__(*args, **kwargs)
         self.appresponse = None
 
-    def parse_args(self):
-        super(AppResponseApp, self).parse_args()
-
     def add_positional_args(self):
         self.add_positional_arg('host', 'AppResponse hostname or IP address')
 
