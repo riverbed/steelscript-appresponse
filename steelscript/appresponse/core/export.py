@@ -6,8 +6,11 @@
 
 import logging
 
+import time
+
 from steelscript.appresponse.core.reports import SourceProxy
 from steelscript.appresponse.core.types import ServiceClass
+from steelscript.common.exceptions import RvbdHTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +30,8 @@ class PacketExportService(ServiceClass):
     def create(self, source, timefilter, filters):
 
         config = dict(path=SourceProxy(source).path,
-                      start_time=timefilter.start,
-                      end_time=timefilter.end,
+                      start_time=str(timefilter.start),
+                      end_time=str(timefilter.end),
                       filters=dict(items=filters))
 
         resp = self.exports.execute('create', _data=dict(config=config))
@@ -49,7 +52,13 @@ class Export(object):
         self.delete()
 
     def download(self, filename, overwrite):
-        self.appresponse.download(self.exp_id, filename, overwrite)
+        try:
+            self.appresponse.download(self.exp_id, filename, overwrite)
+        except RvbdHTTPException:
+            # export may not be ready yet, try one more time
+            time.sleep(1)
+            logger.info('Export %s not ready, re-trying ...' % self.exp_id)
+            self.appresponse.download(self.exp_id, filename, overwrite)
 
     def delete(self):
         try:
