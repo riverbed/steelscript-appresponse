@@ -40,6 +40,10 @@ class GeneralReportApp(AppResponseApp):
                          default=None,
                          help='List of value column names separated by comma'
                          )
+        group.add_option('--topbycolumns', dest='topbycolumns',
+                         default=None,
+                         help='List of column names to be topped by seperated by commas'
+                         )
         parser.add_option_group(group)
 
         group = optparse.OptionGroup(parser, "Time and Filter Options")
@@ -59,6 +63,8 @@ class GeneralReportApp(AppResponseApp):
                          help="steelfilter traffic filter expression. "
                               "bpf and wireshark filters are not supported "
                               "for non-packets sources.")
+        group.add_option('--limit', dest='limit',
+                         help='The limit on the number of records to return.')
         parser.add_option_group(group)
 
         group = optparse.OptionGroup(parser, "Output Options")
@@ -103,11 +109,19 @@ class GeneralReportApp(AppResponseApp):
             columns.append(Value(col))
             headers.append(col)
 
+        topbycolumns = []
+        
+        if self.options.topbycolumns:
+            for col in self.options.topbycolumns.split(','):
+                topbycolumns.append(Key(col))
+
         data_def = DataDef(source=source,
                            columns=columns,
                            granularity=self.options.granularity,
                            resolution=self.options.resolution,
-                           time_range=self.options.timerange)
+                           time_range=self.options.timerange,
+                           limit=self.options.limit,
+                           topbycolumns=topbycolumns)
 
         if self.options.filterexpr:
             data_def.add_filter(TrafficFilter(type_='steelfilter',

@@ -259,7 +259,8 @@ class DataDef(object):
     suitable for uploading to a report.
     """
     def __init__(self, source, columns, start=None, end=None, duration=None,
-                 time_range=None, granularity=None, resolution=None):
+                 time_range=None, granularity=None, resolution=None, limit=None, 
+                 topbycolumns=None):
         """Initialize a data definition request object.
 
         :param source: SourceProxy object.
@@ -270,6 +271,8 @@ class DataDef(object):
         :param time_range: string time range of data def request.
         :param str granularity: granularity in seconds. Required.
         :param str resolution: resolution in seconds. Optional
+        :param limit: limit to number of returned rows. Optional
+        :param topbycolumn: Key/Value columns to be used for topn. Optional.
 
         For defining the overall time for the report, either a
         single `time_range` string may be used or a combination of
@@ -301,6 +304,9 @@ class DataDef(object):
                                      duration=duration, time_range=time_range)
         self._filters = []
         self._data = None
+        self.limit = limit
+        self.topbycolumns = topbycolumns
+        
 
     def to_dict(self):
 
@@ -324,7 +330,19 @@ class DataDef(object):
 
         if self._filters:
             data_def['filters'] = self._filters
-
+            
+        if self.limit:
+            data_def['limit'] = int(self.limit)
+      
+        topbycolumns = [] 
+        for col in self.topbycolumns:
+            topbycol = dict()
+            topbycol["direction"] = "desc"
+            topbycol["id"] = col.name 
+            topbycolumns.append(topbycol) 
+ 
+        data_def['top_by'] = topbycolumns    
+            
         return data_def
 
     def add_filter(self, filter):
@@ -379,22 +397,10 @@ class Report(object):
 
         logger.debug("Converting string in records into integer/float")
 
-        columns = self.appresponse.reports.sources[source_name]['columns']
-        functions = [lambda x: x] * len(result['columns'])
-
-        for i, col in enumerate(result['columns']):
-            if columns[col]['type'] in ['integer', 'timestamp']:
-                functions[i] = (lambda x: None if x == 'NULL'
-                                else int(x) if x.isdigit() else x)
-            elif columns[col]['type'] in ('number', 'duration'):
-                functions[i] = (lambda x: None if x == 'NULL'
-                                else float(x) if
-                                x.replace('.', '', 1).isdigit() else x)
-
         # operate on each column, then zip back into list of tuples
         datacols = []
         for i, c in enumerate(zip(*result['data'])):
-            datacols.append(map(functions[i], c))
+            datacols.append(map(None, c))
 
         records = zip(*datacols)
 
