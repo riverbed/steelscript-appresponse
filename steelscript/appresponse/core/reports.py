@@ -31,7 +31,6 @@ class SourceProxy(object):
 
     def __init__(self, packets_obj=None, name=None, path=None):
         """Initialize a data source for reports to run against.
-
         :param packets_obj: Clip or File or Job object
         :param str name: Name of general report sources
         :param str path: Path of the packets data source
@@ -89,7 +88,6 @@ class ReportService(object):
     def _load_sources(self):
         """Get the names and granularites of sources. The hierarchy of the
         data looks like below:
-
             { "source1" : { "name": string,
                             "filters_on_metrics": boolean,
                             "columns": [source_column],
@@ -97,7 +95,6 @@ class ReportService(object):
                           }
               ...
             }
-
         """
         ss_dir = SteelScriptDir('AppResponse', 'files')
 
@@ -161,7 +158,6 @@ class ReportService(object):
 
     def create_instance(self, data_defs):
         """Create a report instance with multiple data definition requests.
-
         :param data_defs: list of DataDef objects
         :return: one ReportInstance object
         """
@@ -259,9 +255,9 @@ class DataDef(object):
     suitable for uploading to a report.
     """
     def __init__(self, source, columns, start=None, end=None, duration=None,
-                 time_range=None, granularity=None, resolution=None):
+                 time_range=None, granularity=None, resolution=None, limit=None, 
+                 topbycolumns=None):
         """Initialize a data definition request object.
-
         :param source: SourceProxy object.
         :param columns: list Key/Value column objects.
         :param start: epoch start time in seconds.
@@ -270,13 +266,12 @@ class DataDef(object):
         :param time_range: string time range of data def request.
         :param str granularity: granularity in seconds. Required.
         :param str resolution: resolution in seconds. Optional
-
+        :param limit: limit to number of returned rows. Optional
+        :param topbycolumn: Key/Value columns to be used for topn. Optional.
         For defining the overall time for the report, either a
         single `time_range` string may be used or a combination of
         `start`/`end`/`duration`.
-
         Further discussion on `granularity` and `resolution`:
-
         Granularity refers to the amount of time for which the data source
         computes a summary of the metrics it received. The data source
         examines all data and creates summaries for 1 second, 1 minute,
@@ -285,13 +280,11 @@ class DataDef(object):
         Lesser granularity (1 hour, 6 hours, 1 day) requires less processing
         and therefore the data is returned faster. Granularity must be
         specified as number of seconds.
-
         Resolution must be multiple of the requested granularity. For
         example, if you specify granularity of 5mins (300 seconds) then the
         resolution can be set to 5mins, 10mins, 15mins, etc. If the
         resolution is set to be equal of the granularity then it has no
         effect to the number of returned samples. The resolution is optional.
-
         """
         self.source = source
         self.columns = columns
@@ -301,6 +294,9 @@ class DataDef(object):
                                      duration=duration, time_range=time_range)
         self._filters = []
         self._data = None
+        self.limit = limit
+        self.topbycolumns = topbycolumns
+        
 
     def to_dict(self):
 
@@ -324,12 +320,23 @@ class DataDef(object):
 
         if self._filters:
             data_def['filters'] = self._filters
-
+            
+        if self.limit:
+            data_def['limit'] = int(self.limit)
+      
+        topbycolumns = [] 
+        for col in self.topbycolumns:
+            topbycol = dict()
+            topbycol["direction"] = "desc"
+            topbycol["id"] = col.name 
+            topbycolumns.append(topbycol) 
+ 
+        data_def['top_by'] = topbycolumns    
+            
         return data_def
 
     def add_filter(self, filter):
         """Add one traffic filter to the data def.
-
         :param filter: types.TrafficFilter object
         """
         self._filters.append(filter.as_dict())
@@ -351,7 +358,6 @@ class Report(object):
 
     def __init__(self, appresponse):
         """Initialize a new report against the given AppResponse object.
-
         :param appresponse: the AppResponse object.
         """
         logger.debug("Initializing Report object with appresponse '{}'"
@@ -371,7 +377,6 @@ class Report(object):
         of the column is 'number' or unit is not 'none', then check if
         the column name has 'avg' in its name, if yes, then convert it to
         float, otherwise to integer.
-
         :param dict result: includes metadata for one data def request
             as well as the response data for the data def request.
         :param string source_name: name of the source.
@@ -423,7 +428,6 @@ class Report(object):
 
     def get_data(self, index=0):
         """Return data for the indexed data definition requests.
-
         :param int index: Set to None to return data from all data definitions,
             defaults to returning the data from just the first data def.
         """
@@ -434,10 +438,8 @@ class Report(object):
 
     def get_legend(self, index=0, details=False):
         """Return legend information for the data definition.
-
         :param int index: Set to None to return data from all data definitions,
             defaults to returning the data from just the first data def.
-
         :param bool details: If True, return complete column dict, otherwise
             just short label ids for each column will be returned
         """
@@ -457,13 +459,10 @@ class Report(object):
     def get_dataframe(self, index=0):
         """Return data in pandas DataFrame format for the indexed
         data definition requests.
-
         This will return a single DataFrame for the given index, unlike
         ``get_data`` and ``get_legend`` which will optionally return info
         for all data defs in a report.
-
         **Requires `pandas` library to be available in environment.**
-
         :param int index: DataDef to process into DataFrame.  Defaults to 0.
         """
         import pandas
