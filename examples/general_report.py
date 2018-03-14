@@ -146,3 +146,4 @@ class GeneralReportApp(AppResponseApp):
 if __name__ == "__main__":
     app = GeneralReportApp()
     app.run()
+    
