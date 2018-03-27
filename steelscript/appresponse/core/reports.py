@@ -88,7 +88,7 @@ class ReportService(object):
     def _load_sources(self):
         """Get the names and granularites of sources. The hierarchy of the
         data looks like below:
-        
+
             { "source1" : { "name": string,
                             "filters_on_metrics": boolean,
                             "columns": [source_column],
@@ -96,7 +96,7 @@ class ReportService(object):
                           }
               ...
             }
-            
+
         """
         ss_dir = SteelScriptDir('AppResponse', 'files')
 
@@ -160,7 +160,7 @@ class ReportService(object):
 
     def create_instance(self, data_defs):
         """Create a report instance with multiple data definition requests.
-        
+
         :param data_defs: list of DataDef objects
         :return: one ReportInstance object
         """
@@ -258,10 +258,10 @@ class DataDef(object):
     suitable for uploading to a report.
     """
     def __init__(self, source, columns, start=None, end=None, duration=None,
-                 time_range=None, granularity=None, resolution=None, limit=None, 
-                 topbycolumns=None):
+                 time_range=None, granularity=None, resolution=None,
+                 limit=None, topbycolumns=None):
         """Initialize a data definition request object.
-        
+
         :param source: SourceProxy object.
         :param columns: list Key/Value column objects.
         :param start: epoch start time in seconds.
@@ -272,7 +272,7 @@ class DataDef(object):
         :param str resolution: resolution in seconds. Optional
         :param limit: limit to number of returned rows. Optional
         :param topbycolumn: Key/Value columns to be used for topn. Optional.
-        
+
         For defining the overall time for the report, either a
         single `time_range` string may be used or a combination of
         `start`/`end`/`duration`.
@@ -291,7 +291,7 @@ class DataDef(object):
         resolution is set to be equal of the granularity then it has no
         effect to the number of returned samples. The resolution is optional.
         """
-        
+
         self.source = source
         self.columns = columns
         self.granularity = granularity
@@ -301,7 +301,7 @@ class DataDef(object):
         self._filters = []
         self._data = None
         self.limit = limit
-        self.topbycolumns = topbycolumns  
+        self.topbycolumns = topbycolumns or []
 
     def to_dict(self):
 
@@ -325,19 +325,19 @@ class DataDef(object):
 
         if self._filters:
             data_def['filters'] = self._filters
-            
+
         if self.limit:
             data_def['limit'] = int(self.limit)
-      
-        topbycolumns = [] 
+
+        topbycolumns = []
         for col in self.topbycolumns:
             topbycol = dict()
             topbycol["direction"] = "desc"
-            topbycol["id"] = col.name 
-            topbycolumns.append(topbycol) 
- 
-        data_def['top_by'] = topbycolumns    
-            
+            topbycol["id"] = col.name
+            topbycolumns.append(topbycol)
+
+        data_def['top_by'] = topbycolumns
+
         return data_def
 
     def add_filter(self, filter):
