@@ -18,6 +18,7 @@ from steelscript.common._fs import SteelScriptDir
 from sleepwalker.connection import ConnectionManager, ConnectionHook
 from sleepwalker.service import ServiceManager
 from steelscript.appresponse.core.types import InstanceDescriptorMixin
+from reschema.exceptions import ParseError, UnsupportedSchema
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,11 @@ class AppResponseServiceDefLoader(ServiceDefLoadHook):
         rel_fname, abs_fname = self.get_fnames(name, version)
 
         if self.ss_dir.isfile(rel_fname):
-            return ServiceDef.create_from_file(abs_fname)
+            try:
+                return ServiceDef.create_from_file(abs_fname)
+            except (ValueError, ParseError, UnsupportedSchema) as e:
+                # Clean up invalid cache
+                os.remove(abs_fname)
 
         resp = self.connection.request(method='GET', path=id_)
 
@@ -85,7 +90,11 @@ class AppResponseServiceDefLoader(ServiceDefLoadHook):
 
         if self.ss_dir.isfile(rel_fname):
             # Found cache file
-            return ServiceDef.create_from_file(abs_fname)
+            try:
+                return ServiceDef.create_from_file(abs_fname)
+            except (ValueError, ParseError, UnsupportedSchema) as e:
+                # Clean up invalid cache
+                os.remove(abs_fname)
 
         service_id = self.SERVICE_ID.format(name=name, version=version)
         return self.find_by_id(service_id)
