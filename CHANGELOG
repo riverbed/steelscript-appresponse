@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+[1.3]
+ * Add support for topby columns and limit
+ * Handle corrupted ServiceDef caches
+ * Add get_instances method to retrieve all running reports
+
 [1.2]
  * Add App Framework support for all data sources
  * Documentation updates
@@ -15,7 +20,7 @@ CHANGELOG
 
 [1.0]
  * Add tutorial
- * Performance enhancement: remove unnecessary REST calls
+ * Performance enhancement - remove unnecessary REST calls
  * Add Appfwk reports for packets report
 
 [0.5]
