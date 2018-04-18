@@ -214,6 +214,67 @@ class ReportService(object):
                                        data_defs)
         return instance
 
+    def get_instances(self, service=None, include_system_reports=False):
+        """Get all running report instances on appliance.
+
+        Several different services can have instances running, which
+        covers both system processes as well as user initiated reports.
+        The primary means of identifying the sources is through the
+        `user_agent` field.  Examples are:
+
+        user reports:
+        'python-requests/2.4.3 CPython/2.7.12 Darwin/17.5.0 SteelScript/1.3.3'
+        'python-requests/2.4.3 CPython/2.7.12 Darwin/17.5.0'
+        'Pilot/11.3.1000.4175'
+        'curl/7.29.0'
+
+        system reports:
+        'Analytics v1.0'
+        'ReportManager (internal client)'
+        'webui'
+
+        By default, this method will only return `user reports` to avoid
+        accidentally deleting system reports.
+
+        :param service: optional service to check specifically.  If None,
+            will return from all available report services.  Valid options
+            include:  'npm.probe.reports' or 'npm.reports'
+        :param include_system_reports: Include system generated views,
+            including web UI reports in results.
+
+        :return: list of ReportInstance objects
+        """
+        if service is None:
+            services = [PACKETS_REPORT_SERVICE_NAME,
+                        GENERAL_REPORT_SERVICE_NAME]
+        else:
+            services = [service]
+
+        def test_user_agent(data):
+            system_report_agents = ('Analytics', 'ReportManager', 'webui')
+
+            if include_system_reports:
+                return True
+
+            for agent in system_report_agents:
+                if agent in data['user_agent']:
+                    return False
+
+            return True
+
+        instances = []
+
+        for svc in services:
+            svcdef = self.appresponse.find_service(svc)
+            datarep = svcdef.bind('instances')
+
+            for item in datarep['items']:
+                if test_user_agent(item.data):
+                    instance = ReportInstance(item.data, datarep=item)
+                    instances.append(instance)
+
+        return instances
+
 
 class ReportInstance(ResourceObject):
     """Main interface to interact with a probe report instance. """
@@ -223,6 +284,17 @@ class ReportInstance(ResourceObject):
     def __init__(self, data, servicedef=None, datarep=None):
         super(ReportInstance, self).__init__(data, servicedef, datarep)
         self.errors = []
+
+    def __str__(self):
+        return "<{} id:{} svc:{} user_agent:{}>".format(
+            self.__class__.__name__, self.data['id'],
+            self.datarep.service.servicedef.name, self.data['user_agent'])
+
+    def __repr__(self):
+        return "{}(id='{}', svc='{}', user_agent='{}')".format(
+            self.__class__.__name__, self.data['id'],
+            self.datarep.service.servicedef.name, self.data['user_agent']
+        )
 
     def is_complete(self):
 

@@ -22,27 +22,27 @@ class Command(AppResponseApp):
 
     def add_options(self, parser):
         super(Command, self).add_options(parser)
-        parser.add_option('--group', default=None,
-                          help="Name of group that sources belong to, "
-                               "needs to be one of the following: "
-                               "'packets', 'asa', 'wta', 'db' and 'uc'."
-                               "If not provided, "
-                               "all sources will be shown. "
-                               "The mapping of each name is as below."
-                               "                                           "
-                               "---------------------------------------------- "
-                               "packets: Packets                      "
-                               "                       "
-                               "asa: Application Stream Analysis"
-                               "                      "
-                               "wta: Web Transaction Analysis"
-                               "                           "
-                               "db: DB Analysis"
-                               "                                         "
-                               "uc: UC Analysis"
-                               "                                         "
-                               "--------------------------------------------- "
-                          )
+        parser.add_option(
+            '--group', default=None,
+            help="Name of group that sources belong to, needs to be "
+                 "one of the following: "
+                 "'packets', 'asa', 'wta', 'db' and 'uc'. "
+                 "If not provided, all sources will be shown. "
+                 "The mapping of each name is as below."
+                 "                                           "
+                 "---------------------------------------------- "
+                 "packets: Packets                      "
+                 "                       "
+                 "asa: Application Stream Analysis"
+                 "                      "
+                 "wta: Web Transaction Analysis"
+                 "                           "
+                 "db: DB Analysis"
+                 "                                         "
+                 "uc: UC Analysis"
+                 "                                         "
+                 "--------------------------------------------- "
+        )
         parser.add_option('--truncate', default=False, action='store_true',
                           help="truncate description column, don't wrap")
         parser.add_option('-w', '--table-width', default=150,
