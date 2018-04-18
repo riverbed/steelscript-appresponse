@@ -5,6 +5,7 @@ CHANGELOG
  * Add support for topby columns and limit
  * Handle corrupted ServiceDef caches
  * Add get_instances method to retrieve all running reports
+ * Add example clean_report_instances.py script
 
 [1.2]
  * Add App Framework support for all data sources
