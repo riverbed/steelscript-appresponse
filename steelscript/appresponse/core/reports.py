@@ -67,7 +67,7 @@ class SourceProxy(object):
 
     def to_dict(self):
         ret = {}
-        for k, v in vars(self).iteritems():
+        for k, v in vars(self).items():
             if v:
                 ret[k] = v
         return ret
@@ -123,7 +123,7 @@ class ReportService(object):
                 for source in sources:
                     cols = source['columns']
                     source['columns'] = \
-                        OrderedDict(sorted(zip(map(lambda x: x['id'], cols),
+                        OrderedDict(sorted(zip([x['id'] for x in cols],
                                                cols)))
                     source['filters_on_metrics'] = \
                         source['capabilities']['filters_on_metrics']
@@ -144,7 +144,7 @@ class ReportService(object):
                 logger.debug("Loading sources data from {}"
                              .format(sources_filename))
                 # Only load valid sources based on settings
-                for k, v in sources_file.data.iteritems():
+                for k, v in sources_file.data.items():
                     if k in report_source_to_groups:
                         self._sources[k] = v
 
@@ -476,9 +476,9 @@ class Report(object):
         # operate on each column, then zip back into list of tuples
         datacols = []
         for i, c in enumerate(zip(*result['data'])):
-            datacols.append(map(functions[i], c))
+            datacols.append(list(map(functions[i], c)))
 
-        records = zip(*datacols)
+        records = list(zip(*datacols))
 
         return records
 

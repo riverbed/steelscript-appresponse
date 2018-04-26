@@ -23,7 +23,7 @@ class HostGroupConfig(DictObject):
              'out_speed', 'out_speed_unit', 'tags']
 
     def __init__(self, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             if k in self.Attrs:
                 setattr(self, k, v)
             else:
@@ -67,7 +67,7 @@ class ClassificationService(ServiceClass):
         try:
             resp = self.servicedef.bind('hostgroup', id=id_)
             return HostGroup(data=resp.data, datarep=resp)
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('No hostgroup found with id %s' % id_)
 

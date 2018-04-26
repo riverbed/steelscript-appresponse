@@ -52,9 +52,11 @@ class Command(AppResponseApp):
         super(Command, self).validate_args()
 
         if self.options.group:
-            if self.options.group not in report_groups.keys():
+            if self.options.group not in list(report_groups.keys()):
                 self.parser.error("group needs to one of {}."
-                                  .format(', '.join(report_groups.keys())))
+                                  .format(', '.join(list(
+                    report_groups.keys())))
+                )
 
     def main(self):
         headers = ['Name', 'Groups', 'Filters Supported on Metric Columns',
@@ -63,7 +65,7 @@ class Command(AppResponseApp):
         if self.options.group:
             source_names = report_sources[self.options.group]
         else:
-            source_names = report_source_to_groups.keys()
+            source_names = list(report_source_to_groups.keys())
 
         data = []
         for name in source_names:

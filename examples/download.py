@@ -100,7 +100,7 @@ class DownloadApp(AppResponseApp):
             self.parser.error("Select either --timerange or --start and "
                               "--end times")
 
-        filters = [dict(zip(['id', 'type', 'value'], f.split(',')))
+        filters = [dict(list(zip(['id', 'type', 'value'], f.split(','))))
                    for f in self.options.filters]
 
         with self.appresponse.create_export(source, timefilter, filters) as e:

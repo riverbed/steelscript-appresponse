@@ -31,6 +31,7 @@ from steelscript.appfwk.apps.datasource.modules.analysis import \
     AnalysisTable, AnalysisQuery
 from steelscript.appfwk.apps.datasource.models import Table
 from steelscript.appfwk.apps.jobs.models import Job
+from functools import reduce
 
 logger = logging.getLogger(__name__)
 
@@ -191,7 +192,7 @@ class AppResponseQuery(TableQueryBase):
         report.run()
 
         df = report.get_dataframe()
-        df.columns = map(lambda x: col_names[x], df.columns)
+        df.columns = [col_names[x] for x in df.columns]
 
         def to_int(x):
             return x if str(x).isdigit() else None
@@ -291,7 +292,7 @@ class AppResponseTimeSeriesQuery(AnalysisQuery):
                              self.table.options.value_column_name]]
             # Rename columns to 'time' and the pivot column name
             sub_df.rename(
-                columns={time_col_name: u'time',
+                columns={time_col_name: 'time',
                          self.table.options.value_column_name: pivot},
                 inplace=True
             )
@@ -299,7 +300,7 @@ class AppResponseTimeSeriesQuery(AnalysisQuery):
             sub_dfs.append(sub_df)
 
         df_final = reduce(
-            lambda df1, df2: pandas.merge(df1, df2, on=u'time', how='outer'),
+            lambda df1, df2: pandas.merge(df1, df2, on='time', how='outer'),
             sub_dfs
         )
 
