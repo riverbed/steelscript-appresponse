@@ -105,7 +105,7 @@ class HostGroupApp(AppResponseApp):
                                  hosts=self.options.hosts.split(','),
                                  enabled=enabled)
             ret = self.appresponse.classification.create_hostgroup(hg)
-            print("Successfully created hostgroup '{}'".format(ret.data.name))
+            print(("Successfully created hostgroup '{}'".format(ret.data.name)))
 
         elif self.options.operation == 'update':
             if self.options.id:
@@ -121,7 +121,7 @@ class HostGroupApp(AppResponseApp):
                                          else hg.data.hosts),
                                   enabled=enabled)
             hg.update(hgc)
-            print ("Successfully updated hostgroup '{}'".format(hg.name))
+            print(("Successfully updated hostgroup '{}'".format(hg.name)))
 
         elif self.options.operation == 'upload':
             with open(self.options.file) as f:
@@ -134,8 +134,8 @@ class HostGroupApp(AppResponseApp):
                                                hosts=hosts.split(','),
                                                enabled=True))
                 self.appresponse.classification.create_hostgroups(hgs)
-                print("Successfully uploaded {} hostgroup definitions."
-                      .format(len(hgs)))
+                print(("Successfully uploaded {} hostgroup definitions."
+                      .format(len(hgs))))
 
         elif self.options.operation == 'delete':
             if self.options.id:
@@ -146,8 +146,8 @@ class HostGroupApp(AppResponseApp):
                     self.options.name)
 
             hg.delete()
-            print("Successfully deleted hostgroup with ID/name {}"
-                  .format(self.options.id or self.options.name))
+            print(("Successfully deleted hostgroup with ID/name {}"
+                  .format(self.options.id or self.options.name)))
 
         elif self.options.operation == 'clear':  # clear all hostgroups
             self.appresponse.classification.bulk_delete()

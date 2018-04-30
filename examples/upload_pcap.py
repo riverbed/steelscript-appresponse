@@ -35,15 +35,15 @@ class UploadPcap(AppResponseApp):
             self.options.destname = dst
 
     def main(self):
-        print("Uploading {}".format(self.options.filepath))
+        print(("Uploading {}".format(self.options.filepath)))
         self.appresponse.upload(
             dest_path=self.options.destname,
             local_file=self.options.filepath
         )
-        print("File '{}' successfully uploaded."
-              .format(self.options.filepath))
+        print(("File '{}' successfully uploaded."
+              .format(self.options.filepath)))
         res = self.appresponse.fs.get_file_by_id(self.options.destname).data
-        print("The properties are {}".format(res))
+        print(("The properties are {}".format(res)))
 
 
 if __name__ == "__main__":

@@ -67,8 +67,8 @@ class CaptureJobService(ServiceClass):
     def get_job_by_id(self, id_):
         try:
             logger.debug("Obtaining Job object with id '{}'".format(id_))
-            return (j for j in self.get_jobs()
-                    if j.id == id_).next()
+            return next((j for j in self.get_jobs()
+                    if j.id == id_))
 
         except StopIteration:
             raise AppResponseException(
@@ -78,8 +78,8 @@ class CaptureJobService(ServiceClass):
 
         try:
             logger.debug("Obtaining Job object with name '{}'".format(name))
-            return (j for j in self.get_jobs()
-                    if j.name == name).next()
+            return next((j for j in self.get_jobs()
+                    if j.name == name))
 
         except StopIteration:
             raise AppResponseException(

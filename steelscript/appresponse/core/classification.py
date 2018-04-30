@@ -23,7 +23,7 @@ class HostGroupConfig(DictObject):
              'out_speed', 'out_speed_unit', 'tags']
 
     def __init__(self, **kwargs):
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             if k in self.Attrs:
                 setattr(self, k, v)
             else:
@@ -73,8 +73,8 @@ class ClassificationService(ServiceClass):
 
     def get_hostgroup_by_name(self, name):
         try:
-            return (hg for hg in self.get_hostgroups()
-                    if hg.name == name).next()
+            return next((hg for hg in self.get_hostgroups()
+                    if hg.name == name))
         except StopIteration:
             raise ValueError("No hostgroups found with name "
                              "'%s'." % name)

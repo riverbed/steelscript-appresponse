@@ -19,7 +19,7 @@ class PacketCaptureApp(AppResponseApp):
     def console(self, source_type, data, headers):
         print('')
         print(source_type)
-        print('-' * len(source_type))
+        print(('-' * len(source_type)))
 
         Formatter.print_table(data, headers)
 

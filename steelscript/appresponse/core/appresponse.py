@@ -188,7 +188,7 @@ class AppResponse(InstanceDescriptorMixin):
         ar_versions = self.common.get_versions()
 
         self._versions = {}
-        for svc, versions in ar_versions.iteritems():
+        for svc, versions in ar_versions.items():
             if self.req_versions and svc in self.req_versions:
                 vers = set(self.req_versions[svc]).intersection(set(versions))
                 if not vers:
