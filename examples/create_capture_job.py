@@ -80,8 +80,8 @@ class PacketCaptureApp(AppResponseApp):
                                       string=self.options.filter))
 
             self.appresponse.capture.create_job(dict(config=config))
-            print(("Successfully created packet capture job {}"
-                  .format(self.options.jobname)))
+            print("Successfully created packet capture job {}"
+                  .format(self.options.jobname))
 
 
 if __name__ == '__main__':

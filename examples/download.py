@@ -104,9 +104,9 @@ class DownloadApp(AppResponseApp):
                    for f in self.options.filters]
 
         with self.appresponse.create_export(source, timefilter, filters) as e:
-            print(('Downloading to file {}'.format(filename)))
+            print('Downloading to file {}'.format(filename))
             e.download(filename, overwrite=self.options.overwrite)
-            print(('Finished downloading to file {}'.format(filename)))
+            print('Finished downloading to file {}'.format(filename))
 
 
 if __name__ == '__main__':
