@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2017 Riverbed Technology, Inc.
+# Copyright (c) 2018 Riverbed Technology, Inc.
 #
 # This software is licensed under the terms and conditions of the MIT License
 # accompanying the software ("License").  This software is distributed "AS IS"
@@ -100,7 +100,7 @@ class DownloadApp(AppResponseApp):
             self.parser.error("Select either --timerange or --start and "
                               "--end times")
 
-        filters = [dict(list(zip(['id', 'type', 'value'], f.split(','))))
+        filters = [dict(zip(['id', 'type', 'value'], f.split(',')))
                    for f in self.options.filters]
 
         with self.appresponse.create_export(source, timefilter, filters) as e:

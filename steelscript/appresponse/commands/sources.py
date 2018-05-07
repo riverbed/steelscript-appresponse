@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2017 Riverbed Technology, Inc.
+# Copyright (c) 2018 Riverbed Technology, Inc.
 #
 # This software is licensed under the terms and conditions of the MIT License
 # accompanying the software ("License").  This software is distributed "AS IS"
@@ -52,11 +52,10 @@ class Command(AppResponseApp):
         super(Command, self).validate_args()
 
         if self.options.group:
-            if self.options.group not in list(report_groups.keys()):
-                self.parser.error("group needs to one of {}."
-                                  .format(', '.join(list(
-                    report_groups.keys())))
-                )
+            if self.options.group not in report_groups.keys():
+                self.parser.error('group needs to one of {}.'
+                                  ''.format(', '.join(list(report_groups.keys()
+                                                           ))))
 
     def main(self):
         headers = ['Name', 'Groups', 'Filters Supported on Metric Columns',
@@ -65,7 +64,7 @@ class Command(AppResponseApp):
         if self.options.group:
             source_names = report_sources[self.options.group]
         else:
-            source_names = list(report_source_to_groups.keys())
+            source_names = report_source_to_groups.keys()
 
         data = []
         for name in source_names:

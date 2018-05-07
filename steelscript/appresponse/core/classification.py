@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Riverbed Technology, Inc.
+# Copyright (c) 2018 Riverbed Technology, Inc.
 #
 # This software is licensed under the terms and conditions of the MIT License
 # accompanying the software ("License").  This software is distributed "AS IS"
@@ -23,7 +23,7 @@ class HostGroupConfig(DictObject):
              'out_speed', 'out_speed_unit', 'tags']
 
     def __init__(self, **kwargs):
-        for k, v in list(kwargs.items()):
+        for k, v in kwargs.items():
             if k in self.Attrs:
                 setattr(self, k, v)
             else:
@@ -74,7 +74,7 @@ class ClassificationService(ServiceClass):
     def get_hostgroup_by_name(self, name):
         try:
             return next((hg for hg in self.get_hostgroups()
-                    if hg.name == name))
+                         if hg.name == name))
         except StopIteration:
             raise ValueError("No hostgroups found with name "
                              "'%s'." % name)

@@ -33,7 +33,7 @@ class Command(AppResponseApp):
         cols = self.appresponse.reports.sources[self.options.source]['columns']
 
         data = []
-        for c in list(cols.values()):
+        for c in cols.values():
             v = 'Key' if 'grouped_by' in c and c['grouped_by'] else 'Value'
             metric = c['metric'] if 'metric' in c else '---'
             data.append((c['id'], c['description'], c['type'],

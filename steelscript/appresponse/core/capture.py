@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Riverbed Technology, Inc.
+# Copyright (c) 2018 Riverbed Technology, Inc.
 #
 # This software is licensed under the terms and conditions of the MIT License
 # accompanying the software ("License").  This software is distributed "AS IS"
@@ -67,9 +67,7 @@ class CaptureJobService(ServiceClass):
     def get_job_by_id(self, id_):
         try:
             logger.debug("Obtaining Job object with id '{}'".format(id_))
-            return next((j for j in self.get_jobs()
-                    if j.id == id_))
-
+            return next((j for j in self.get_jobs() if j.id == id_))
         except StopIteration:
             raise AppResponseException(
                 "No capture job found with ID '{}'".format(id_))
@@ -78,9 +76,7 @@ class CaptureJobService(ServiceClass):
 
         try:
             logger.debug("Obtaining Job object with name '{}'".format(name))
-            return next((j for j in self.get_jobs()
-                    if j.name == name))
-
+            return next((j for j in self.get_jobs() if j.name == name))
         except StopIteration:
             raise AppResponseException(
                 "No capture job found with name '{}'".format(name))

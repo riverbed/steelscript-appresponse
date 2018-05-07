@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Riverbed Technology, Inc.
+# Copyright (c) 2018 Riverbed Technology, Inc.
 #
 # This software is licensed under the terms and conditions of the MIT License
 # accompanying the software ("License").  This software is distributed "AS IS"
@@ -84,7 +84,7 @@ if os.environ.get('AR11_EXPERIMENTAL_FEATURES', 'False').lower() == 'true':
     report_sources.update(exp_sources)
 
 report_source_to_groups = OrderedDict()
-for group, sources in list(report_sources.items()):
+for group, sources in report_sources.items():
     for source in sources:
         if source in report_source_to_groups:
             report_source_to_groups[source].append(report_groups[group])

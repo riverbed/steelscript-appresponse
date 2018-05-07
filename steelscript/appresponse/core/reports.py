@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Riverbed Technology, Inc.
+# Copyright (c) 2018 Riverbed Technology, Inc.
 #
 # This software is licensed under the terms and conditions of the MIT License
 # accompanying the software ("License").  This software is distributed "AS IS"
@@ -67,7 +67,7 @@ class SourceProxy(object):
 
     def to_dict(self):
         ret = {}
-        for k, v in list(vars(self).items()):
+        for k, v in vars(self).items():
             if v:
                 ret[k] = v
         return ret
@@ -144,7 +144,7 @@ class ReportService(object):
                 logger.debug("Loading sources data from {}"
                              .format(sources_filename))
                 # Only load valid sources based on settings
-                for k, v in list(sources_file.data.items()):
+                for k, v in sources_file.data.items():
                     if k in report_source_to_groups:
                         self._sources[k] = v
 
@@ -477,7 +477,6 @@ class Report(object):
         datacols = []
         for i, c in enumerate(zip(*result['data'])):
             datacols.append(list(map(functions[i], c)))
-
         records = list(zip(*datacols))
 
         return records
