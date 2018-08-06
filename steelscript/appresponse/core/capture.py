@@ -21,7 +21,7 @@ class CaptureJobService(ServiceClass):
         self.jobs = None
         self.settings = None
         self.phys_interfaces = None
-        self.mifgs = None
+        self.vifgs = None
         self._job_objs = None
 
     def _bind_resources(self):
@@ -33,7 +33,7 @@ class CaptureJobService(ServiceClass):
         self.jobs = self.servicedef.bind('jobs')
         self.settings = self.servicedef.bind('settings')
         self.phys_interfaces = self.servicedef.bind('phys_interfaces')
-        self.mifgs = self.servicedef.bind('mifgs')
+        self.vifgs = self.servicedef.bind('vifgs')
 
     def get_jobs(self):
 
@@ -85,11 +85,11 @@ class CaptureJobService(ServiceClass):
             raise AppResponseException(
                 "No capture job found with name '{}'".format(name))
 
-    def get_mifgs(self):
+    def get_vifgs(self):
 
-        resp = self.mifgs.execute('get')
+        resp = self.vifgs.execute('get')
 
-        return [MIFG(data=item, servicedef=self.servicedef)
+        return [VIFG(data=item, servicedef=self.servicedef)
                 for item in resp.data['items']]
 
 
@@ -98,10 +98,10 @@ class Job(ResourceObject):
     resource = 'job'
 
     def __repr__(self):
-        return '<{0} {1} on MIFG {2}>'.format(
+        return '<{0} {1} on VIFGs {2}>'.format(
             self.__class__.__name__,
             self.name,
-            self.data.config.mifg_id
+            self.data.config.vifgs
         )
 
     @property
@@ -127,6 +127,6 @@ class Job(ResourceObject):
         return self.datarep.execute('get_stats').data
 
 
-class MIFG(ResourceObject):
+class VIFG(ResourceObject):
 
-    resource = 'mifg'
+    resource = 'vifg'
