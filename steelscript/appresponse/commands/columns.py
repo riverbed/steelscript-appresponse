@@ -46,3 +46,4 @@ class Command(AppResponseApp):
                               max_width=int(self.options.table_width),
                               long_column=1,
                               wrap_columns=(not self.options.truncate))
+

@@ -86,7 +86,7 @@ class ReportService(object):
         return self._sources
 
     def _load_sources(self):
-        """Get the names and granularites of sources. The hierarchy of the
+        """Get the names and granularities of sources. The hierarchy of the
         data looks like below:
 
             { "source1" : { "name": string,

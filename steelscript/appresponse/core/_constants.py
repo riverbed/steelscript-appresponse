@@ -19,8 +19,8 @@ report_groups = OrderedDict([
     ('uc', 'UC Analysis')])
 
 # Mapping from group title to group sources
-# AR11_ADVANCED_FEATURES is a shell variable telling
-# whether advanced sources should be exposed or not.
+# Use AR11_ADVANCED_FEATURES=true shell variable to include
+# advanced sources such as detailed page metrics.
 
 if os.environ.get('AR11_ADVANCED_FEATURES', 'False').lower() == 'true':
     report_sources = OrderedDict([
@@ -41,8 +41,8 @@ else:
     ])
 
 
-# EXPERIMENT is a shell variable dictating whether to include
-# sources from 'system' and 'other' group
+# Use AR11_EXPERIMENTAL_FEATURES=true shell variable to include
+# sources from 'system' for detailed CPU and Disk data.
 
 if os.environ.get('AR11_EXPERIMENTAL_FEATURES', 'False').lower() == 'true':
     exp_groups = OrderedDict([

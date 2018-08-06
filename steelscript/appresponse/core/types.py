@@ -85,6 +85,10 @@ class Column(object):
     def __str__(self):
         return self.name
 
+    def __repr__(self):
+        msg = '<{cls}(name={name} key={key})>'
+        return msg.format(cls=self.__class__.__name__, **self.__dict__)
+
 
 class Key(Column):
 
