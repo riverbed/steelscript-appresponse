@@ -16,7 +16,9 @@ report_groups = OrderedDict([
     ('asa', 'Application Stream Analysis'),
     ('wta', 'Web Transaction Analysis'),
     ('db', 'DB Analysis'),
-    ('uc', 'UC Analysis')])
+    ('uc', 'UC Analysis'),
+    ('alerts', 'Alert Events'),
+])
 
 # Mapping from group title to group sources
 # Use AR11_ADVANCED_FEATURES=true shell variable to include
@@ -29,7 +31,9 @@ if os.environ.get('AR11_ADVANCED_FEATURES', 'False').lower() == 'true':
         ('wta', ['aggregates', 'wtapages', 'wtapageobjects']),
         ('db',  ['dbsession_summaries', 'sql_summaries',
                  'sqlsessions', 'sqlqueries']),
-        ('uc', ['aggregates', 'voip_rtp_channels', 'voip_calls'])])
+        ('uc', ['aggregates', 'voip_rtp_channels', 'voip_calls']),
+        ('alerts', ['alert_list'])
+    ])
 
 else:
     report_sources = OrderedDict([
@@ -37,7 +41,8 @@ else:
         ('asa', ['aggregates']),
         ('wta', ['aggregates']),
         ('db', ['dbsession_summaries', 'sql_summaries']),
-        ('uc', ['aggregates'])
+        ('uc', ['aggregates']),
+        ('alerts', ['alert_list'])
     ])
 
 
@@ -47,7 +52,7 @@ else:
 if os.environ.get('AR11_EXPERIMENTAL_FEATURES', 'False').lower() == 'true':
     exp_groups = OrderedDict([
         ('system', 'System Metrics'),
-        ('other', 'Other')])
+    ])
 
     report_groups.update(exp_groups)
 
@@ -78,7 +83,6 @@ if os.environ.get('AR11_EXPERIMENTAL_FEATURES', 'False').lower() == 'true':
                    'system_metrics.disk',
                    'system_metrics.memory',
                    'system_metrics.tds']),
-        ('other', ['alert_list']),
     ])
 
     report_sources.update(exp_sources)
