@@ -21,17 +21,20 @@ class PacketCaptureApp(AppResponseApp):
         print(source_type)
         print('-' * len(source_type))
 
-        Formatter.print_table(data, headers)
+        if data:
+            Formatter.print_table(data, headers)
+        else:
+            print('None.')
 
     def main(self):
 
         # Show capture jobs
-        headers = ['id', 'name', 'mifg_id', 'filter', 'state',
+        headers = ['id', 'name', 'vifgs', 'filter', 'state',
                    'start_time', 'end_time', 'size']
         data = []
         for job in self.appresponse.capture.get_jobs():
             data.append([job.id, job.name,
-                         job.data.config.mifg_id,
+                         job.data.config.vifgs,
                          getattr(job.data.config, 'filter',
                                  dict(string=None))['string'],
                          job.data.state.status.state,

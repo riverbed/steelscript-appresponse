@@ -8,6 +8,7 @@ import logging
 
 from steelscript.appresponse.core.types import ServiceClass, \
     AppResponseException, ResourceObject
+from steelscript.common.exceptions import RvbdHTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +36,9 @@ class CaptureJobService(ServiceClass):
         self.phys_interfaces = self.servicedef.bind('phys_interfaces')
         self.vifgs = self.servicedef.bind('vifgs')
 
-    def get_jobs(self):
+    def get_jobs(self, force=False):
 
-        if not self._job_objs:
+        if not self._job_objs or force:
             logger.debug("Getting info of capture jobs via resource "
                          "'jobs' link 'get'...")
 
@@ -49,10 +50,12 @@ class CaptureJobService(ServiceClass):
         return self._job_objs
 
     def create_job(self, config):
+        full_config = {'config': config}
 
         logger.debug("Creating one capture job via resource "
-                     "'jobs' link 'create' with data {}".format(config))
-        resp = self.jobs.execute('create', _data=config)
+                     "'jobs' link 'create' with data {}".format(full_config))
+        resp = self.jobs.execute('create', _data=full_config)
+        self.get_jobs(force=True)
         return Job(data=resp.data, datarep=resp)
 
     def delete_jobs(self):
@@ -108,25 +111,39 @@ class Job(ResourceObject):
     def status(self):
         return self.data.state.status.state
 
-    def set(self):
-        self.datarep.execute('set')
-
     def stop(self):
-        self.datarep.execute('stop')
+        self.datarep.data['config']['enabled'] = False
+        self.datarep.push()
 
     def delete(self):
         self.datarep.execute('delete')
 
     def start(self):
-        self.datarep.execute('start')
+        self.datarep.data['config']['enabled'] = True
+        try:
+            self.datarep.push()
+        except RvbdHTTPException as e:
+            if e.error_text == 'NPM_JOB_RUNNING':
+                msg = 'Job already started'
+                logger.error(msg)
+                print(msg)
+            else:
+                raise e
 
     def clear_packets(self):
         self.datarep.execute('clear_packets')
 
     def get_stats(self):
-        return self.datarep.execute('get_stats').data
+        return self.data.state.stats
 
 
 class VIFG(ResourceObject):
 
     resource = 'vifg'
+
+    def __repr__(self):
+        return '<VIFG {0}/{1} enabled: {2}>'.format(
+            self.data.id,
+            self.data.config.name,
+            self.data.config.enabled
+        )

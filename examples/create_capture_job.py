@@ -20,17 +20,17 @@ class PacketCaptureApp(AppResponseApp):
 
         parser.add_option('--jobname', dest='jobname', default=None,
                           help='job name')
-        parser.add_option('--mifg-id', dest='mifg_id', default=None,
-                          help='ID of the MIFG on which this job '
+        parser.add_option('--vifg', dest='vifgs', default=None,
+                          help='ID of the VIFG on which this job '
                                'is collecting packet data')
         parser.add_option('--filter', dest='filter', default='',
                           help='STEELFILTER/BPF filter of the packets '
                                'collected')
         parser.add_option('--filter-type', dest='filter_type', default='BPF',
                           help='STEELFILTER or BPF, default BPF')
-        parser.add_option('--show-mifgs', action='store_true',
-                          dest='show_mifgs', default=False,
-                          help='Show list of MIFG on the device')
+        parser.add_option('--show-vifgs', action='store_true',
+                          dest='show_vifgs', default=False,
+                          help='Show list of VIFG on the device')
         parser.add_option('--show-jobs', action='store_true',
                           dest='show_jobs', default=False,
                           help='Show list of capture jobs on the device')
@@ -38,33 +38,37 @@ class PacketCaptureApp(AppResponseApp):
     def validate_args(self):
         super(PacketCaptureApp, self).validate_args()
 
-        if self.options.show_jobs or self.options.show_mifgs:
+        if self.options.show_jobs or self.options.show_vifgs:
             return
 
         if not self.options.jobname:
             self.parser.error("Job name needs to be provided.")
 
-        if not self.options.mifg_id:
-            self.parser.error("MIFG ID needs to be provided.")
+        if not self.options.vifgs:
+            self.parser.error("VIFG ID needs to be provided.")
 
     def main(self):
 
-        if self.options.show_mifgs:
-            headers = ['id', 'name', 'interfaces']
+        if self.options.show_vifgs:
+            headers = ['id', 'name', 'filter', 'members']
             data = []
-            for mifg in self.appresponse.capture.get_mifgs():
-                data.append([mifg.id, mifg.name,
-                             mifg.data.config.interfaces])
+            for vifg in self.appresponse.capture.get_vifgs():
+                f = vifg.data.config.filter
+                fltr = f if f['value'] else 'None'
+
+                data.append([vifg.id, vifg.name,
+                             fltr,
+                             vifg.data.config.members])
 
             Formatter.print_table(data, headers)
 
         elif self.options.show_jobs:
-            headers = ['id', 'name', 'mifg_id', 'filter', 'state',
+            headers = ['id', 'name', 'vifgs', 'filter', 'state',
                        'start', 'end', 'size']
             data = []
             for job in self.appresponse.capture.get_jobs():
                 data.append([job.id, job.name,
-                             job.data.config.mifg_id,
+                             job.data.config.vifgs,
                              getattr(job.data.config, 'filter',
                                      dict(string=None))['string'],
                              job.status,
@@ -74,12 +78,18 @@ class PacketCaptureApp(AppResponseApp):
             Formatter.print_table(data, headers)
 
         else:
-            config = dict(name=self.options.jobname,
-                          mifg_id=int(self.options.mifg_id),
-                          filter=dict(type=self.options.filter_type,
-                                      string=self.options.filter))
+            vifgs = [int(v) for v in self.options.vifgs.split(',')]
 
-            self.appresponse.capture.create_job(dict(config=config))
+            config = dict(name=self.options.jobname,
+                          enabled=True,
+                          vifgs=vifgs)
+
+            if self.options.filter:
+                fltr = dict(type=self.options.filter_type,
+                            string=self.options.filter)
+                config['filter'] = fltr
+
+            self.appresponse.capture.create_job(config)
             print("Successfully created packet capture job {}"
                   .format(self.options.jobname))
 
