@@ -16,7 +16,6 @@ from steelscript.appresponse.core.fs import File
 from steelscript.appresponse.core.capture import Job
 from steelscript.appresponse.core._constants import report_source_to_groups
 from steelscript.common._fs import SteelScriptDir
-from steelscript.common.datastructures import DictObject
 
 logger = logging.getLogger(__name__)
 

@@ -12,7 +12,6 @@ Show list of Alert Events and optionally detail of specific Alert.
 import optparse
 
 from steelscript.appresponse.core.app import AppResponseApp
-from steelscript.appresponse.core.types import Key, Value, TrafficFilter
 from steelscript.appresponse.core.reports import DataDef, Report, SourceProxy
 from steelscript.common.datautils import Formatter
 
@@ -61,11 +60,10 @@ class AlertEventApp(AppResponseApp):
 
         if self.options.alert_detail:
             # detail view
-            column_names =[
+            column_names = [
                 'alert.id',
                 'alert.policy_id',
                 'alert.policy_name',
-                #'alert.policy_description',
                 'alert.policy_eval_period',
                 'alert.policy_type_name',
                 'alert.policy_last_N',
@@ -76,7 +74,6 @@ class AlertEventApp(AppResponseApp):
                 'alert.end_time',
                 'alert.duration',
                 'alert.ongoing',
-                #'alert.policy_definition',
                 'alert.low_violations_count',
                 'alert.medium_violations_count',
                 'alert.high_violations_count'
@@ -89,7 +86,6 @@ class AlertEventApp(AppResponseApp):
                 'alert.policy_name',
                 'alert.policy_type_name',
                 'alert.policy_type',
-                #'alert.policy_definition',
                 'alert.severity_level',
                 'alert.severity',
                 'alert.start_time',
