@@ -223,6 +223,15 @@ class AppResponse(InstanceDescriptorMixin):
         """Get a list of all existing capture jobs."""
         return self.capture.get_jobs()
 
+    def get_column_objects(self, source_name, columns):
+        """Return proper Key/Value objects for given list of column strings.
+
+        :param source_name: string value of source name
+        :param columns: list of columns as strings
+        :return: column objects
+        """
+        return self.reports.get_column_objects(source_name, columns)
+
     def create_report(self, data_def_request):
         """Helper method to initiate an AppResponse report.
 
