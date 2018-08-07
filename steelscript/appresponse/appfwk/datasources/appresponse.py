@@ -182,7 +182,7 @@ class AppResponseQuery(TableQueryBase):
         data_def = DataDef(
             source=source,
             columns=col_extractors,
-            granularity=str(granularity),
+            granularity=granularity,
             start=start,
             end=end)
 

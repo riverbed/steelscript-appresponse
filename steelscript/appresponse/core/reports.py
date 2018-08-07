@@ -355,8 +355,8 @@ class DataDef(object):
         :param end: epoch endtime in seconds.
         :param duration: string duration of data def request.
         :param time_range: string time range of data def request.
-        :param str granularity: granularity in seconds. Required.
-        :param str resolution: resolution in seconds. Optional
+        :param int granularity: granularity in seconds. Required.
+        :param int resolution: resolution in seconds. Optional
         :param limit: limit to number of returned rows. Optional
         :param topbycolumn: Key/Value columns to be used for topn. Optional.
 
