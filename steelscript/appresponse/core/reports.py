@@ -10,12 +10,12 @@ import logging
 from collections import OrderedDict
 
 from steelscript.appresponse.core.types import AppResponseException, \
-     TimeFilter, ResourceObject
+     TimeFilter, ResourceObject, Key, Value
 from steelscript.appresponse.core.clips import Clip
 from steelscript.appresponse.core.fs import File
 from steelscript.appresponse.core.capture import Job
-from steelscript.common._fs import SteelScriptDir
 from steelscript.appresponse.core._constants import report_source_to_groups
+from steelscript.common._fs import SteelScriptDir
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class ReportService(object):
         return self._sources
 
     def _load_sources(self):
-        """Get the names and granularites of sources. The hierarchy of the
+        """Get the names and granularities of sources. The hierarchy of the
         data looks like below:
 
             { "source1" : { "name": string,
@@ -275,6 +275,20 @@ class ReportService(object):
 
         return instances
 
+    def get_column_objects(self, source_name, columns):
+        coldefs = self.sources[source_name]['columns']
+
+        def iskey(coldef):
+            if 'grouped_by' in coldef and coldef['grouped_by'] is True:
+                return True
+            return False
+
+        cols = []
+        for c in columns:
+            obj = Key(c) if iskey(coldefs[c]) else Value(c)
+            cols.append(obj)
+        return cols
+
 
 class ReportInstance(ResourceObject):
     """Main interface to interact with a probe report instance. """
@@ -334,14 +348,15 @@ class DataDef(object):
                  limit=None, topbycolumns=None):
         """Initialize a data definition request object.
 
-        :param source: SourceProxy object.
+        :param source: Reference to a source object.  If a string,
+            will try to convert to a SourceProxy
         :param columns: list Key/Value column objects.
         :param start: epoch start time in seconds.
         :param end: epoch endtime in seconds.
         :param duration: string duration of data def request.
         :param time_range: string time range of data def request.
-        :param str granularity: granularity in seconds. Required.
-        :param str resolution: resolution in seconds. Optional
+        :param int granularity: granularity in seconds. Required.
+        :param int resolution: resolution in seconds. Optional
         :param limit: limit to number of returned rows. Optional
         :param topbycolumn: Key/Value columns to be used for topn. Optional.
 
@@ -364,7 +379,16 @@ class DataDef(object):
         effect to the number of returned samples. The resolution is optional.
         """
 
-        self.source = source
+        if isinstance(source, SourceProxy):
+            self.source = source
+        else:
+            # try as a packets reference first
+            try:
+                self.source = SourceProxy(source)
+            except AppResponseException:
+                logger.debug('Assuming source name as non-packets source ...')
+                self.source = SourceProxy(name=source)
+
         self.columns = columns
         self.granularity = granularity
         self.resolution = resolution
@@ -520,16 +544,19 @@ class Report(object):
         :param bool details: If True, return complete column dict, otherwise
             just short label ids for each column will be returned
         """
-        def get_cols(cols):
+        def get_cols(data_def):
+            cols = data_def.columns
             if details:
-                return [self.appresponse.reports.columns[c] for c in cols]
+                source = data_def.source.name
+                columns = self.appresponse.reports.sources[source]['columns']
+                return [columns[c] for c in cols]
             return [c for c in cols]
 
         if index is None:
-            legend = [get_cols(dd.columns) for dd in self._data_defs]
+            legend = [get_cols(dd) for dd in self._data_defs]
 
         else:
-            legend = get_cols(self._data_defs[index].columns)
+            legend = get_cols(self._data_defs[index])
 
         return legend
 
