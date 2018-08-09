@@ -31,6 +31,7 @@ class SourceProxy(object):
 
     def __init__(self, packets_obj=None, name=None, path=None):
         """Initialize a data source for reports to run against.
+
         :param packets_obj: Clip or File or Job object
         :param str name: Name of general report sources
         :param str path: Path of the packets data source
@@ -86,8 +87,9 @@ class ReportService(object):
         return self._sources
 
     def _load_sources(self):
-        """Get the names and granularities of sources. The hierarchy of the
-        data looks like below:
+        """Get the names and granularities of sources.
+
+        The hierarchy of the data looks like below:
 
             { "source1" : { "name": string,
                             "filters_on_metrics": boolean,
@@ -217,10 +219,10 @@ class ReportService(object):
     def get_instances(self, service=None, include_system_reports=False):
         """Get all running report instances on appliance.
 
-        Several different services can have instances running, which
-        covers both system processes as well as user initiated reports.
-        The primary means of identifying the sources is through the
-        `user_agent` field.  Examples are:
+        Several different services can have instances running, which covers
+        both system processes as well as user initiated reports.  The primary
+        means of identifying the sources is through the `user_agent` field.
+        Examples are:
 
         user reports:
         'python-requests/2.4.3 CPython/2.7.12 Darwin/17.5.0 SteelScript/1.3.3'
@@ -276,6 +278,7 @@ class ReportService(object):
         return instances
 
     def get_column_objects(self, source_name, columns):
+        """Return Key/Value objects for given set of string names."""
         coldefs = self.sources[source_name]['columns']
 
         def iskey(coldef):
@@ -291,7 +294,7 @@ class ReportService(object):
 
 
 class ReportInstance(ResourceObject):
-    """Main interface to interact with a probe report instance. """
+    """Main interface to interact with a probe report instance."""
 
     resource = 'instance'
 
@@ -340,9 +343,8 @@ class ReportInstance(ResourceObject):
 
 
 class DataDef(object):
-    """This class provides an interface to build a data definition request
-    suitable for uploading to a report.
-    """
+    """Interface to build a data definition for uploading to a report."""
+
     def __init__(self, source, columns, start=None, end=None, duration=None,
                  time_range=None, granularity=None, resolution=None,
                  limit=None, topbycolumns=None):
@@ -438,6 +440,7 @@ class DataDef(object):
 
     def add_filter(self, filter):
         """Add one traffic filter to the data def.
+
         :param filter: types.TrafficFilter object
         """
         self._filters.append(filter.as_dict())
@@ -453,12 +456,11 @@ class DataDef(object):
 
 
 class Report(object):
-    """This class is the main interface to build and run a report against
-    an AppResponse appliance.
-    """
+    """Main interface to build and run a report on AppResponse."""
 
     def __init__(self, appresponse):
-        """Initialize a new report against the given AppResponse object.
+        """Initialize a new report.
+
         :param appresponse: the AppResponse object.
         """
         logger.debug("Initializing Report object with appresponse '{}'"
@@ -474,10 +476,12 @@ class Report(object):
         self._data_defs.append(data_def_request)
 
     def _cast_number(self, result, source_name):
-        """ Check records and convert string to integer/float. If the type
-        of the column is 'number' or unit is not 'none', then check if
-        the column name has 'avg' in its name, if yes, then convert it to
+        """Check records and convert string to integer/float.
+
+        If the type of the column is 'number' or unit is not 'none', then check
+        if the column name has 'avg' in its name, if yes, then convert it to
         float, otherwise to integer.
+
         :param dict result: includes metadata for one data def request
             as well as the response data for the data def request.
         :param string source_name: name of the source.
@@ -507,9 +511,7 @@ class Report(object):
         return records
 
     def run(self):
-        """Create a report instance and record the results of multiple
-        data definition instances as a list of records (dictionaries).
-        """
+        """Create and run a report instance with stored data definitions."""
         if not self._instance:
             self._instance = \
                 self.appresponse.reports.create_instance(self._data_defs)
@@ -529,8 +531,10 @@ class Report(object):
 
     def get_data(self, index=0):
         """Return data for the indexed data definition requests.
-        :param int index: Set to None to return data from all data definitions,
-            defaults to returning the data from just the first data def.
+
+        :param int index: Set to None to return data from all data
+            definitions, defaults to returning the data from just
+            the first data def.
         """
         if index is None:
             return [dd.data for dd in self._data_defs]
@@ -539,6 +543,7 @@ class Report(object):
 
     def get_legend(self, index=0, details=False):
         """Return legend information for the data definition.
+
         :param int index: Set to None to return data from all data definitions,
             defaults to returning the data from just the first data def.
         :param bool details: If True, return complete column dict, otherwise
@@ -561,12 +566,14 @@ class Report(object):
         return legend
 
     def get_dataframe(self, index=0):
-        """Return data in pandas DataFrame format for the indexed
-        data definition requests.
+        """Return data in pandas DataFrame format.
+
         This will return a single DataFrame for the given index, unlike
-        ``get_data`` and ``get_legend`` which will optionally return info
-        for all data defs in a report.
+        ``get_data`` and ``get_legend`` which will optionally return info for
+        all data defs in a report.
+
         **Requires `pandas` library to be available in environment.**
+
         :param int index: DataDef to process into DataFrame.  Defaults to 0.
         """
         import pandas

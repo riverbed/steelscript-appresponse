@@ -7,4 +7,4 @@ SteelScript AppResponse
    tutorial
    examples
    appresponse
-   upgrade
+   changelog

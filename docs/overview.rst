@@ -28,4 +28,4 @@ Detailed documentation may be found on the following pages:
 
 * Changelog and Upgrades
   
-  * :doc:`upgrade`
+  * :doc:`changelog`

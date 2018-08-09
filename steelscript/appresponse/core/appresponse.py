@@ -27,9 +27,7 @@ COMMON_SERVICE_VERSION = '1.0'
 
 
 class AppResponseServiceDefLoader(ServiceDefLoadHook):
-    """This class serves as the custom hook for service definition manager
-    for AppResponse devices.
-    """
+    """Custom hook for service definition manager for AppResponse"""
 
     SERVICE_ID = '/api/{name}/{version}'
 
@@ -241,7 +239,7 @@ class AppResponse(InstanceDescriptorMixin):
         return self.reports.create_report(data_def_request)
 
     def upload(self, dest_path, local_file):
-        """ Upload a local file to the AppResponse 11 device.
+        """Upload a local file to the AppResponse 11 device.
 
         :param dest_path: path where local file will be stored
             at AppResponse device

@@ -115,30 +115,42 @@ explanatory:
 .. code-block:: none
 
     --jobname=JOBNAME     job name
-    --mifg-id=MIFG_ID     ID of the MIFG on which this job is collecting packet
-                          data
+    --vifg=VIFGS          ID of the VIFG on which this job is collecting packet
+                        data
     --filter=FILTER       STEELFILTER/BPF filter of the packets collected
     --filter-type=FILTER_TYPE
                           STEELFILTER or BPF, default BPF
-    --show-mifgs          Show list of MIFG on the device
+    --show-vifgs          Show list of VIFG on the device
     --show-jobs           Show list of capture jobs on the device
 
 Using the ``--show-jobs`` command will output the same table as seen in
-:ref:`list_sources_example`, and using the ``--show-mifgs`` will show the
-interface groups available::
+:ref:`list_sources_example`, and using the ``--show-vifgs`` will show the
+virtual interface groups available::
 
-    $ python create_capture_job.py ar11.example.com -u admin -p admin --show-mifgs
+    $ python create_capture_job.py ar11.example.com -u admin -p admin --show-vifgs
 
-    id      name            interfaces
-    --------------------------------------
-    1000    default_mifg    ['mon0']
+    id      name             filter    members
+    ----------------------------------------------
+    1000    other_vifg       None      []
+    1024    vifg_7           None      ['7']
+    1025    vifg_untagged    None      ['0']
+    1026    vifg_10          None      ['10']
+    1027    vifg_104         None      ['104']
+    1028    vifg_108         None      ['108']
+    1029    vifg_32          None      ['32']
+    1030    vifg_5           None      ['5']
+    1031    vifg_112         None      ['112']
+    1032    vifg_17          None      ['17']
+    1033    vifg_6           None      ['6']
+    1034    vifg_20          None      ['20']
 
-Creating a capture job requires just a desired job name, the MIFG, and an optional filter
-expression:
+
+Creating a capture job requires just a desired job name, the VIFG, and an
+optional filter expression:
 
 .. code-block:: none
 
-    $ python create_capture_job.py ar11.example.com -u admin -p admin --jobname newtest1 --filter "port 80" --mifg-id 1000
+    $ python create_capture_job.py ar11.example.com -u admin -p admin --jobname newtest1 --filter "port 80" --vifg=1000
     Successfully created packet capture job newtest1
 
 Running the ``--show-jobs`` option will now show the newly created capture job.
