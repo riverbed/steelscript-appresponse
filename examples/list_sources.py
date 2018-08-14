@@ -9,9 +9,14 @@
 """
 Show available packet sources.
 """
+from collections import namedtuple
 
 from steelscript.appresponse.core.app import AppResponseApp
+from steelscript.common.api_helpers import APIVersion
 from steelscript.common.datautils import Formatter
+
+
+IFG = namedtuple('IFG', 'type get_id get_items')
 
 
 class PacketCaptureApp(AppResponseApp):
@@ -28,13 +33,24 @@ class PacketCaptureApp(AppResponseApp):
 
     def main(self):
 
+        # handle new packet capture version
+        version = APIVersion(self.appresponse.versions['npm.packet_capture'])
+        if version < APIVersion('2.0'):
+            ifg = IFG('mifg_id',
+                      lambda job: job.data.config.mifg_id,
+                      self.appresponse.capture.get_mifgs)
+        else:
+            ifg = IFG('vifgs',
+                      lambda job: job.data.config.vifgs,
+                      self.appresponse.capture.get_vifgs)
+
         # Show capture jobs
-        headers = ['id', 'name', 'vifgs', 'filter', 'state',
+        headers = ['id', 'name', ifg.type, 'filter', 'state',
                    'start_time', 'end_time', 'size']
         data = []
         for job in self.appresponse.capture.get_jobs():
             data.append([job.id, job.name,
-                         job.data.config.vifgs,
+                         ifg.get_id(job),
                          getattr(job.data.config, 'filter',
                                  dict(string=None))['string'],
                          job.data.state.status.state,

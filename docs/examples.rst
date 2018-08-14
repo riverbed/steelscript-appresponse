@@ -115,19 +115,21 @@ explanatory:
 .. code-block:: none
 
     --jobname=JOBNAME     job name
-    --vifg=VIFGS          ID of the VIFG on which this job is collecting packet
-                        data
+    --ifg=IFGS            ID of the MIFG or VIFG on which this job is
+                          collecting packet data. For AR11 versions 11.5 and
+                          later, this can be a comma-separated list of VIFG IDs.
+                          Earlier versions can only be single values
     --filter=FILTER       STEELFILTER/BPF filter of the packets collected
     --filter-type=FILTER_TYPE
                           STEELFILTER or BPF, default BPF
-    --show-vifgs          Show list of VIFG on the device
+    --show-ifgs           Show list of IFG on the device
     --show-jobs           Show list of capture jobs on the device
 
 Using the ``--show-jobs`` command will output the same table as seen in
-:ref:`list_sources_example`, and using the ``--show-vifgs`` will show the
+:ref:`list_sources_example`, and using the ``--show-ifgs`` will show the
 virtual interface groups available::
 
-    $ python create_capture_job.py ar11.example.com -u admin -p admin --show-vifgs
+    $ python create_capture_job.py ar11.example.com -u admin -p admin --show-ifgs
 
     id      name             filter    members
     ----------------------------------------------
@@ -145,12 +147,13 @@ virtual interface groups available::
     1034    vifg_20          None      ['20']
 
 
-Creating a capture job requires just a desired job name, the VIFG, and an
+Creating a capture job requires just a desired job name, the IFG (either a MIFG ID
+or VIFG ID depending on the version of the appliance), and an
 optional filter expression:
 
 .. code-block:: none
 
-    $ python create_capture_job.py ar11.example.com -u admin -p admin --jobname newtest1 --filter "port 80" --vifg=1000
+    $ python create_capture_job.py ar11.example.com -u admin -p admin --jobname newtest1 --filter "port 80" --ifg=1000
     Successfully created packet capture job newtest1
 
 Running the ``--show-jobs`` option will now show the newly created capture job.
