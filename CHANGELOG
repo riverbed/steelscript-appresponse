@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-[2.0]
- * Backwards incompatible support for AR 11.5 release
+[1.4]
+ * Add support for AR 11.5 release
  * Add column helper methods
  * Remove requirement to wrap sources in SourceProxy for DataDefs
  * Add alert_list datasource
