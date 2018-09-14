@@ -1,19 +1,14 @@
-Changelog and Upgrades in 2.0
+Changelog and Upgrades in 1.4
 =============================
 
 Changelog
 ---------
 
-Backwards incompatible release for AR 11.5.
-
-This release adds support for the new Virtual Interface Groups introduced in 11.5
+This release adds support for the new Virtual Interface Groups introduced in
+11.5
 
 Upgrades
 --------
-
-This package will not be able to run reports against older versions of
-AppResponse.  In order to communicate in a mixed environment, separate
-SteelScript installations will be needed until the migrations are completed.
 
 Reporting scripts should be largely unaffected as the MIFG to VIFG changes are
 handled within the SDK.  Any specific references to MIFGs will need to be
