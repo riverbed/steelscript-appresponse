@@ -232,10 +232,10 @@ class ReportService(object):
             #     instance = _create_and_run(PACKETS_REPORT_SERVICE_NAME,
             #                                data_defs)
             instance = _create_instance(PACKETS_REPORT_SERVICE_NAME,
-                                       data_defs, live)
+                                        data_defs, live)
         else:
             instance = _create_instance(GENERAL_REPORT_SERVICE_NAME,
-                                       data_defs, live)
+                                        data_defs, live)
         return instance
 
     def get_instances(self, service=None, include_system_reports=False):
@@ -395,11 +395,13 @@ class ReportInstance(ResourceObject):
         dd = self.datarep['data_defs'][index]
         dd.pull()
 
+        meta_timerange = dd.data['actual_time']['time_ranges'][index]
+
         if not self._metatime:
-            self._metatime[index] = dd.data['actual_time']['time_ranges'][0]
+            self._metatime[index] = meta_timerange
             start_time = self._metatime[index]['start']
         else:
-            if dd.data['actual_time']['time_ranges'][0]['end'] == self._metatime[index]['end']:
+            if meta_timerange['end'] == self._metatime[index]['end']:
                 logger.debug('No new data for {}, skipping ...'.format(self))
                 return []
 
@@ -439,7 +441,7 @@ class DataDef(object):
         :param int granularity: granularity in seconds. Required.
         :param int resolution: resolution in seconds. Optional
         :param limit: limit to number of returned rows. Optional
-        :param topbycolumn: Key/Value columns to be used for topn. Optional.
+        :param topbycolumns: Key/Value columns to be used for topn. Optional.
         :param live: boolean for whether this is a live retrieval data_def.
             Setting this to true changes the behavior somewhat, see notes.
         :param retention_time: int seconds for how long to store data before
@@ -684,7 +686,10 @@ class Report(object):
                 msg = 'index must be a value for live reports'
                 raise AppResponseException(msg)
             else:
-                return self._instance.get_datadef_data(index)
+                resp = self._instance.get_datadef_data(index)
+                if not self._data_defs[index]._data_columns:
+                    self._data_defs[index]._data_columns = resp['columns']
+                return resp
 
     def get_legend(self, index=0, details=False):
         """Return legend information for the data definition.
@@ -723,6 +728,13 @@ class Report(object):
         """
         import pandas
         data = self.get_data(index)
+
+        # check if we are a live version and extract data directly
+        try:
+            data = data['data']
+        except TypeError:
+            pass
+
         columns = self.get_legend(index)
         df = pandas.DataFrame(data, columns=columns)
         return df
