@@ -22,6 +22,9 @@ logger = logging.getLogger(__name__)
 PACKETS_REPORT_SERVICE_NAME = 'npm.probe.reports'
 GENERAL_REPORT_SERVICE_NAME = 'npm.reports'
 
+PACKETS_SOURCES_SERVICE_NAME = 'npm.probe.reports.sources'
+GENERAL_SOURCES_SERVICE_NAME = 'npm.reports.sources'
+
 
 class SourceProxy(object):
 
@@ -108,8 +111,8 @@ class ReportService(object):
         """
         ss_dir = SteelScriptDir('AppResponse', 'files')
 
-        for svc in [PACKETS_REPORT_SERVICE_NAME,
-                    GENERAL_REPORT_SERVICE_NAME]:
+        for svc in [PACKETS_SOURCES_SERVICE_NAME,
+                    GENERAL_SOURCES_SERVICE_NAME]:
             svc_version = self.appresponse.versions[svc]
             sw_version = (self.appresponse.get_info()['sw_version']
                           .replace(' ', ''))
