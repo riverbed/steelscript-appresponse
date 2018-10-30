@@ -162,7 +162,7 @@ class ReportService(object):
         return
 
     def create_report(self, data_def_request):
-        """Convenience method to create a report with one data definition request.
+        """Convenience method to create a report with a data definition request.
 
         :param DataDef data_def_request: DataDef objects
         :return: one Report object
@@ -297,7 +297,9 @@ class ReportService(object):
 
             for item in datarep['items']:
                 if test_user_agent(item.data):
-                    instance = ReportInstance(item.data, datarep=item, live=item.data['live'])
+                    instance = ReportInstance(item.data,
+                                              datarep=item,
+                                              live=item.data['live'])
                     instances.append(instance)
 
         return instances
@@ -410,7 +412,8 @@ class ReportInstance(ResourceObject):
 
         if start_time is None and end_time is None:
             start_time = self._metatime[index]['end']
-            logger.debug('Using start_time of previous end time: %s' % start_time)
+            logger.debug('Using start_time of previous end time: %s'
+                         % start_time)
             self._metatime[index] = dd.data['actual_time']['time_ranges'][0]
 
         kwargs = {'report_id': self.id}
@@ -431,7 +434,8 @@ class DataDef(object):
 
     def __init__(self, source, columns, start=None, end=None, duration=None,
                  time_range=None, granularity=None, resolution=None,
-                 limit=None, topbycolumns=None, live=False, retention_time=3600):
+                 limit=None, topbycolumns=None,
+                 live=False, retention_time=3600):
         """Initialize a data definition request object.
 
         :param source: Reference to a source object.  If a string,
@@ -666,7 +670,8 @@ class Report(object):
         in a report need to collect data, query them individually.
 
         Also, the object returned from a live query will be a
-        `data_def_results` object (https://support.riverbed.com/apis/npm.probe.reports/1.0/service.html#types_data_def_results)
+        `data_def_results` object
+        (https://support.riverbed.com/apis/npm.probe.reports/1.0/service.html#types_data_def_results)
         The data can be referenced via data['data'] but meta data
         about the results including endtime and startime can be
         found at data['meta']
