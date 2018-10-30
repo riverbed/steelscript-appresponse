@@ -51,8 +51,7 @@ class PacketCaptureApp(AppResponseApp):
         for job in self.appresponse.capture.get_jobs():
             data.append([job.id, job.name,
                          ifg.get_id(job),
-                         getattr(job.data.config, 'filter',
-                                 dict(string=None))['string'],
+                         getattr(job.data.config, 'filter', None),
                          job.data.state.status.state,
                          job.data.state.status.packet_start_time,
                          job.data.state.status.packet_end_time,
