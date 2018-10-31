@@ -9,8 +9,9 @@
 from __future__ import print_function
 
 """
-Run a report against sources of 'packets' (capture job, clips, files) on an
-AppResponse 11 appliance.
+Run a live report against 'packets' or 'aggregates' data source.
+
+Only valid for AppResponse 11 version 11.5 or higher.
 """
 import time
 import datetime
@@ -36,9 +37,9 @@ class LiveReportApp(AppResponseApp):
         group.add_option('--sourceid',
                          dest='sourceid', default=None,
                          help='If sourcename is "packets", '
-                              'ID of the source to run report against, in the '
-                              'form of <type>/<id>, e.g. "interfaces/mon0", or '
-                              '"jobs/default_job".')
+                              'VIFG ID of the source to run report against, '
+                              'in the form of <type>/<id>, e.g. "vifgs/1002", '
+                              'or "vifgs/1001".')
         group.add_option('--keycolumns',
                          dest='keycolumns',
                          default=None,
@@ -71,6 +72,11 @@ class LiveReportApp(AppResponseApp):
         group = optparse.OptionGroup(parser, "Output Options")
         group.add_option('--csvfile', dest='csvfile', default=None,
                          help='CSV file to store report data')
+        group.add_option('--limit', dest='limit', default=0,
+                         help='Optionally limit output results to this number '
+                              'of rows.')
+        group.add_option('--sortby', dest='sortby', default=None,
+                         help='Optional column to sort descending by.')
         parser.add_option_group(group)
 
     def validate_args(self):
@@ -84,13 +90,13 @@ class LiveReportApp(AppResponseApp):
 
         if self.options.sourcename == 'packets':
             if self.options.sourceid is None:
-                print('No source defined, '
-                      'choosing first MIFG or VIFG available.')
+                print('No source defined, choosing first VIFG available.')
 
-            if (self.options.sourceid and
-                    '/' not in self.options.sourceid):
-                self.parser.error('Invalid sourceid: {}.  Must be of the form'
-                                  '<type>/<id>')
+            if self.options.sourceid:
+                if 'vifgs/' not in self.options.sourceid:
+                    self.parser.error('Invalid sourceid: {}.  '
+                                      'Must be of the form "vifgs/<id>"'
+                                      .format(self.options.sourceid))
 
         elif self.options.sourcename == 'aggregates':
             print('Setting granularity to 60s for aggregates data source.')
@@ -102,11 +108,13 @@ class LiveReportApp(AppResponseApp):
                 self.delay = 60
 
             if self.delay % 60 != 0:
-                self.parser.error('Invalid interval for aggregates data source: {}. '
-                                  'Must be multiple of 60s.'.format(self.delay))
+                self.parser.error('Invalid interval for aggregates '
+                                  'data source: {}. Must be multiple of 60s.'
+                                  .format(self.delay))
         else:
             self.parser.error('Invalid sourcename: {}. '
-                              'Must be either "packets" or "aggregates"')
+                              'Must be either "packets" or "aggregates"'
+                              .format(self.options.sourcename))
 
         if (self.options.keycolumns is None and
                 self.options.valuecolumns is None):
@@ -123,6 +131,7 @@ class LiveReportApp(AppResponseApp):
                     'sum_traffic.packets',
                     'sum_ip.total_packets_psg'
                 ])
+
             elif self.options.sourcename == 'aggregates':
                 self.options.keycolumns = ','.join([
                     'app.id',
@@ -136,14 +145,16 @@ class LiveReportApp(AppResponseApp):
                   .format(self.options.keycolumns,
                           self.options.valuecolumns))
 
+        try:
+            self.limit = int(self.options.limit)
+        except:
+            self.parser.error('Invalid limit value: %s' % self.options.limit)
+
     def main(self):
 
         if self.options.sourcename == 'packets':
             if self.options.sourceid is None:
-                try:
-                    source = self.appresponse.capture.get_mifgs()[0]
-                except:
-                    source = self.appresponse.capture.get_vifgs()[0]
+                source = self.appresponse.capture.get_vifgs()[0]
             else:
                 source = SourceProxy(name='packets',
                                      path=self.options.sourceid)
@@ -178,20 +189,31 @@ class LiveReportApp(AppResponseApp):
         time.sleep(1)
 
         try:
-
             while 1:
                 banner = '{} {}'.format(datetime.datetime.now(), '--' * 20)
                 print(banner)
 
                 try:
                     data = report.get_data()['data']
+                    headers = report.get_legend()
+
+                    if self.options.sortby:
+                        index = headers.index(self.options.sortby)
+                        data.sort(key=lambda x: x[index], reverse=True)
+
+                    if self.limit:
+                        total_rows = len(data)
+                        limit_string = ('Showing {} out of {} rows.'
+                                        .format(self.limit, total_rows))
+                        data = data[:self.limit]
+                    else:
+                        limit_string = None
+
                 except KeyError:
                     # something went wrong, print error and exit
                     print('Error accessing data:')
                     print(report.get_data())
                     raise KeyboardInterrupt
-
-                headers = report.get_legend()
 
                 if self.options.csvfile:
                     with open(self.options.csvfile, 'a') as f:
@@ -200,8 +222,13 @@ class LiveReportApp(AppResponseApp):
                         for line in Formatter.get_csv(data, headers):
                             f.write(line)
                             f.write('\n')
+                        if limit_string:
+                            f.write(limit_string)
+                            f.write('\n')
                 else:
                     Formatter.print_table(data, headers)
+                    if limit_string:
+                        print(limit_string)
 
                 time.sleep(self.delay)
 

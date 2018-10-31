@@ -385,7 +385,8 @@ class ReportInstance(ResourceObject):
             if item['state'] == 'error':
                 for m in item['messages']:
                     self.errors.append(m['text'])
-                    logger.error("Error msg from status: {}" .format(m['text']))
+                    logger.error("Error msg from status: {}"
+                                 .format(m['text']))
 
         if self.errors:
             err_msgs = ';\n'.join(self.errors)
@@ -687,7 +688,7 @@ class Report(object):
             return self._data_defs[index].data
 
         else:
-            # we need to so some special processing
+            # need to do some special processing
             # first check for existing meta data, otherwise
             # do our first collection
             if index is None:
@@ -697,7 +698,11 @@ class Report(object):
                 resp = self._instance.get_datadef_data(index)
                 if not self._data_defs[index]._data_columns:
                     self._data_defs[index]._data_columns = resp['columns']
-                return resp
+
+                source_name = self._data_defs[index].source.name
+                if 'data' in resp:
+                    data = self._cast_number(resp, source_name)
+                return {'data': data, 'meta': resp['meta']}
 
     def get_legend(self, index=0, details=False):
         """Return legend information for the data definition.
