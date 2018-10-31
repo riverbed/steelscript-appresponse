@@ -9,6 +9,7 @@ import logging
 from steelscript.appresponse.core.types import ServiceClass, \
     AppResponseException, ResourceObject
 from steelscript.common.api_helpers import APIVersion
+from steelscript.common.datastructures import DictObject
 from steelscript.common.exceptions import RvbdHTTPException
 
 logger = logging.getLogger(__name__)
@@ -32,8 +33,9 @@ class CaptureServiceBase(ServiceClass):
         self.servicedef = None
         self.jobs = None
         self.settings = None
-        self.phys_interfaces = None
+        self.interfaces = None
         self._job_objs = None
+        self._interface_objs = None
 
     def _bind_resources(self):
 
@@ -43,12 +45,26 @@ class CaptureServiceBase(ServiceClass):
         # init resources
         self.jobs = self.servicedef.bind('jobs')
         self.settings = self.servicedef.bind('settings')
-        self.phys_interfaces = self.servicedef.bind('phys_interfaces')
+        self.interfaces = self.servicedef.bind('phys_interfaces')
+
+    def get_interfaces(self, force=False):
+
+        if not self._interface_objs or force:
+            logger.debug("Getting interfaces via resource "
+                         "'phys_interfaces' link 'get'...")
+
+            resp = self.interfaces.execute('get')
+
+            self._interface_objs = [Interface(data=item,
+                                              servicedef=self.servicedef)
+                                    for item in resp.data['items']]
+
+        return self._interface_objs
 
     def get_jobs(self, force=False):
 
         if not self._job_objs or force:
-            logger.debug("Getting info of capture jobs via resource "
+            logger.debug("Getting capture jobs via resource "
                          "'jobs' link 'get'...")
 
             resp = self.jobs.execute('get')
@@ -129,6 +145,38 @@ class PacketCapture20(CaptureServiceBase):
 
         return [VIFG(data=item, servicedef=self.servicedef)
                 for item in resp.data['items']]
+
+
+class Interface(ResourceObject):
+    """This class manages single packet capture job."""
+    resource = 'phys_interface'
+
+    def __init__(self, data, servicedef=None, datarep=None):
+        # Override super class to use name instead of id
+        logger.debug('Initialized {} object with data {}'
+                     .format(self.__class__.__name__, data))
+        self.data = DictObject.create_from_dict(data)
+        if not datarep:
+            self.datarep = servicedef.bind(self.resource,
+                                           name=self.data.name)
+        else:
+            self.datarep = datarep
+
+    def __repr__(self):
+        return '<Interface {}/{}>'.format(self.name, self.status)
+
+    @property
+    def name(self):
+        return self.data.name
+
+    @property
+    def status(self):
+        return self.data.state.status
+
+    @property
+    def stats(self):
+        """Show packets seen and dropped"""
+        return self.data.state.stats
 
 
 class Job(ResourceObject):
