@@ -54,6 +54,8 @@ class ResourceObject(object):
 
     resource = None
 
+    property_names = None
+
     def __init__(self, data, servicedef=None, datarep=None):
         logger.debug('Initialized {} object with data {}'
                      .format(self.__class__.__name__, data))
@@ -62,6 +64,25 @@ class ResourceObject(object):
             self.datarep = servicedef.bind(self.resource, id=self.data.id)
         else:
             self.datarep = datarep
+
+    def get_property_values(self):
+        return None
+
+    def print_properties(self):
+        property_values = self.get_property_values()
+        if (property_values is not None and
+                self.property_names is not None):
+            for num, value in enumerate(property_values, start=0):
+                if isinstance(value, dict):
+                    for k, v in value.items():
+                        print("{}->{}: {}"
+                              .format(self.property_names[num], k, v))
+                else:
+                    print("{}: {}"
+                          .format(self.property_names[num], value))
+        else:
+            raise NotImplementedError("Property names and Property "
+                                      "values have to be implemented")
 
     @property
     def id(self):
@@ -74,7 +95,6 @@ class ResourceObject(object):
         elif hasattr(self.data.config, 'name'):
             return self.data.config.name
         return self.id
-
 
 class Column(object):
 

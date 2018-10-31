@@ -100,6 +100,61 @@ Example output::
     ---------------------------------------------------------------------------------------------------------
     PCAP_FILE    /admin/port80_export.pcap    EN10MB       PCAP_US    7518727    1501166729    1501166729
 
+.. certificate_example:
+
+``certificate.py``
+-------------------
+
+This script takes no extra arguments, and will just print out details
+of SSL Certificate.
+
+Example output::
+
+    $ python certificate.py ar11.example.com -u admin -p admin
+
+    -------------------------------
+    Certificate Details
+    -------------------
+    Subject->common_name: localhost.localdomain
+    Subject->country: US
+    Subject->state: California
+    Subject->organization: Riverbed Technology, Inc.
+    Subject->locality: San Francisco
+    Fingerprint->value: 1E:39:E1:6C:29:31:93:3E:39:EE:AE:BD:86:EB:44:7F:E0:C5:FB:7C
+    Fingerprint->algorithm: SHA1
+    Key->algorithm: rsaEncryption
+    Key->size: 2048
+    Issuer->common_name: localhost.localdomain
+    Issuer->country: US
+    Issuer->state: California
+    Issuer->organization: Riverbed Technology, Inc.
+    Issuer->locality: San Francisco
+    Valid at: 2017-10-17 10:39:44+00:00
+    Expires at: 2019-01-17 10:39:44+00:00
+    PEM: -----BEGIN CERTIFICATE-----
+    MIIDzzCCAregAwIBAgIJAKwfBmgqvpUNMA0GCSqGSIb3DQEBCwUAMH4xHjAcBgNV
+    BAMMFWxvY2FsaG9zdC5sb2NhbGRvbWFpbjEiMCAGA1UECgwZUml2ZXJiZWQgVGVj
+    aG5vbG9neSwgSW5jLjEWMBQGA1UEBwwNU2FuIEZyYW5jaXNjbzETMBEGA1UECAwK
+    Q2FsaWZvcm5pYTELMAkGA1UEBhMCVVMwHhc2123gxMDE3MTAzOTQ0WhcNMTkxMDE3
+    MTAzOTQ0WjB+MR4wHAYDVQQDDBVsb2NhbGhvc3QubG9jYWxkb21haW4xIjAgBgNV
+    BAoMGVJpdmVyYmVkIFRlY2hub2xvZ3ksIEluYy4xFjAUBgNVBAcMDVNhbiBGcmFu
+    Y2lzY28xEzARBgNVBAgMCkNhbGlmb3JuaWExCzAJBgNVBAYTAlVTMIIBIjANBgkq
+    hkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApspx/OhQD5REEJqAhzW+q4gHwDNgJ4x/
+    y3Vds20vnptJPBfDN02ZqP1n2aeg27wcBOH3PBU5DEqqB1+JaSqG/AV1JCVXy70H
+    CnmGaRCf6amJgiZGMSPDmOdgV3ZFKS8c/BpAwGsVfgbo8BSLK5UjgasKLYV/McQ0
+    Nn1YwpLtfqsnI5TdEMFJCmMKhPfIdqSbNXUeHKHctKpLlIJCfJHn76aOihHiy8kr
+    MSSx48XKppEpppuZSfRXs9Cf+qnhWpjXm1qr1QtuQPu9o12/Xl1/0TTHm8Zovr3g
+    pEs6vtpU6mDHejSV4FUxe29Uwl/ADV+8TYvVDZmdOGbj++Q8MJ6noQIDAQABo1Aw
+    TjAdBgNVHQ4EFgQUDYeliG8fWkDY17nXGE8Ut107qCEwHwYDVR0jBBgwFoAUDYel
+    iG8fWkDY17nXGE8Ut107qCEwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOC
+    AQEAbK8HxOQMWbszqQIMx3lc3UQ1SuWeFqLdnTBsY6AQHVXUfuwaAhrERNsZewdd
+    HLcO5YqnK+koj5erXfcCGJTvUiPK51vGROYiMzxqL2YcfDDEUNg9Viiz3xBZsfhW
+    5cAGzrvg7EQtxsEBBJH8ikTjqkFM6H2G7QnJAMFNj01S8cJs1Iy1HNOENGFGQ/GD
+    T8NZrvfrP9XVEhG4y8W4Czz0zDOOfUsvOe5AKrRX5E4u8OrK+y2Afej3L+KFQA0K
+    I9pprZqwZ59bO0j1yvTpzapjjXYXV0sWKrXAtqGUVgv/Yhvwio7X7r64rbTnH/Rt
+    JX07lhBGzyiC2rB1D5Kl35sgzw==
+    -----END CERTIFICATE-----
+
 
 .. _create_capture_job_example:
 
@@ -393,6 +448,94 @@ A simple general report that outputs applications with response time larger than
 
 For a complete list of available source names to choose from, see the ouput of the built-in
 command `steel appresponse sources <https://support.riverbed.com/apis/steelscript/appresponse/tutorial.html#creating-a-data-definition-object>`_.
+
+
+.. ssl_keys_example:
+
+``ssl_keys.py``
+-------------------
+
+This script takes no extra arguments, and will import SSL Key,
+print out it details and delete the key.
+
+Example output::
+
+    $ python ssl_keys.py ar11.example.com -u admin -p admin
+
+    ---Import SSL Key---
+    Key successfully imported
+    <SSL_Key 1/Demo_Key_7>
+
+    ---SSL Keys Count---
+    1
+
+    ---SSL Key Details---
+    ID: 1
+    Name: Demo_Key_7
+    Description: Demo_Description_7
+    Timestamp: 2018-10-17 14:22:13+00:00
+
+    ---Delete SSL Key---
+    Key deleted.
+
+    ---SSL Keys Count---
+    0
+
+
+.. system_update_example:
+
+``system_update.py``
+-------------------
+
+This script takes no extra arguments. It will fetch an update image
+from provided url, print out the details of the image and delete it.
+It will also print out the details of current update state.
+
+Example output::
+
+    $ python system_update.py ar11.example.com -u admin -p admin
+
+
+    ---Update images---
+    No images available
+
+    ---Fetch image---
+    Please, enter an update image url: http://support.riverbed.com/update/current/update.iso
+    Fetch successfully started
+    Wait 5 sec ...
+
+    ---Update Image Details---
+    ID: 1
+    State: UPLOADING
+    State Description:
+    Version: N/A
+    Progress: 15.17
+    Checksum: N/A
+
+    ---Delete Image---
+    Image deleted
+
+    ---Update Details---
+    State: IDLE
+    State Description:
+    Last State Time: 2018-10-17 14:08:38+00:00
+    Target Version: None
+    Update History:
+    Time: 2018-10-17 14:35:20+00:00 Version: 11.6.0 #23947
+
+
+    --Initialize an update if in IDLE state or reset it--
+    Update state: IDLE
+    Initializing and resetting
+    Wait 10 sec ...
+    Resetting into IDLE state
+
+    ---How to execute an update---
+    In order to execute an update run those steps:
+    1. Initialize update: update.initialize()
+    2. Run update: update.start()
+    Those steps will bring box down and it will be inaccessible for some time
+
 
 .. _update_host_groups_example:
 

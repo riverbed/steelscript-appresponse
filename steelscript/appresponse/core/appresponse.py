@@ -10,7 +10,8 @@ import logging
 
 from steelscript.appresponse.core import CommonService, ReportService, \
     CaptureJobService, ClipService, ClassificationService, SystemTimeService, \
-    FileSystemService, PacketExportService
+    FileSystemService, PacketExportService, CertificateService, \
+    SslKeyStoreService, SystemUpdateService
 from steelscript.common.service import Service
 from reschema.servicedef import ServiceDefLoadHook, ServiceDef,\
     ServiceDefManager
@@ -171,6 +172,9 @@ class AppResponse(InstanceDescriptorMixin):
         self.mgmt_time = SystemTimeService(self)
         self.fs = FileSystemService(self)
         self.export = PacketExportService(self)
+        self.certificate = CertificateService(self)
+        self.ssl_key_store = SslKeyStoreService(self)
+        self.system_update = SystemUpdateService(self)
         # At this point, all services have used negotiated versions
         # Except common which is using 1.0 to get supported versions
         # Now reinitialize common service with negotiated versions
