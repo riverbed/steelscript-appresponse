@@ -44,6 +44,38 @@ class PacketCaptureApp(AppResponseApp):
                       lambda job: job.data.config.vifgs,
                       self.appresponse.capture.get_vifgs)
 
+        # Show Interfaces and VIFGs (skip if MIFG appliance)
+        if ifg.type == 'vifgs':
+            # Show interfaces
+            headers = ['name', 'description', 'status', 'bytes_total',
+                       'packets_dropped', 'packets_total']
+            data = []
+            for iface in self.appresponse.capture.get_interfaces():
+                data.append([
+                    iface.name,
+                    iface.data.config.description,
+                    iface.status,
+                    iface.stats.bytes_total.total,
+                    iface.stats.packets_dropped.total,
+                    iface.stats.packets_total.total,
+                ])
+            self.console('Interfaces', data, headers)
+
+            headers = ['id', 'name', 'enabled', 'filter', 'bytes_received',
+                       'packets_duped', 'packets_received']
+            data = []
+            for vifg in self.appresponse.capture.get_vifgs():
+                data.append([
+                    vifg.data.id,
+                    vifg.data.config.name,
+                    vifg.data.config.enabled,
+                    vifg.data.config.filter,
+                    vifg.data.state.stats.bytes_received.total,
+                    vifg.data.state.stats.packets_duped.total,
+                    vifg.data.state.stats.packets_received.total,
+                ])
+            self.console('VIFGs', data, headers)
+
         # Show capture jobs
         headers = ['id', 'name', ifg.type, 'filter', 'state',
                    'start_time', 'end_time', 'size']
@@ -51,8 +83,7 @@ class PacketCaptureApp(AppResponseApp):
         for job in self.appresponse.capture.get_jobs():
             data.append([job.id, job.name,
                          ifg.get_id(job),
-                         getattr(job.data.config, 'filter',
-                                 dict(string=None))['string'],
+                         getattr(job.data.config, 'filter', None),
                          job.data.state.status.state,
                          job.data.state.status.packet_start_time,
                          job.data.state.status.packet_end_time,
