@@ -46,20 +46,23 @@ class SystemUpdateService(ServiceClass):
             if str(e).startswith('404'):
                 raise ValueError('No image found with id %s' % id_)
 
-    def upload_image(self, obj):
-        """Upload update image on AppResponse appliance.
-         :param obj: Provide a request body with the following structure:
-            {
-                <prop>: any
-            }
-
-        :return : Returns an image data object.
+    def upload_image(self, path):
+        """Upload an update image on AppResponse appliance.
+        :param path: Provide a path to local image
+        :return : Returns a response object.
         """
         try:
             # Init resource
-            self.system_update = self.servicedef.bind('images')
-            resp = self.system_update.execute('upload', _data=obj)
-            return Image(data=resp.data, datarep=resp)
+            uri = self.servicedef.bind('images').uri + '/upload'
+            conn = (self.appresponse
+                        .service_manager
+                        .connection_manager
+                        .find(host=self.appresponse.host,
+                              auth=self.appresponse.auth))
+            with open(path, mode='rb') as fd:
+                resp = conn.upload(uri, fd)
+            fd.close()
+            return resp
         except RvbdHTTPException, e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to upload an update image.')
