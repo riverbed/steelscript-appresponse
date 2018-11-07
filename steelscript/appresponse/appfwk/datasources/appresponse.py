@@ -26,7 +26,6 @@ from steelscript.appresponse.core.reports import \
     SourceProxy, DataDef, Report
 from steelscript.appresponse.core.types import Key, Value, AppResponseException
 from steelscript.common.timeutils import datetime_to_seconds
-from steelscript.appresponse.core.fs import File
 from steelscript.appfwk.apps.datasource.modules.analysis import \
     AnalysisTable, AnalysisQuery
 from steelscript.appfwk.apps.datasource.models import Table
@@ -170,7 +169,8 @@ class AppResponseQuery(TableQueryBase):
         # If the data source is of file type and entire PCAP
         # is set True, then set start end times to None
 
-        if isinstance(source, File) and criteria.entire_pcap:
+        if (source.path.startswith(SourceProxy.FILE_PREFIX) and
+                criteria.entire_pcap):
             start = None
             end = None
         else:
