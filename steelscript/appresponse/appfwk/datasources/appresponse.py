@@ -4,10 +4,12 @@
 # accompanying the software ("License").  This software is distributed "AS IS"
 # as set forth in the License.
 
+import copy
 import logging
-import pandas
+import datetime
 import functools
 
+import pandas
 from django import forms
 
 from steelscript.appfwk.apps.datasource.models import \
@@ -15,6 +17,7 @@ from steelscript.appfwk.apps.datasource.models import \
 
 from steelscript.appfwk.apps.datasource.forms import \
     fields_add_time_selection, DurationField
+from steelscript.appfwk.apps.devices.models import Device
 
 from steelscript.appfwk.apps.jobs import QueryComplete, QueryContinue
 
@@ -24,7 +27,8 @@ from steelscript.appfwk.libs.fields import Function
 from steelscript.appfwk.apps.datasource.forms import IDChoiceField
 from steelscript.appresponse.core.reports import \
     SourceProxy, DataDef, Report
-from steelscript.appresponse.core.types import Key, Value, AppResponseException
+from steelscript.appresponse.core.types import Key, Value, \
+    AppResponseException, TrafficFilter
 from steelscript.common.timeutils import datetime_to_seconds
 from steelscript.appfwk.apps.datasource.modules.analysis import \
     AnalysisTable, AnalysisQuery
@@ -84,6 +88,20 @@ def fields_add_granularity(obj, initial=None, source=None):
     obj.fields.add(field)
 
 
+def fields_add_filterexpr(table, keyword='appresponse_steelfilter',
+                          initial=None):
+    field = TableField(keyword=keyword,
+                       label='AppResponse SteelFilter Expression',
+                       help_text='Traffic expression using '
+                                 'SteelFilter syntax, e.g. '
+                                 'ip.addr == "10.0.0.1" or '
+                                 'avg_traffic.total_ bytes_ps <= 10000',
+                       initial=initial,
+                       required=False)
+    field.save()
+    table.fields.add(field)
+
+
 class AppResponseTable(DatasourceTable):
     class Meta:
         proxy = True
@@ -94,6 +112,7 @@ class AppResponseTable(DatasourceTable):
 
     TABLE_OPTIONS = {'source': 'packets',
                      'include_files': False,
+                     'include_filter': False,
                      'show_entire_pcap': True,
                      'sort_col_name': None,
                      'ascending': False}
@@ -127,6 +146,9 @@ class AppResponseTable(DatasourceTable):
                                   label='Entire PCAP',
                                   initial=True,
                                   required=False)
+
+        if self.options.include_filter:
+            fields_add_filterexpr(self)
 
         fields_add_granularity(self, initial=field_options['granularity'],
                                source=self.options.source)
@@ -185,6 +207,17 @@ class AppResponseQuery(TableQueryBase):
             granularity=granularity,
             start=start,
             end=end)
+
+        if hasattr(criteria, 'appresponse_steelfilter'):
+            logger.debug('calculating steelfilter expression ...')
+            filterexpr = self.job.combine_filterexprs(
+                exprs=criteria.appresponse_steelfilter
+            )
+            if filterexpr:
+                logger.debug('applying steelfilter expression: %s'
+                             % filterexpr)
+                data_def.add_filter(TrafficFilter(type_='steelfilter',
+                                                  value=filterexpr))
 
         report = Report(ar)
         report.add(data_def)
@@ -416,4 +449,71 @@ class AppResponseLinkQuery(AnalysisQuery):
         pivot_col = self.table.options.pivot_column_name
         df[pivot_col] = df[pivot_col].map(make_report_link_with_mod)
 
+        return QueryComplete(df)
+
+
+class AppResponseScannerTable(AnalysisTable):
+    class Meta:
+        proxy = True
+        app_label = APP_LABEL
+
+    _query_class = 'AppResponseScannerQuery'
+
+    @classmethod
+    def create(cls, name, basetable, **kwargs):
+        kwargs['related_tables'] = {'basetable': basetable}
+        return super(AppResponseScannerTable, cls).create(name, **kwargs)
+
+
+class AppResponseScannerQuery(AnalysisQuery):
+    def analyze(self, jobs):
+        criteria = self.job.criteria
+
+        ar_query_table = Table.from_ref(
+            self.table.options.related_tables['basetable']
+        )
+
+        depjobs = {}
+
+        # For every (ar, job), we spin off a new job to grab the data, then
+        # merge everything into one dataframe at the end.
+        for s in Device.objects.filter(module='appresponse', enabled=True):
+            ar = DeviceManager.get_device(s.id)
+
+            for job in ar.capture.get_jobs():
+                # Start with criteria from the primary table -- this gives us
+                # endtime, duration and filterexpr.
+                bytes_criteria = copy.copy(criteria)
+                bytes_criteria.appresponse_device = s.id
+                bytes_criteria.appresponse_source = 'jobs/' + job.id
+                bytes_criteria.granularity = datetime.timedelta(0, 1)
+
+                newjob = Job.create(table=ar_query_table,
+                                    criteria=bytes_criteria)
+
+                depjobs[newjob.id] = newjob
+
+        return QueryContinue(self.collect, depjobs)
+
+    def collect(self, jobs=None):
+
+        out = []
+        for jid, job in jobs.iteritems():
+            ardata = job.data()
+            if ardata is not None:
+                total_bytes = ardata['total_bytes'].sum()
+                if total_bytes:
+                    s = Device.objects.get(id=job.criteria.appresponse_device)
+                    out.append([s.name,
+                                s.host,
+                                job.criteria.appresponse_source,
+                                total_bytes])
+
+        if not out:
+            out.append([
+                'No capture jobs found', '--', '--', ''
+            ])
+
+        columns = ['name', 'host', 'capture_job', 'bytes']
+        df = pandas.DataFrame(out, columns=columns)
         return QueryComplete(df)
