@@ -16,7 +16,7 @@ from steelscript.appfwk.apps.datasource.models import \
     DatasourceTable, TableQueryBase, Column, TableField
 
 from steelscript.appfwk.apps.datasource.forms import \
-    fields_add_time_selection, DurationField
+    fields_add_time_selection
 from steelscript.appfwk.apps.devices.models import Device
 
 from steelscript.appfwk.apps.jobs import QueryComplete, QueryContinue
@@ -24,7 +24,11 @@ from steelscript.appfwk.apps.jobs import QueryComplete, QueryContinue
 from steelscript.appfwk.apps.devices.devicemanager import DeviceManager
 from steelscript.appfwk.apps.devices.forms import fields_add_device_selection
 from steelscript.appfwk.libs.fields import Function
-from steelscript.appfwk.apps.datasource.forms import IDChoiceField
+from steelscript.appresponse.appfwk.datasources.appresponse_pcap import \
+    AppResponseDownloadTable
+from steelscript.appresponse.appfwk.fields import \
+    appresponse_source_choices, fields_add_granularity, \
+    fields_add_filterexpr, fields_add_source_choices, fields_add_entire_pcap
 from steelscript.appresponse.core.reports import \
     SourceProxy, DataDef, Report
 from steelscript.appresponse.core.types import Key, Value, \
@@ -46,60 +50,6 @@ class AppResponseColumn(Column):
         app_label = APP_LABEL
 
     COLUMN_OPTIONS = {'extractor': None}
-
-
-def appresponse_source_choices(form, id_, field_kwargs, params):
-    """ Query AppResponse for available capture jobs / files."""
-
-    ar_id = form.get_field_value('appresponse_device', id_)
-    if ar_id == '':
-        choices = [('', '<No AppResponse Device>')]
-    else:
-        ar = DeviceManager.get_device(ar_id)
-
-        choices = []
-
-        for job in ar.capture.get_jobs():
-            if job.status == 'RUNNING':
-                choices.append((SourceProxy(job).path, job.name))
-
-        if params['include_files']:
-            for f in ar.fs.get_files():
-                choices.append((SourceProxy(f).path, f.id))
-
-    field_kwargs['label'] = 'Source'
-    field_kwargs['choices'] = choices
-
-
-def fields_add_granularity(obj, initial=None, source=None):
-
-    if source == 'packets':
-        granularities = ('0.001', '0.01', '0.1', '1', '10', '60', '600',
-                         '3600', '86400')
-    else:
-        granularities = ('60', '600', '3600', '86400')
-
-    field = TableField(keyword='granularity',
-                       label='Granularity',
-                       field_cls=DurationField,
-                       field_kwargs={'choices': granularities},
-                       initial=initial)
-    field.save()
-    obj.fields.add(field)
-
-
-def fields_add_filterexpr(table, keyword='appresponse_steelfilter',
-                          initial=None):
-    field = TableField(keyword=keyword,
-                       label='AppResponse SteelFilter Expression',
-                       help_text='Traffic expression using '
-                                 'SteelFilter syntax, e.g. '
-                                 'ip.addr == "10.0.0.1" or '
-                                 'avg_traffic.total_ bytes_ps <= 10000',
-                       initial=initial,
-                       required=False)
-    field.save()
-    table.fields.add(field)
 
 
 class AppResponseTable(DatasourceTable):
@@ -129,23 +79,10 @@ class AppResponseTable(DatasourceTable):
 
         if self.options.source == 'packets':
             func = Function(appresponse_source_choices, self.options)
-
-            TableField.create(
-                keyword='appresponse_source', label='Source',
-                obj=self,
-                field_cls=IDChoiceField,
-                field_kwargs={'widget_attrs': {'class': 'form-control'}},
-                parent_keywords=['appresponse_device'],
-                dynamic=True,
-                pre_process_func=func
-            )
+            fields_add_source_choices(self, func)
 
             if self.options.show_entire_pcap:
-                TableField.create(keyword='entire_pcap', obj=self,
-                                  field_cls=forms.BooleanField,
-                                  label='Entire PCAP',
-                                  initial=True,
-                                  required=False)
+                fields_add_entire_pcap(self)
 
         if self.options.include_filter:
             fields_add_filterexpr(self)
