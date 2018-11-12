@@ -228,14 +228,15 @@ class ReportService(object):
             return instance
 
         if data_defs[0].source.name == 'packets':
-            # Needs to create a clip for for capture job packets source
+            # Create clip for for capture job sources only
             # Keep the clip till the instance is completed
-            # with self.appresponse.clips.create_clips(data_defs):
-            #     # capture job data_defs are modified in place
-            #     instance = _create_and_run(PACKETS_REPORT_SERVICE_NAME,
-            #                                data_defs)
-            instance = _create_instance(PACKETS_REPORT_SERVICE_NAME,
-                                        data_defs, live)
+            if data_defs[0].source.path.startswith(SourceProxy.JOB_PREFIX):
+                with self.appresponse.clips.create_clips(data_defs):
+                    instance = _create_instance(PACKETS_REPORT_SERVICE_NAME,
+                                                data_defs)
+            else:
+                instance = _create_instance(PACKETS_REPORT_SERVICE_NAME,
+                                            data_defs, live)
         else:
             instance = _create_instance(GENERAL_REPORT_SERVICE_NAME,
                                         data_defs, live)
