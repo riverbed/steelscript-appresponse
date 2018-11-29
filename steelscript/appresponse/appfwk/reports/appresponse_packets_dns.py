@@ -36,10 +36,8 @@ name = 'DNS Response Codes'
 p = AppResponseTable.create(name)
 
 p.add_column('dns_is_success', label='DNS Success', iskey=True,
-             datatype='string', extractor='dns.is_success')
-p.add_column('dns_is_success_name', label='DNS Success Name',
-             datatype='string', extractor='dns.is_success_name')
-
+             datatype='string',
+             extractor='dns.is_success', alias='dns.is_success_name')
 p.add_column('dns_total_queries', label='DNS Total Queries',
              datatype='integer', extractor='sum_dns.query.count',
              sortdesc=True)
@@ -51,7 +49,8 @@ name = 'DNS Query Type'
 p = AppResponseTable.create(name)
 
 p.add_column('dns_query_type', label='DNS Query Type', iskey=True,
-             datatype='string', extractor='dns.query.type')
+             datatype='string',
+             extractor='dns.query.type', alias='dns.query.type_name')
 p.add_column('dns_total_queries', label='DNS Total Queries',
              datatype='integer', extractor='sum_dns.query.count',
              sortdesc=True)
@@ -66,8 +65,10 @@ p = AppResponseTable.create(name, rows=100)
 p.add_column('dns_query_name', label='DNS Request', iskey=True,
              datatype='string', extractor='dns.query.name')
 p.add_column('dns_is_success', label='Query Result', iskey=True,
-             datatype='string', extractor='dns.is_success')
-p.add_column('dns_query_type', label='# Requests',
-             datatype='string', extractor='sum_dns.query.count',
+             datatype='string',
+             extractor='dns.is_success', alias='dns.is_success_name')
+p.add_column('dns_query_count', label='# Requests',
+             datatype='integer', extractor='sum_dns.query.count',
              sortdesc=True)
+
 report.add_widget(tables.TableWidget, p, name, width=12)

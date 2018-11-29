@@ -75,7 +75,8 @@ report.add_widget(tables.TableWidget, a,
 tcp = AppResponseTable.create('TCPErrors')
 
 tcp.add_column('error_type', label='TCP Error Type', iskey=True,
-               datatype='string', extractor='tcp.error_type')
+               datatype='string',
+               extractor='tcp.error_type', alias='tcp.error_type_name')
 tcp.add_column('errors', label='TCP Error Count', datatype='integer',
                sortdesc=True, extractor='sum_tcp.errors')
 

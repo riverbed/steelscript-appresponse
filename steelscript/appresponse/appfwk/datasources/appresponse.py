@@ -49,7 +49,17 @@ class AppResponseColumn(Column):
         proxy = True
         app_label = APP_LABEL
 
-    COLUMN_OPTIONS = {'extractor': None}
+    # Notes:
+    # 'extractor' defines the underlying column name for the Data Def
+
+    # 'alias' indicates for a given key column, what the more descriptive
+    # string alias column would be for it.  This actually results in the
+    # query making a request for both columns, then overwriting the 'extractor'
+    # column results with the 'alias' column results before handing back the
+    # results.
+
+    COLUMN_OPTIONS = {'extractor': None,
+                      'alias': None}
 
 
 class AppResponseTable(DatasourceTable):
@@ -67,7 +77,7 @@ class AppResponseTable(DatasourceTable):
                      'sort_col_name': None,
                      'ascending': False}
 
-    FIELD_OPTIONS = {'duration': '1h',
+    FIELD_OPTIONS = {'duration': '15m',
                      'granularity': '1m'}
 
     def post_process_table(self, field_options):
@@ -115,7 +125,7 @@ class AppResponseQuery(TableQueryBase):
         else:
             source = SourceProxy(name=self.table.options.source)
 
-        col_extractors, col_names = [], {}
+        col_extractors, col_names, aliases = [], {}, {}
 
         for col in self.table.get_columns(synthetic=False):
             col_names[col.options.extractor] = col.name
@@ -125,10 +135,15 @@ class AppResponseQuery(TableQueryBase):
             else:
                 col_extractors.append(Value(col.options.extractor))
 
+            if col.options.alias:
+                aliases[col.options.extractor] = col.options.alias
+                col_extractors.append(Value(col.options.alias))
+
         # If the data source is of file type and entire PCAP
         # is set True, then set start end times to None
 
-        if (source.path.startswith(SourceProxy.FILE_PREFIX) and
+        if (self.table.options.source == 'packets' and
+                source.path.startswith(SourceProxy.FILE_PREFIX) and
                 criteria.entire_pcap):
             start = None
             end = None
@@ -161,6 +176,13 @@ class AppResponseQuery(TableQueryBase):
         report.run()
 
         df = report.get_dataframe()
+
+        if aliases:
+            # overwrite columns with their alias values, then drop 'em
+            for k, v in aliases.iteritems():
+                df[k] = df[v]
+                df.drop(v, 1, inplace=True)
+
         df.columns = map(lambda x: col_names[x], df.columns)
 
         def to_int(x):

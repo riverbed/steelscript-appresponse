@@ -24,11 +24,10 @@ p = AppResponseTable.create('TCPErrors',
                             include_files=True)
 
 p.add_column('error_type', label='TCP Error Type', iskey=True,
-             datatype='string', extractor='tcp.error_type')
+             datatype='string',
+             extractor='tcp.error_type', alias='tcp.error_type_name')
 p.add_column('errors', label='TCP Error Count', datatype='integer',
              sortdesc=True, extractor='sum_tcp.errors')
-p.add_column('error_type_name', label='TCP Error Type Name',
-             datatype='string', extractor='tcp.error_type_name')
 
 report.add_widget(c3.BarWidget, p, 'TCP Errors',
                   width=6, height=400)

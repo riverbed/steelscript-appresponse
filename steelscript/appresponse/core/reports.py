@@ -233,7 +233,7 @@ class ReportService(object):
             if data_defs[0].source.path.startswith(SourceProxy.JOB_PREFIX):
                 with self.appresponse.clips.create_clips(data_defs):
                     instance = _create_instance(PACKETS_REPORT_SERVICE_NAME,
-                                                data_defs)
+                                                data_defs, False)
             else:
                 instance = _create_instance(PACKETS_REPORT_SERVICE_NAME,
                                             data_defs, live)
