@@ -125,7 +125,9 @@ class AppResponseQuery(TableQueryBase):
         else:
             source = SourceProxy(name=self.table.options.source)
 
-        col_extractors, col_names, aliases = [], {}, {}
+        col_extractors = []
+        col_names = {}
+        aliases = {}
 
         for col in self.table.get_columns(synthetic=False):
             col_names[col.options.extractor] = col.name
@@ -153,10 +155,21 @@ class AppResponseQuery(TableQueryBase):
 
         granularity = criteria.granularity.total_seconds()
 
+        resolution = None
+
+        # temp fix for https://bugzilla.nbttech.com/show_bug.cgi?id=305478
+        # if we aren't asking for a timeseries, make sure the data gets
+        # aggregated by making resolution greater than the report duration
+        if (self.table.options.source == 'packets' and
+                'start_time' not in col_names.keys() and
+                'end_time' not in col_names.keys()):
+            resolution = end - start + granularity
+
         data_def = DataDef(
             source=source,
             columns=col_extractors,
             granularity=granularity,
+            resolution=resolution,
             start=start,
             end=end)
 
@@ -176,6 +189,8 @@ class AppResponseQuery(TableQueryBase):
         report.run()
 
         df = report.get_dataframe()
+
+        report.delete()
 
         if aliases:
             # overwrite columns with their alias values, then drop 'em
