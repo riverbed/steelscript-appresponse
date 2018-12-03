@@ -4,6 +4,9 @@
 # accompanying the software ("License").  This software is distributed "AS IS"
 # as set forth in the License.
 
+import logging
+import threading
+
 from django import forms
 
 from steelscript.appfwk.apps.datasource.forms import DurationField, IDChoiceField
@@ -12,33 +15,42 @@ from steelscript.appfwk.apps.devices.devicemanager import DeviceManager
 from steelscript.appresponse.core.reports import SourceProxy
 
 
+logger = logging.getLogger(__name__)
+lock = threading.Lock()
+
+
 def appresponse_source_choices(form, id_, field_kwargs, params):
     """ Query AppResponse for available capture jobs / files."""
 
+    # most of these results will be cached by the underlying AR object
+
     ar_id = form.get_field_value('appresponse_device', id_)
-    if ar_id == '':
-        choices = [('', '<No AppResponse Device>')]
-    else:
-        ar = DeviceManager.get_device(ar_id)
 
-        choices = []
+    with lock:
+        if ar_id == '':
+            choices = [('', '<No AppResponse Device>')]
 
-        for job in ar.capture.get_jobs():
-            if job.status == 'RUNNING':
-                choices.append((SourceProxy(job).path, job.name))
+        else:
+            ar = DeviceManager.get_device(ar_id)
 
-        for clip in ar.clips.get_clips():
-            choices.append((SourceProxy(clip).path, clip.name))
-
-        if params['include_files']:
-            for f in ar.fs.get_files():
-                choices.append((SourceProxy(f).path, f.id))
-
-        if params['include_msa_files_only']:
             choices = []
-            for f in ar.fs.get_files():
-                if f.is_msa():
+
+            for job in ar.capture.get_jobs():
+                if job.status == 'RUNNING':
+                    choices.append((SourceProxy(job).path, job.name))
+
+            for clip in ar.clips.get_clips():
+                choices.append((SourceProxy(clip).path, clip.name))
+
+            if params['include_files']:
+                for f in ar.fs.get_files():
                     choices.append((SourceProxy(f).path, f.id))
+
+            if params['include_msa_files_only']:
+                choices = []
+                for f in ar.fs.get_files(force=True):
+                    if f.is_msa():
+                        choices.append((SourceProxy(f).path, f.id))
 
     field_kwargs['label'] = 'Source'
     field_kwargs['choices'] = choices

@@ -21,6 +21,7 @@ class FileSystemService(ServiceClass):
         self.appresponse = appresponse
         self.servicedef = None
         self.filesystem = None
+        self._file_objs = None
 
     def _bind_resources(self):
 
@@ -30,30 +31,33 @@ class FileSystemService(ServiceClass):
         # Init resource
         self.filesystem = self.servicedef.bind('filesystem')
 
-    def get_files(self):
+    def get_files(self, force=False):
         """Get all files on filesystem across all directories."""
 
-        resp = self.filesystem.execute('get')
+        if not self._file_objs or force:
+            resp = self.filesystem.execute('get')
 
-        def find_files(data, files=None):
-            """Recursive function which traverses directories."""
-            if files is None:
-                files = []
+            def find_files(data, files=None):
+                """Recursive function which traverses directories."""
+                if files is None:
+                    files = []
 
-            if data.keys() == ['items']:
-                data = data['items']
+                if data.keys() == ['items']:
+                    data = data['items']
 
-            for element in data:
-                if 'dirs' in element and element['dirs']:
-                    find_files(element['dirs'], files=files)
+                for element in data:
+                    if 'dirs' in element and element['dirs']:
+                        find_files(element['dirs'], files=files)
 
-                if 'files' in element and element['files']:
-                    filelist = [File(data=f, servicedef=self.servicedef)
-                                for f in element['files']['items']]
-                    files.extend(filelist)
-            return files
+                    if 'files' in element and element['files']:
+                        filelist = [File(data=f, servicedef=self.servicedef)
+                                    for f in element['files']['items']]
+                        files.extend(filelist)
+                return files
 
-        return find_files(resp.data)
+            self._file_objs = find_files(resp.data)
+
+        return self._file_objs
 
     def get_file_by_id(self, id_):
 

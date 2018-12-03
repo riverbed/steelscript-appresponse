@@ -22,6 +22,7 @@ class ClipService(ServiceClass):
         self.appresponse = appresponse
         self.servicedef = None
         self.clips = None
+        self._clip_objs = None
 
     def _bind_resources(self):
 
@@ -31,18 +32,21 @@ class ClipService(ServiceClass):
         # Init resource
         self.clips = self.servicedef.bind('clips')
 
-    def get_clips(self):
+    def get_clips(self, force=False):
         """Return a list of Clip objects."""
 
-        logger.debug("Obtaining all Clip objects ")
+        if not self._clip_objs or force:
+            logger.debug("Obtaining all Clip objects ")
 
-        resp = self.clips.execute('get')
+            resp = self.clips.execute('get')
 
-        if 'items' not in resp.data:
-            return []
+            if 'items' not in resp.data:
+                self._clip_objs = []
+            else:
+                self._clip_objs = [Clip(data=item, servicedef=self.servicedef)
+                                   for item in resp.data['items']]
 
-        return [Clip(data=item, servicedef=self.servicedef)
-                for item in resp.data['items']]
+        return self._clip_objs
 
     def get_clip_by_id(self, id_):
         """Return the Clip object given an id."""
