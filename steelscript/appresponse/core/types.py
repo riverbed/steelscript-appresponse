@@ -5,11 +5,15 @@
 # as set forth in the License.
 
 import logging
+import threading
 
 from steelscript.common import timeutils
 from steelscript.common.datastructures import DictObject
 
 logger = logging.getLogger(__name__)
+
+
+lock = threading.Lock()
 
 
 class AppResponseException(Exception):
@@ -29,14 +33,20 @@ class ServiceClass(object):
         pass
 
     def __get__(self, obj, objtype):
-        if self.initialized:
+        # Add threading lock to ensure that the resources are all
+        # allocated before claiming to be initialized.
+        with lock:
+            logger.debug('Checking %s service' % self.__class__.__name__)
+            if self.initialized:
+                return self
+
+            logger.debug('Initializing %s service' % self.__class__.__name__)
+            self._bind_resources()
+            logger.debug('Resources bound for %s' % self.__class__.__name__)
+
+            self.initialized = True
+
             return self
-
-        self.initialized = True
-
-        logger.debug('Initializing %s service' % self.__class__.__name__)
-        self._bind_resources()
-        return self
 
 
 # This class is used for instance descriptors

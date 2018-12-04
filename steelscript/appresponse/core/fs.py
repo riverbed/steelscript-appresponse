@@ -5,6 +5,7 @@
 # as set forth in the License.
 
 import logging
+import os
 
 from steelscript.appresponse.core.types import ServiceClass, ResourceObject
 
@@ -20,6 +21,7 @@ class FileSystemService(ServiceClass):
         self.appresponse = appresponse
         self.servicedef = None
         self.filesystem = None
+        self._file_objs = None
 
     def _bind_resources(self):
 
@@ -29,18 +31,33 @@ class FileSystemService(ServiceClass):
         # Init resource
         self.filesystem = self.servicedef.bind('filesystem')
 
-    def get_files(self):
+    def get_files(self, force=False):
+        """Get all files on filesystem across all directories."""
 
-        resp = self.filesystem.execute('get')
+        if not self._file_objs or force:
+            resp = self.filesystem.execute('get')
 
-        ret = []
+            def find_files(data, files=None):
+                """Recursive function which traverses directories."""
+                if files is None:
+                    files = []
 
-        for directory in resp.data['items']:
-            if 'items' in directory['files']:
-                for file in directory['files']['items']:
-                    ret.append(File(data=file,
-                                    servicedef=self.servicedef))
-        return ret
+                if data.keys() == ['items']:
+                    data = data['items']
+
+                for element in data:
+                    if 'dirs' in element and element['dirs']:
+                        find_files(element['dirs'], files=files)
+
+                    if 'files' in element and element['files']:
+                        filelist = [File(data=f, servicedef=self.servicedef)
+                                    for f in element['files']['items']]
+                        files.extend(filelist)
+                return files
+
+            self._file_objs = find_files(resp.data)
+
+        return self._file_objs
 
     def get_file_by_id(self, id_):
 
@@ -48,7 +65,54 @@ class FileSystemService(ServiceClass):
         resp = self.servicedef.bind('file', id=id_)
         return File(data=resp.data, datarep=resp)
 
+    def create_dir(self, fullpath):
+        """Create directory on device at `fullpath`"""
+        # too hard to figure out how to do this with sleepwalker natively
+        # just hit the endpoint with custom headers directly
+
+        # The API requires the directory name and the directory
+        # parent dir as two separated parameters
+        src_dir, dir_name = os.path.split(fullpath)
+
+        # Remove leading and trailing white space from the new resource name
+        dir_name = dir_name.strip()
+
+        if (src_dir is not None and dir_name is not None and
+                len(src_dir) > 0 and len(dir_name) > 0):
+
+            headers = {
+                'Content-Disposition': dir_name,
+                'Content-Type': 'application/x-shark-directory'
+            }
+            self.servicedef.connection.request(
+                'POST',
+                '/api/npm.filesystem/1.0/fs/{}'.format(src_dir),
+                body=None, extra_headers=headers
+            )
+
+            return self.get_file_by_id(fullpath)
+
 
 class File(ResourceObject):
 
     resource = 'file'
+
+    def __str__(self):
+        return '<File {}:{}>'.format(self.type, self.path)
+
+    def __repr__(self):
+        return '<File {}:{}>'.format(self.type, self.path)
+
+    @property
+    def type(self):
+        return self.data.type
+
+    @property
+    def path(self):
+        return self.data.id
+
+    def is_msa(self):
+        return self.type == 'MULTISEGMENT_FILE'
+
+    def delete(self):
+        self.datarep.delete()

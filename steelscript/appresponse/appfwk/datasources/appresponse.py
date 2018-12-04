@@ -4,29 +4,33 @@
 # accompanying the software ("License").  This software is distributed "AS IS"
 # as set forth in the License.
 
+import copy
 import logging
-import pandas
+import datetime
 import functools
 
-from django import forms
+import pandas
 
 from steelscript.appfwk.apps.datasource.models import \
     DatasourceTable, TableQueryBase, Column, TableField
 
 from steelscript.appfwk.apps.datasource.forms import \
-    fields_add_time_selection, DurationField
+    fields_add_time_selection
+from steelscript.appfwk.apps.devices.models import Device
 
 from steelscript.appfwk.apps.jobs import QueryComplete, QueryContinue
 
 from steelscript.appfwk.apps.devices.devicemanager import DeviceManager
 from steelscript.appfwk.apps.devices.forms import fields_add_device_selection
 from steelscript.appfwk.libs.fields import Function
-from steelscript.appfwk.apps.datasource.forms import IDChoiceField
+from steelscript.appresponse.appfwk.fields import \
+    appresponse_source_choices, fields_add_granularity, \
+    fields_add_filterexpr, fields_add_source_choices, fields_add_entire_pcap
 from steelscript.appresponse.core.reports import \
     SourceProxy, DataDef, Report
-from steelscript.appresponse.core.types import Key, Value, AppResponseException
+from steelscript.appresponse.core.types import Key, Value, \
+    AppResponseException, TrafficFilter
 from steelscript.common.timeutils import datetime_to_seconds
-from steelscript.appresponse.core.fs import File
 from steelscript.appfwk.apps.datasource.modules.analysis import \
     AnalysisTable, AnalysisQuery
 from steelscript.appfwk.apps.datasource.models import Table
@@ -42,47 +46,17 @@ class AppResponseColumn(Column):
         proxy = True
         app_label = APP_LABEL
 
-    COLUMN_OPTIONS = {'extractor': None}
+    # Notes:
+    # 'extractor' defines the underlying column name for the Data Def
 
+    # 'alias' indicates for a given key column, what the more descriptive
+    # string alias column would be for it.  This actually results in the
+    # query making a request for both columns, then overwriting the 'extractor'
+    # column results with the 'alias' column results before handing back the
+    # results.
 
-def appresponse_source_choices(form, id_, field_kwargs, params):
-    """ Query AppResponse for available capture jobs / files."""
-
-    ar_id = form.get_field_value('appresponse_device', id_)
-    if ar_id == '':
-        choices = [('', '<No AppResponse Device>')]
-    else:
-        ar = DeviceManager.get_device(ar_id)
-
-        choices = []
-
-        for job in ar.capture.get_jobs():
-            if job.status == 'RUNNING':
-                choices.append((SourceProxy(job).path, job.name))
-
-        if params['include_files']:
-            for f in ar.fs.get_files():
-                choices.append((SourceProxy(f).path, f.id))
-
-    field_kwargs['label'] = 'Source'
-    field_kwargs['choices'] = choices
-
-
-def fields_add_granularity(obj, initial=None, source=None):
-
-    if source == 'packets':
-        granularities = ('0.001', '0.01', '0.1', '1', '10', '60', '600',
-                         '3600', '86400')
-    else:
-        granularities = ('60', '600', '3600', '86400')
-
-    field = TableField(keyword='granularity',
-                       label='Granularity',
-                       field_cls=DurationField,
-                       field_kwargs={'choices': granularities},
-                       initial=initial)
-    field.save()
-    obj.fields.add(field)
+    COLUMN_OPTIONS = {'extractor': None,
+                      'alias': None}
 
 
 class AppResponseTable(DatasourceTable):
@@ -95,11 +69,13 @@ class AppResponseTable(DatasourceTable):
 
     TABLE_OPTIONS = {'source': 'packets',
                      'include_files': False,
+                     'include_msa_files_only': False,
+                     'include_filter': False,
                      'show_entire_pcap': True,
                      'sort_col_name': None,
                      'ascending': False}
 
-    FIELD_OPTIONS = {'duration': '1h',
+    FIELD_OPTIONS = {'duration': '15m',
                      'granularity': '1m'}
 
     def post_process_table(self, field_options):
@@ -111,23 +87,13 @@ class AppResponseTable(DatasourceTable):
 
         if self.options.source == 'packets':
             func = Function(appresponse_source_choices, self.options)
-
-            TableField.create(
-                keyword='appresponse_source', label='Source',
-                obj=self,
-                field_cls=IDChoiceField,
-                field_kwargs={'widget_attrs': {'class': 'form-control'}},
-                parent_keywords=['appresponse_device'],
-                dynamic=True,
-                pre_process_func=func
-            )
+            fields_add_source_choices(self, func)
 
             if self.options.show_entire_pcap:
-                TableField.create(keyword='entire_pcap', obj=self,
-                                  field_cls=forms.BooleanField,
-                                  label='Entire PCAP',
-                                  initial=True,
-                                  required=False)
+                fields_add_entire_pcap(self)
+
+        if self.options.include_filter:
+            fields_add_filterexpr(self)
 
         fields_add_granularity(self, initial=field_options['granularity'],
                                source=self.options.source)
@@ -157,7 +123,9 @@ class AppResponseQuery(TableQueryBase):
         else:
             source = SourceProxy(name=self.table.options.source)
 
-        col_extractors, col_names = [], {}
+        col_extractors = []
+        col_names = {}
+        aliases = {}
 
         for col in self.table.get_columns(synthetic=False):
             col_names[col.options.extractor] = col.name
@@ -167,10 +135,16 @@ class AppResponseQuery(TableQueryBase):
             else:
                 col_extractors.append(Value(col.options.extractor))
 
+            if col.options.alias:
+                aliases[col.options.extractor] = col.options.alias
+                col_extractors.append(Value(col.options.alias))
+
         # If the data source is of file type and entire PCAP
         # is set True, then set start end times to None
 
-        if isinstance(source, File) and criteria.entire_pcap:
+        if (self.table.options.source == 'packets' and
+                source.path.startswith(SourceProxy.FILE_PREFIX) and
+                criteria.entire_pcap):
             start = None
             end = None
         else:
@@ -179,18 +153,49 @@ class AppResponseQuery(TableQueryBase):
 
         granularity = criteria.granularity.total_seconds()
 
+        resolution = None
+
+        # temp fix for https://bugzilla.nbttech.com/show_bug.cgi?id=305478
+        # if we aren't asking for a timeseries, make sure the data gets
+        # aggregated by making resolution greater than the report duration
+        if (self.table.options.source == 'packets' and
+                'start_time' not in col_names.keys() and
+                'end_time' not in col_names.keys()):
+            resolution = end - start + granularity
+
         data_def = DataDef(
             source=source,
             columns=col_extractors,
             granularity=granularity,
+            resolution=resolution,
             start=start,
             end=end)
+
+        if hasattr(criteria, 'appresponse_steelfilter'):
+            logger.debug('calculating steelfilter expression ...')
+            filterexpr = self.job.combine_filterexprs(
+                exprs=criteria.appresponse_steelfilter
+            )
+            if filterexpr:
+                logger.debug('applying steelfilter expression: %s'
+                             % filterexpr)
+                data_def.add_filter(TrafficFilter(type_='steelfilter',
+                                                  value=filterexpr))
 
         report = Report(ar)
         report.add(data_def)
         report.run()
 
         df = report.get_dataframe()
+
+        report.delete()
+
+        if aliases:
+            # overwrite columns with their alias values, then drop 'em
+            for k, v in aliases.iteritems():
+                df[k] = df[v]
+                df.drop(v, 1, inplace=True)
+
         df.columns = map(lambda x: col_names[x], df.columns)
 
         def to_int(x):
@@ -416,4 +421,71 @@ class AppResponseLinkQuery(AnalysisQuery):
         pivot_col = self.table.options.pivot_column_name
         df[pivot_col] = df[pivot_col].map(make_report_link_with_mod)
 
+        return QueryComplete(df)
+
+
+class AppResponseScannerTable(AnalysisTable):
+    class Meta:
+        proxy = True
+        app_label = APP_LABEL
+
+    _query_class = 'AppResponseScannerQuery'
+
+    @classmethod
+    def create(cls, name, basetable, **kwargs):
+        kwargs['related_tables'] = {'basetable': basetable}
+        return super(AppResponseScannerTable, cls).create(name, **kwargs)
+
+
+class AppResponseScannerQuery(AnalysisQuery):
+    def analyze(self, jobs):
+        criteria = self.job.criteria
+
+        ar_query_table = Table.from_ref(
+            self.table.options.related_tables['basetable']
+        )
+
+        depjobs = {}
+
+        # For every (ar, job), we spin off a new job to grab the data, then
+        # merge everything into one dataframe at the end.
+        for s in Device.objects.filter(module='appresponse', enabled=True):
+            ar = DeviceManager.get_device(s.id)
+
+            for job in ar.capture.get_jobs():
+                # Start with criteria from the primary table -- this gives us
+                # endtime, duration and filterexpr.
+                bytes_criteria = copy.copy(criteria)
+                bytes_criteria.appresponse_device = s.id
+                bytes_criteria.appresponse_source = 'jobs/' + job.id
+                bytes_criteria.granularity = datetime.timedelta(0, 1)
+
+                newjob = Job.create(table=ar_query_table,
+                                    criteria=bytes_criteria)
+
+                depjobs[newjob.id] = newjob
+
+        return QueryContinue(self.collect, depjobs)
+
+    def collect(self, jobs=None):
+
+        out = []
+        for jid, job in jobs.iteritems():
+            ardata = job.data()
+            if ardata is not None:
+                total_bytes = ardata['total_bytes'].sum()
+                if total_bytes:
+                    s = Device.objects.get(id=job.criteria.appresponse_device)
+                    out.append([s.name,
+                                s.host,
+                                job.criteria.appresponse_source,
+                                total_bytes])
+
+        if not out:
+            out.append([
+                'No capture jobs found', '--', '--', ''
+            ])
+
+        columns = ['name', 'host', 'capture_job', 'bytes']
+        df = pandas.DataFrame(out, columns=columns)
         return QueryComplete(df)
