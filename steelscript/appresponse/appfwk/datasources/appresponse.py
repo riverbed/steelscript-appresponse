@@ -10,7 +10,6 @@ import datetime
 import functools
 
 import pandas
-from django import forms
 
 from steelscript.appfwk.apps.datasource.models import \
     DatasourceTable, TableQueryBase, Column, TableField
@@ -24,8 +23,6 @@ from steelscript.appfwk.apps.jobs import QueryComplete, QueryContinue
 from steelscript.appfwk.apps.devices.devicemanager import DeviceManager
 from steelscript.appfwk.apps.devices.forms import fields_add_device_selection
 from steelscript.appfwk.libs.fields import Function
-from steelscript.appresponse.appfwk.datasources.appresponse_pcap import \
-    AppResponseDownloadTable
 from steelscript.appresponse.appfwk.fields import \
     appresponse_source_choices, fields_add_granularity, \
     fields_add_filterexpr, fields_add_source_choices, fields_add_entire_pcap
@@ -72,6 +69,7 @@ class AppResponseTable(DatasourceTable):
 
     TABLE_OPTIONS = {'source': 'packets',
                      'include_files': False,
+                     'include_msa_files_only': False,
                      'include_filter': False,
                      'show_entire_pcap': True,
                      'sort_col_name': None,

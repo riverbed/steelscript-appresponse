@@ -9,7 +9,8 @@ import threading
 
 from django import forms
 
-from steelscript.appfwk.apps.datasource.forms import DurationField, IDChoiceField
+from steelscript.appfwk.apps.datasource.forms import \
+    DurationField, IDChoiceField
 from steelscript.appfwk.apps.datasource.models import TableField
 from steelscript.appfwk.apps.devices.devicemanager import DeviceManager
 from steelscript.appresponse.core.reports import SourceProxy
