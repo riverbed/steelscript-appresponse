@@ -9,9 +9,14 @@
 """
 Show available packet sources.
 """
+from collections import namedtuple
 
 from steelscript.appresponse.core.app import AppResponseApp
+from steelscript.common.api_helpers import APIVersion
 from steelscript.common.datautils import Formatter
+
+
+IFG = namedtuple('IFG', 'type get_id get_items')
 
 
 class PacketCaptureApp(AppResponseApp):
@@ -21,19 +26,64 @@ class PacketCaptureApp(AppResponseApp):
         print(source_type)
         print('-' * len(source_type))
 
-        Formatter.print_table(data, headers)
+        if data:
+            Formatter.print_table(data, headers)
+        else:
+            print('None.')
 
     def main(self):
 
+        # handle new packet capture version
+        version = APIVersion(self.appresponse.versions['npm.packet_capture'])
+        if version < APIVersion('2.0'):
+            ifg = IFG('mifg_id',
+                      lambda job: job.data.config.mifg_id,
+                      self.appresponse.capture.get_mifgs)
+        else:
+            ifg = IFG('vifgs',
+                      lambda job: job.data.config.vifgs,
+                      self.appresponse.capture.get_vifgs)
+
+        # Show Interfaces and VIFGs (skip if MIFG appliance)
+        if ifg.type == 'vifgs':
+            # Show interfaces
+            headers = ['name', 'description', 'status', 'bytes_total',
+                       'packets_dropped', 'packets_total']
+            data = []
+            for iface in self.appresponse.capture.get_interfaces():
+                data.append([
+                    iface.name,
+                    iface.data.config.description,
+                    iface.status,
+                    iface.stats.bytes_total.total,
+                    iface.stats.packets_dropped.total,
+                    iface.stats.packets_total.total,
+                ])
+            self.console('Interfaces', data, headers)
+
+            headers = ['id', 'name', 'enabled', 'filter', 'bytes_received',
+                       'packets_duped', 'packets_received']
+            data = []
+            for vifg in self.appresponse.capture.get_vifgs():
+                data.append([
+                    vifg.data.id,
+                    vifg.data.config.name,
+                    vifg.data.config.enabled,
+                    vifg.data.config.filter,
+                    vifg.data.state.stats.bytes_received.total,
+                    vifg.data.state.stats.packets_duped.total,
+                    vifg.data.state.stats.packets_received.total,
+                ])
+            self.console('VIFGs', data, headers)
+
         # Show capture jobs
-        headers = ['id', 'name', 'mifg_id', 'filter', 'state',
+        headers = ['id', 'name', ifg.type, 'filter', 'state',
                    'start_time', 'end_time', 'size']
         data = []
         for job in self.appresponse.capture.get_jobs():
             data.append([job.id, job.name,
-                         job.data.config.mifg_id,
-                         getattr(job.data.config, 'filter',
-                                 dict(string=None))['string'],
+                         ifg.get_id(job),
+                         getattr(job.data.config, 'filter', None),
                          job.data.state.status.state,
                          job.data.state.status.packet_start_time,
                          job.data.state.status.packet_end_time,

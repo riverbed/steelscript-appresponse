@@ -12,3 +12,6 @@ from steelscript.appresponse.core.classification import ClassificationService
 from steelscript.appresponse.core.mgmt_time import SystemTimeService
 from steelscript.appresponse.core.fs import FileSystemService
 from steelscript.appresponse.core.export import PacketExportService
+from steelscript.appresponse.core.certificate import CertificateService
+from steelscript.appresponse.core.ssl_keys import SslKeyStoreService
+from steelscript.appresponse.core.system_update import SystemUpdateService

@@ -10,7 +10,8 @@ import logging
 
 from steelscript.appresponse.core import CommonService, ReportService, \
     CaptureJobService, ClipService, ClassificationService, SystemTimeService, \
-    FileSystemService, PacketExportService
+    FileSystemService, PacketExportService, CertificateService, \
+    SslKeyStoreService, SystemUpdateService
 from steelscript.common.service import Service
 from reschema.servicedef import ServiceDefLoadHook, ServiceDef,\
     ServiceDefManager
@@ -27,9 +28,7 @@ COMMON_SERVICE_VERSION = '1.0'
 
 
 class AppResponseServiceDefLoader(ServiceDefLoadHook):
-    """This class serves as the custom hook for service definition manager
-    for AppResponse devices.
-    """
+    """Custom hook for service definition manager for AppResponse"""
 
     SERVICE_ID = '/api/{name}/{version}'
 
@@ -173,6 +172,9 @@ class AppResponse(InstanceDescriptorMixin):
         self.mgmt_time = SystemTimeService(self)
         self.fs = FileSystemService(self)
         self.export = PacketExportService(self)
+        self.certificate = CertificateService(self)
+        self.ssl_key_store = SslKeyStoreService(self)
+        self.system_update = SystemUpdateService(self)
         # At this point, all services have used negotiated versions
         # Except common which is using 1.0 to get supported versions
         # Now reinitialize common service with negotiated versions
@@ -223,6 +225,15 @@ class AppResponse(InstanceDescriptorMixin):
         """Get a list of all existing capture jobs."""
         return self.capture.get_jobs()
 
+    def get_column_objects(self, source_name, columns):
+        """Return proper Key/Value objects for given list of column strings.
+
+        :param source_name: string value of source name
+        :param columns: list of columns as strings
+        :return: column objects
+        """
+        return self.reports.get_column_objects(source_name, columns)
+
     def create_report(self, data_def_request):
         """Helper method to initiate an AppResponse report.
 
@@ -232,7 +243,7 @@ class AppResponse(InstanceDescriptorMixin):
         return self.reports.create_report(data_def_request)
 
     def upload(self, dest_path, local_file):
-        """ Upload a local file to the AppResponse 11 device.
+        """Upload a local file to the AppResponse 11 device.
 
         :param dest_path: path where local file will be stored
             at AppResponse device

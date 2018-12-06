@@ -5,11 +5,15 @@
 # as set forth in the License.
 
 import logging
+import threading
 
 from steelscript.common import timeutils
 from steelscript.common.datastructures import DictObject
 
 logger = logging.getLogger(__name__)
+
+
+lock = threading.Lock()
 
 
 class AppResponseException(Exception):
@@ -29,14 +33,20 @@ class ServiceClass(object):
         pass
 
     def __get__(self, obj, objtype):
-        if self.initialized:
+        # Add threading lock to ensure that the resources are all
+        # allocated before claiming to be initialized.
+        with lock:
+            logger.debug('Checking %s service' % self.__class__.__name__)
+            if self.initialized:
+                return self
+
+            logger.debug('Initializing %s service' % self.__class__.__name__)
+            self._bind_resources()
+            logger.debug('Resources bound for %s' % self.__class__.__name__)
+
+            self.initialized = True
+
             return self
-
-        self.initialized = True
-
-        logger.debug('Initializing %s service' % self.__class__.__name__)
-        self._bind_resources()
-        return self
 
 
 # This class is used for instance descriptors
@@ -54,6 +64,8 @@ class ResourceObject(object):
 
     resource = None
 
+    property_names = None
+
     def __init__(self, data, servicedef=None, datarep=None):
         logger.debug('Initialized {} object with data {}'
                      .format(self.__class__.__name__, data))
@@ -62,6 +74,25 @@ class ResourceObject(object):
             self.datarep = servicedef.bind(self.resource, id=self.data.id)
         else:
             self.datarep = datarep
+
+    def get_property_values(self):
+        return None
+
+    def print_properties(self):
+        property_values = self.get_property_values()
+        if (property_values is not None and
+                self.property_names is not None):
+            for num, value in enumerate(property_values, start=0):
+                if isinstance(value, dict):
+                    for k, v in value.items():
+                        print("{}->{}: {}"
+                              .format(self.property_names[num], k, v))
+                else:
+                    print("{}: {}"
+                          .format(self.property_names[num], value))
+        else:
+            raise NotImplementedError("Property names and Property "
+                                      "values have to be implemented")
 
     @property
     def id(self):
@@ -75,7 +106,6 @@ class ResourceObject(object):
             return self.data.config.name
         return self.id
 
-
 class Column(object):
 
     def __init__(self, name, key=False):
@@ -84,6 +114,10 @@ class Column(object):
 
     def __str__(self):
         return self.name
+
+    def __repr__(self):
+        msg = '<{cls}(name={name} key={key})>'
+        return msg.format(cls=self.__class__.__name__, **self.__dict__)
 
 
 class Key(Column):
