@@ -134,6 +134,8 @@ class GeneralReportApp(AppResponseApp):
         data = report.get_data()
         headers = report.get_legend()
 
+        report.delete()
+
         if self.options.csvfile:
             with open(self.options.csvfile, 'w') as f:
                 for line in Formatter.get_csv(data, headers):
