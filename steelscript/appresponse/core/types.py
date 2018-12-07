@@ -106,6 +106,7 @@ class ResourceObject(object):
             return self.data.config.name
         return self.id
 
+
 class Column(object):
 
     def __init__(self, name, key=False):

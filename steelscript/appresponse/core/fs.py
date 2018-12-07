@@ -42,7 +42,7 @@ class FileSystemService(ServiceClass):
                 if files is None:
                     files = []
 
-                if data.keys() == ['items']:
+                if list(data.keys()) == ['items']:
                     data = data['items']
 
                 for element in data:

@@ -46,7 +46,7 @@ class SslKeyStoreService(ServiceClass):
             self.ssl_key_store = self.servicedef.bind('key', id=id_)
             resp = self.ssl_key_store.execute('get')
             return SslKey(data=resp.data, datarep=resp)
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('No SSL Key found with id %s' % id_)
 
@@ -56,7 +56,7 @@ class SslKeyStoreService(ServiceClass):
             self.ssl_key_store = self.servicedef.bind('key', name=name_)
             resp = self.ssl_key_store.execute('get')
             return SslKey(data=resp.data, datarep=resp)
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('No SSL Key found with name %s' % name_)
 

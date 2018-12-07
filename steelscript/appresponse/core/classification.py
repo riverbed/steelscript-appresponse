@@ -92,7 +92,7 @@ class ClassificationService(ServiceClass):
     def create_hostgroups(self, objs):
         """Create multiple hostgroup objects in one go.
 
-        :param obj: a list of HostGroupConfig objects.
+        :param objs: a list of HostGroupConfig objects.
         :return: a list of HostGroup objects.
         """
 
