@@ -11,7 +11,7 @@ Demonstrate System Update API.
 """
 
 from time import sleep
-from urlparse import urlparse
+from urllib.parse import urlparse
 from steelscript.appresponse.core.app import AppResponseApp
 from steelscript.common.exceptions import RvbdHTTPException
 from steelscript.commands.steel import prompt_yn
@@ -32,14 +32,14 @@ class SystemUpdateApp(AppResponseApp):
                 print("Images count: " + str(len(images)))
             else:
                 print("No images available")
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to get an update images')
 
         try:
             print("")
             print("---Fetch image---")
-            url = raw_input('Please, enter an update image url: ').strip()
+            url = input('Please, enter an update image url: ').strip()
             try:
                 result = urlparse(url)
                 if result.scheme and result.netloc and result.path:
@@ -50,10 +50,10 @@ class SystemUpdateApp(AppResponseApp):
                         sleep(5)
                 else:
                     print('Invalid update image url')
-            except RvbdHTTPException, e:
+            except RvbdHTTPException as e:
                 if str(e).startswith('404'):
                     raise ValueError('Invalid update image url')
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to fetch an update image')
 
@@ -71,7 +71,7 @@ class SystemUpdateApp(AppResponseApp):
                         image.print_properties()
                     else:
                         print("No image retrieved")
-                except RvbdHTTPException, e:
+                except RvbdHTTPException as e:
                     if str(e).startswith('404'):
                         raise ValueError('Failed to get image')
 
@@ -85,12 +85,12 @@ class SystemUpdateApp(AppResponseApp):
                         print("---Delete Image---")
                         image.delete()
                         print("Image deleted")
-                except RvbdHTTPException, e:
+                except RvbdHTTPException as e:
                     if str(e).startswith('404'):
                         raise ValueError('Failed to delete image')
             else:
                 print("No images available")
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to get an update images')
 
@@ -123,7 +123,7 @@ class SystemUpdateApp(AppResponseApp):
                       " inaccessible for some time")
             else:
                 print("No update retrieved")
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to get an update')
 

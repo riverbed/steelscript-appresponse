@@ -115,7 +115,7 @@ class AlertEventApp(AppResponseApp):
         headers = [x.lstrip('alert.') for x in report.get_legend()]
 
         if not data:
-            print '\nNo data found.\n'
+            print('\nNo data found.\n')
 
         else:
             if self.options.csvfile:

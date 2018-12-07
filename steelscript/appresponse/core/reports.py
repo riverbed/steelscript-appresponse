@@ -702,6 +702,8 @@ class Report(object):
                 source_name = self._data_defs[index].source.name
                 if 'data' in resp:
                     data = self._cast_number(resp, source_name)
+                else:
+                    data = None
                 return {'data': data, 'meta': resp['meta']}
 
     def get_legend(self, index=0, details=False):

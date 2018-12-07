@@ -11,7 +11,7 @@ import os
 import json
 
 from time import sleep
-from urlparse import urlparse
+from urllib.parse import urlparse
 from steelscript.appresponse.core.app import AppResponseApp
 from steelscript.common.exceptions import RvbdHTTPException
 
@@ -47,7 +47,7 @@ class UpdateApp(AppResponseApp):
                   self.options.image_path is None):
                 self.parser.error("Please, provide either"
                                   " --image_path or --image_url")
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             self.parser.error("Failed to validate options: {}"
                               .format(e.error_text))
 
@@ -77,7 +77,7 @@ class UpdateApp(AppResponseApp):
                     return False
             else:
                 raise ValueError('Failed to upload an update image')
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to upload an update image')
 
@@ -105,7 +105,7 @@ class UpdateApp(AppResponseApp):
                     return False
             else:
                 raise ValueError('Failed to fetch an update image')
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to fetch an update image')
 
@@ -147,7 +147,7 @@ class UpdateApp(AppResponseApp):
                         return True
                 else:
                     return True
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to initialize an update')
 
@@ -155,7 +155,7 @@ class UpdateApp(AppResponseApp):
         try:
             self.appresponse.system_update.get_update().start()
             print("Update started ...")
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to start an update process')
 
@@ -179,7 +179,7 @@ class UpdateApp(AppResponseApp):
                 return True
             else:
                 return False
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to validate an image')
 
@@ -211,7 +211,7 @@ class UpdateApp(AppResponseApp):
                     self.parser.error('Failed to upload an update image')
             else:
                 self.parser.error('Neither path or url provided')
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to fetch or upload an update image')
 
