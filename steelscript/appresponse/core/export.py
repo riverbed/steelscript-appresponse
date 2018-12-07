@@ -51,14 +51,46 @@ class Export(object):
     def __exit__(self, type, value, traceback):
         self.delete()
 
-    def download(self, filename, overwrite):
+    def download(self, filename, overwrite, retries=3, delay=5):
+        """Download a created export.
+
+        :param str filename: path to save downloaded file
+        :param bool overwrite: true if existing file can be overwritten
+        :param int retries: number of times to retry if export isn't ready
+        :param int delay: time to sleep between retries
+
+        """
         try:
             self.appresponse.download(self.exp_id, filename, overwrite)
-        except RvbdHTTPException:
-            # export may not be ready yet, try one more time
-            time.sleep(1)
-            logger.info('Export %s not ready, re-trying ...' % self.exp_id)
-            self.appresponse.download(self.exp_id, filename, overwrite)
+            return
+        except RvbdHTTPException as e:
+            # while we are waiting for the export to finish initializing,
+            # retry the query checking the exception to make sure something
+            # else didn't go wrong
+
+            def not_initialized(exc):
+                return ('state is not RUNNING: state UNINITIALIZED'
+                        in exc.error_text)
+
+            if not_initialized(e):
+                while retries > 0:
+                    logger.info('Export %s not ready, re-trying ...' %
+                                self.exp_id)
+                    time.sleep(delay)
+                    try:
+                        self.appresponse.download(self.exp_id,
+                                                  filename, overwrite)
+                        return
+                    except RvbdHTTPException as e:
+                        if not_initialized(e):
+                            retries = retries - 1
+                            continue
+                        else:
+                            raise e
+                # if we get here, the export still isn't ready
+                raise e
+            else:
+                raise e
 
     def delete(self):
         try:
