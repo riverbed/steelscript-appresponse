@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+[1.8]
+ * Last version planned to include support for python 2 other than security fixes to SteelScript Code base.
+ * Certificate API support for AR11.
+ * Live report support.
+ * Interface and VIFG support
+ * Enhanced packets data source support.
+ * Add appfwk reports for DNS, TCP errors, and microbursts
+
 [1.4]
  * Add support for AR 11.5 release
  * Add column helper methods
