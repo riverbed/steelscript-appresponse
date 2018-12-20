@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Riverbed Technology, Inc.
+# Copyright (c) 2018 Riverbed Technology, Inc.
 #
 # This software is licensed under the terms and conditions of the MIT License
 # accompanying the software ("License").  This software is distributed "AS IS"
@@ -10,8 +10,8 @@ from setuptools import setup, find_packages
 from gitpy_versioning import get_version
 
 install_requires = (
-    'steelscript>=2.0',
-    'sleepwalker>=2.0',
+    'steelscript>=2.0a1',
+    'sleepwalker>=2.0a1',
 )
 
 setup_args = {
