@@ -741,7 +741,12 @@ class Report(object):
 
         :param int index: DataDef to process into DataFrame.  Defaults to 0.
         """
-        import pandas
+        try:
+            import pandas
+        except ImportError as e:
+            logger.exception("Pandas module is required to run this function. Install pandas and retry. %s" % e)
+            return
+
         data = self.get_data(index)
 
         # check if we are a live version and extract data directly

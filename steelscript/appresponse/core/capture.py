@@ -157,6 +157,8 @@ class Interface(ResourceObject):
                                            name=self.data.name)
         else:
             self.datarep = datarep
+            # [mzetea] - this is a bit confusing since the init does not call the super init even though we have
+            # inheritance. is the inheritance actually needed at all in this case or is this just a miss?
 
     def __repr__(self):
         return '<Interface {}/{}>'.format(self.name, self.status)

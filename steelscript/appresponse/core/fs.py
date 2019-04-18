@@ -46,6 +46,10 @@ class FileSystemService(ServiceClass):
                     data = data['items']
 
                 for element in data:
+                    # [mzetea] - rather than searching in a list (log(n)) we can try dict access O(1)
+                    # dirs = element.get('dirs')
+                    # if dirs is not None: find_files(dirs, files=files)
+                    # same goes below unless it's not a dict we expect...
                     if 'dirs' in element and element['dirs']:
                         find_files(element['dirs'], files=files)
 

@@ -70,6 +70,7 @@ class AppResponseServiceDefLoader(ServiceDefLoadHook):
                 return ServiceDef.create_from_file(abs_fname)
             except (ValueError, ParseError, UnsupportedSchema) as e:
                 # Clean up invalid cache
+                logger.debug("Cleaning up invalid cache in 'find_by_id'. Stacktrace: %s" % e)
                 os.remove(abs_fname)
 
         resp = self.connection.request(method='GET', path=id_)
@@ -93,6 +94,7 @@ class AppResponseServiceDefLoader(ServiceDefLoadHook):
                 return ServiceDef.create_from_file(abs_fname)
             except (ValueError, ParseError, UnsupportedSchema) as e:
                 # Clean up invalid cache
+                logger.debug("Cleaning up invalid cache in 'find_by_name'. Stacktrace: %s" % e)
                 os.remove(abs_fname)
 
         service_id = self.SERVICE_ID.format(name=name, version=version)

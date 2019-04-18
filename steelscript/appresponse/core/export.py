@@ -58,7 +58,7 @@ class Export(object):
         :param bool overwrite: true if existing file can be overwritten
         :param int retries: number of times to retry if export isn't ready
         :param int delay: time to sleep between retries
-
+        TODO: [mzetea]: refactor this to proper recursion
         """
         try:
             self.appresponse.download(self.exp_id, filename, overwrite)
@@ -81,16 +81,17 @@ class Export(object):
                         self.appresponse.download(self.exp_id,
                                                   filename, overwrite)
                         return
-                    except RvbdHTTPException as e:
-                        if not_initialized(e):
+                    except RvbdHTTPException as inner_e:
+                        # renamed the exception variable not to shadow the upper except
+                        if not_initialized(inner_e):
                             retries = retries - 1
                             continue
                         else:
-                            raise e
+                            raise RvbdHTTPException(inner_e)
                 # if we get here, the export still isn't ready
-                raise e
+                raise RvbdHTTPException(e)
             else:
-                raise e
+                raise RvbdHTTPException(e)
 
     def delete(self):
         try:

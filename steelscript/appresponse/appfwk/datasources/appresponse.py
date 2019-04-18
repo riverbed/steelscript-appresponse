@@ -471,7 +471,7 @@ class AppResponseScannerQuery(AnalysisQuery):
     def collect(self, jobs=None):
 
         out = []
-        for jid, job in jobs.iteritems():
+        for jid, job in jobs.items():
             ardata = job.data()
             if ardata is not None:
                 total_bytes = ardata['total_bytes'].sum()
