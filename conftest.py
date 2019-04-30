@@ -1,5 +1,9 @@
 import pytest
-from tests.settings import USERNAME, PASSWORD, ARX_ENDPOINT
+import requests
+import json
+
+from tests.settings import USERNAME, PASSWORD, ARX_ENDPOINT, \
+    WIREMOCK_SERVER, WIREMOCK_START_RECORDING, WIREMOCK_STOP_RECORDING
 from steelscript.common.service import UserAuth
 from steelscript.appresponse.core.appresponse import AppResponse
 
@@ -11,4 +15,16 @@ def user_auth():
 
 @pytest.fixture()
 def app(user_auth):
-    return AppResponse(ARX_ENDPOINT, auth=user_auth)
+    return AppResponse(WIREMOCK_SERVER, auth=user_auth)
+
+
+def pytest_configure(config):
+    start_api = "%s/%s" % (WIREMOCK_SERVER, WIREMOCK_START_RECORDING)
+    req = requests.post(start_api, data=json.dumps({'targetBaseUrl': ARX_ENDPOINT}))
+    print("Started WireMock Recording for ARX. Response from server: %s" % req.content)
+
+
+def pytest_unconfigure(config):
+    stop_api = "%s/%s" % (WIREMOCK_SERVER, WIREMOCK_STOP_RECORDING)
+    req = requests.post(stop_api, data=json.dumps({'targetBaseUrl': ARX_ENDPOINT}))
+    print("Stopped WireMock Recording for ARX. Response from server: %s" % req.content)

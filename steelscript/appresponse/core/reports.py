@@ -536,7 +536,6 @@ class DataDef(object):
             v = getattr(self.timefilter, k, None)
             if v:
                 data_def['time'][k] = str(v)
-
         if self.retention_time:
             data_def['time']['retention_time'] = str(self.retention_time)
 
