@@ -110,6 +110,8 @@ class AppResponseConnectionHook(ConnectionHook):
         # which is redundant. But since it is only one time during
         # initialization, it is benign.
         svc = Service("AppResponse", host=host, auth=auth)
+        # svc.conn.REST_DEBUG = 2
+        # svc.conn.REST_BODY_LINES = 20
         return svc.conn
 
 
