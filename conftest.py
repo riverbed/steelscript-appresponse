@@ -26,7 +26,7 @@ def app(user_auth):
 
 def pytest_configure(config):
     steelscript.common.connection.Connection.REST_DEBUG = 2
-    steelscript.common.connection.Connection.REST_BODY_LINES = 20
+    steelscript.common.connection.Connection.REST_BODY_LINES = 200
     # start_api = "%s/%s" % (WIREMOCK_SERVER, WIREMOCK_START_RECORDING)
     # reset_api = "%s/%s" % (WIREMOCK_SERVER, WIREMOCK_RESET)
     # reset = requests.delete(reset_api)

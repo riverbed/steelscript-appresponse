@@ -6,7 +6,6 @@ from steelscript.appresponse.core.reports import DataDef, Report, SourceProxy
 from tests.settings import PACKETS_KEY_COLS, PACKETS_VALUE_COLS
 
 
-
 @pytest.fixture
 def packet_columns():
     key_cols = [Key(key) for key in PACKETS_KEY_COLS]
@@ -45,9 +44,9 @@ def packet_report_columns(app):
 
 @pytest.fixture
 def report_time_frame():
-    return u"05/01/19 17:10:10 to 05/01/19 17:15:10"
+    # return u"05/21/19 17:10:10.001 to 05/21/19 18:15:10.001"
     #        06/05/17 17:09:00 to 06/05/17 18:09:00
-    # return "previous hour"
+    return "previous hour"
 
 
 class TestPacketsReport:
