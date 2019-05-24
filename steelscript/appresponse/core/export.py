@@ -82,7 +82,8 @@ class Export(object):
                                                   filename, overwrite)
                         return
                     except RvbdHTTPException as inner_e:
-                        # renamed the exception variable not to shadow the upper except
+                        # renamed the exception variable
+                        # not to shadow the upper except
                         if not_initialized(inner_e):
                             retries = retries - 1
                             continue

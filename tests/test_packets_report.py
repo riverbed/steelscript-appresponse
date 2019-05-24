@@ -80,4 +80,3 @@ class TestPacketsReport:
         assert legend == sorted(PACKETS_KEY_COLS + PACKETS_VALUE_COLS)
         assert len(report_data) > 0
         assert len(report_data[1]) == len(PACKETS_KEY_COLS + PACKETS_VALUE_COLS)
-

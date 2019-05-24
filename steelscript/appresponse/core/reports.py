@@ -744,7 +744,8 @@ class Report(object):
         try:
             import pandas
         except ImportError as e:
-            logger.exception("Pandas module is required to run this function. Install pandas and retry. %s" % e)
+            logger.exception("Pandas module is required to run this function. "
+                             "Install pandas and retry. %s" % e)
             return
 
         data = self.get_data(index)

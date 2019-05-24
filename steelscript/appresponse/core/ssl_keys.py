@@ -23,11 +23,11 @@ class SslKeyStoreService(ServiceClass):
         self.servicedef = None
         self.ssl_key_store = None
 
-    def __str__(self):
-        # [mzetea] - where do the id() and name() come from? seem to be undefined. ResourceObject used below has
-        # them defined as properties... Should this class implement the 2 or inherit the RersourceObject instead of the
-        # ServiceClass?
-        return '<SSL Key {}/{}>'.format(self.id(), self.name())
+    # def __str__(self):
+    #     # [mzetea] - where do the id() and name() come from? seem to be undefined. ResourceObject used below has
+    #     # them defined as properties... Should this class implement the 2 or inherit the RersourceObject instead of the
+    #     # ServiceClass?
+    #     return '<SSL Key {}/{}>'.format(self.id(), self.name())
 
     def _bind_resources(self):
         # Init service

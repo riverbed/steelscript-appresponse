@@ -11,8 +11,8 @@ from steelscript.appresponse.core.appresponse import AppResponse
 
 try:
     import steelscript.common.connection
-except:
-    import pdb; pdb.set_trace()
+except ImportError:
+    raise ImportError("Cannot import steelscript connection dependency.")
 
 
 @pytest.fixture(scope="module")
