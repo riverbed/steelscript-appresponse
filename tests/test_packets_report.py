@@ -1,6 +1,6 @@
 import pytest
 
-from steelscript.appresponse.core.types import Key, Value, TrafficFilter
+from steelscript.appresponse.core.types import Key, Value
 from steelscript.appresponse.core.reports import DataDef, Report, SourceProxy
 
 from tests.settings import PACKETS_KEY_COLS, PACKETS_VALUE_COLS
@@ -26,13 +26,15 @@ def packets_source(capture_jobs):
 
 
 @pytest.fixture
-def packets_report_data_def(app, packets_source, packet_columns, report_time_frame):
+def packets_report_data_def(app, packets_source,
+                            packet_columns, report_time_frame):
     granularity = 60
     resolution = 120
     cols = packet_columns[0] + packet_columns[1]
     source_proxy = SourceProxy(packets_source)
-    data_def = DataDef(source=source_proxy, columns=cols, time_range=report_time_frame,
-                       granularity=granularity, resolution=resolution)
+    data_def = DataDef(source=source_proxy, columns=cols,
+                       time_range=report_time_frame, granularity=granularity,
+                       resolution=resolution)
     return data_def
 
 
@@ -44,9 +46,7 @@ def packet_report_columns(app):
 
 @pytest.fixture
 def report_time_frame():
-    return u"05/23/19 14:30:10 to 05/23/19 14:35:10"
-    #        06/05/17 17:09:00 to 06/05/17 18:09:00
-    # return "previous hour"
+    return "previous hour"
 
 
 class TestPacketsReport:
@@ -57,14 +57,13 @@ class TestPacketsReport:
         ('start_time', True, True),
         ('end_time', True, True),
         ('cli_tcp.ip', True, True),
-        # ('srv_tcp.ip', True, False),
         ('somefieldthatdoesnotexistever', True, False),
         ('sum_web.packets', False, True),
         ('avg_tcp.network_time_c2s', False, True),
-        # ('avg_sql.data_transfer_time', False, False),
         ('avg_cifs.data_transfer_time', False, True)
     ])
-    def test_packets_cols_are_valid(self, column_name, is_key, exists, packet_report_columns):
+    def test_packets_cols_are_valid(self, column_name, is_key,
+                                    exists, packet_report_columns):
         col = packet_report_columns.get(column_name)
         col_exists = True if col is not None else False
         assert col_exists == exists
@@ -74,12 +73,11 @@ class TestPacketsReport:
     def test_execute_report(self, app, packets_report_data_def):
         report = Report(app)
         report.add(packets_report_data_def)
-        # import pdb; pdb.set_trace()
         report.run()
         legend = sorted(report.get_legend())
         report_data = report.get_data()
 
         assert legend == sorted(PACKETS_KEY_COLS + PACKETS_VALUE_COLS)
-        # assert len(report_data) > 0
+        assert len(report_data) > 0
         assert len(report_data[1]) == len(PACKETS_KEY_COLS + PACKETS_VALUE_COLS)
 
