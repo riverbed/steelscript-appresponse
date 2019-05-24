@@ -599,7 +599,6 @@ class Report(object):
         logger.debug("Adding a data_def request {}"
                      .format(data_def_request.to_dict()))
         self._data_defs.append(data_def_request)
-        # import pdb; pdb.set_trace()
 
     def _cast_number(self, result, source_name):
         """Check records and convert string to integer/float.
