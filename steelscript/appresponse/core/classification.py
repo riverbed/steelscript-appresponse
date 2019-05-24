@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Riverbed Technology, Inc.
+# Copyright (c) 2018 Riverbed Technology, Inc.
 #
 # This software is licensed under the terms and conditions of the MIT License
 # accompanying the software ("License").  This software is distributed "AS IS"
@@ -23,7 +23,7 @@ class HostGroupConfig(DictObject):
              'out_speed', 'out_speed_unit', 'tags']
 
     def __init__(self, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             if k in self.Attrs:
                 setattr(self, k, v)
             else:
@@ -67,14 +67,14 @@ class ClassificationService(ServiceClass):
         try:
             resp = self.servicedef.bind('hostgroup', id=id_)
             return HostGroup(data=resp.data, datarep=resp)
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('No hostgroup found with id %s' % id_)
 
     def get_hostgroup_by_name(self, name):
         try:
-            return (hg for hg in self.get_hostgroups()
-                    if hg.name == name).next()
+            return next((hg for hg in self.get_hostgroups()
+                         if hg.name == name))
         except StopIteration:
             raise ValueError("No hostgroups found with name "
                              "'%s'." % name)
@@ -92,7 +92,7 @@ class ClassificationService(ServiceClass):
     def create_hostgroups(self, objs):
         """Create multiple hostgroup objects in one go.
 
-        :param obj: a list of HostGroupConfig objects.
+        :param objs: a list of HostGroupConfig objects.
         :return: a list of HostGroup objects.
         """
 

@@ -70,6 +70,8 @@ class AppResponseServiceDefLoader(ServiceDefLoadHook):
                 return ServiceDef.create_from_file(abs_fname)
             except (ValueError, ParseError, UnsupportedSchema) as e:
                 # Clean up invalid cache
+                logger.debug("Cleaning up invalid cache in 'find_by_id'. "
+                             "Stacktrace: %s" % e)
                 os.remove(abs_fname)
 
         resp = self.connection.request(method='GET', path=id_)
@@ -93,6 +95,8 @@ class AppResponseServiceDefLoader(ServiceDefLoadHook):
                 return ServiceDef.create_from_file(abs_fname)
             except (ValueError, ParseError, UnsupportedSchema) as e:
                 # Clean up invalid cache
+                logger.debug("Cleaning up invalid cache in 'find_by_name'. "
+                             "Stacktrace: %s" % e)
                 os.remove(abs_fname)
 
         service_id = self.SERVICE_ID.format(name=name, version=version)
@@ -108,6 +112,8 @@ class AppResponseConnectionHook(ConnectionHook):
         # which is redundant. But since it is only one time during
         # initialization, it is benign.
         svc = Service("AppResponse", host=host, auth=auth)
+        # svc.conn.REST_DEBUG = 2
+        # svc.conn.REST_BODY_LINES = 20
         return svc.conn
 
 
@@ -190,7 +196,7 @@ class AppResponse(InstanceDescriptorMixin):
         ar_versions = self.common.get_versions()
 
         self._versions = {}
-        for svc, versions in ar_versions.iteritems():
+        for svc, versions in ar_versions.items():
             if self.req_versions and svc in self.req_versions:
                 vers = set(self.req_versions[svc]).intersection(set(versions))
                 if not vers:

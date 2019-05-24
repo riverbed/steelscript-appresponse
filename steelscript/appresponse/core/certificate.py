@@ -35,7 +35,7 @@ class CertificateService(ServiceClass):
         try:
             resp = self.certificate.execute('get')
             return Certificate(data=resp.data, datarep=resp)
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('No certificate object found')
 

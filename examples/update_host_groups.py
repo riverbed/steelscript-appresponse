@@ -121,7 +121,7 @@ class HostGroupApp(AppResponseApp):
                                          else hg.data.hosts),
                                   enabled=enabled)
             hg.update(hgc)
-            print ("Successfully updated hostgroup '{}'".format(hg.name))
+            print("Successfully updated hostgroup '{}'".format(hg.name))
 
         elif self.options.operation == 'upload':
             with open(self.options.file) as f:

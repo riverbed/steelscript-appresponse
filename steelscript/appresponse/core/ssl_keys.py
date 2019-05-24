@@ -23,8 +23,11 @@ class SslKeyStoreService(ServiceClass):
         self.servicedef = None
         self.ssl_key_store = None
 
-    def __str__(self):
-        return '<SSL Key {}/{}>'.format(self.id(), self.name())
+    # def __str__(self):
+    #     # [mzetea] - where do the id() and name() come from? seem to be undefined. ResourceObject used below has
+    #     # them defined as properties... Should this class implement the 2 or inherit the RersourceObject instead of the
+    #     # ServiceClass?
+    #     return '<SSL Key {}/{}>'.format(self.id(), self.name())
 
     def _bind_resources(self):
         # Init service
@@ -46,7 +49,7 @@ class SslKeyStoreService(ServiceClass):
             self.ssl_key_store = self.servicedef.bind('key', id=id_)
             resp = self.ssl_key_store.execute('get')
             return SslKey(data=resp.data, datarep=resp)
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('No SSL Key found with id %s' % id_)
 
@@ -56,7 +59,7 @@ class SslKeyStoreService(ServiceClass):
             self.ssl_key_store = self.servicedef.bind('key', name=name_)
             resp = self.ssl_key_store.execute('get')
             return SslKey(data=resp.data, datarep=resp)
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('No SSL Key found with name %s' % name_)
 
@@ -101,6 +104,7 @@ class SslKey(ResourceObject):
         ]
 
     def id(self):
+        #[mzetea] the parent class defines these as property...
         return self.data.get('id', None)
 
     def name(self):

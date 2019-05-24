@@ -28,7 +28,7 @@ class CertificateApp(AppResponseApp):
                 certificate.print_properties()
             else:
                 print("No certificate retrieved")
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to get Certificate.')
 

@@ -35,6 +35,7 @@ from steelscript.appfwk.apps.datasource.modules.analysis import \
     AnalysisTable, AnalysisQuery
 from steelscript.appfwk.apps.datasource.models import Table
 from steelscript.appfwk.apps.jobs.models import Job
+from functools import reduce
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +193,7 @@ class AppResponseQuery(TableQueryBase):
 
         if aliases:
             # overwrite columns with their alias values, then drop 'em
-            for k, v in aliases.iteritems():
+            for k, v in aliases.items():
                 df[k] = df[v]
                 df.drop(v, 1, inplace=True)
 
@@ -296,7 +297,7 @@ class AppResponseTimeSeriesQuery(AnalysisQuery):
                              self.table.options.value_column_name]]
             # Rename columns to 'time' and the pivot column name
             sub_df.rename(
-                columns={time_col_name: u'time',
+                columns={time_col_name: 'time',
                          self.table.options.value_column_name: pivot},
                 inplace=True
             )
@@ -304,7 +305,7 @@ class AppResponseTimeSeriesQuery(AnalysisQuery):
             sub_dfs.append(sub_df)
 
         df_final = reduce(
-            lambda df1, df2: pandas.merge(df1, df2, on=u'time', how='outer'),
+            lambda df1, df2: pandas.merge(df1, df2, on='time', how='outer'),
             sub_dfs
         )
 
@@ -470,7 +471,7 @@ class AppResponseScannerQuery(AnalysisQuery):
     def collect(self, jobs=None):
 
         out = []
-        for jid, job in jobs.iteritems():
+        for jid, job in jobs.items():
             ardata = job.data()
             if ardata is not None:
                 total_bytes = ardata['total_bytes'].sum()

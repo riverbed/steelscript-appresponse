@@ -105,7 +105,6 @@ class ClipService(ServiceClass):
 
 
 class Clips(object):
-
     def __init__(self, clip_objs):
         self.clip_objs = clip_objs
 
@@ -116,7 +115,7 @@ class Clips(object):
     def __enter__(self):
         return self.clip_objs
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, passed_type, value, traceback):
         for clip in self.clip_objs:
             if isinstance(clip, Clip) and clip.from_job:
                 logger.debug("Deleting Clip object with id {}"

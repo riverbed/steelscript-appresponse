@@ -93,7 +93,7 @@ class GeneralReportApp(AppResponseApp):
             svcdef = self.appresponse.find_service('npm.reports')
             dr = svcdef.bind('source_names')
             source_names = dr.execute('get').data
-            print '\n'.join(source_names)
+            print('\n'.join(source_names))
             return
 
         source = SourceProxy(name=self.options.sourcename)
@@ -133,6 +133,8 @@ class GeneralReportApp(AppResponseApp):
 
         data = report.get_data()
         headers = report.get_legend()
+
+        report.delete()
 
         if self.options.csvfile:
             with open(self.options.csvfile, 'w') as f:

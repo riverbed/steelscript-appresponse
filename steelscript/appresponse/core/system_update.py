@@ -40,9 +40,9 @@ class SystemUpdateService(ServiceClass):
     def get_image_by_id(self, id_):
         """Get Update image with given id"""
         try:
-            return (j for j in self.get_images()
-                    if j.id() == id_).next()
-        except RvbdHTTPException, e:
+            return next(j for j in self.get_images()
+                        if j.id() == id_)
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('No image found with id %s' % id_)
 
@@ -63,13 +63,14 @@ class SystemUpdateService(ServiceClass):
                 resp = conn.upload(uri, fd)
             fd.close()
             return resp
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to upload an update image.')
 
     def fetch_image(self, url):
         """Fetch an update image on AppResponse appliance.
-        :param obj: Provide a request body with the following structure:
+
+        :param url: Provide a request body with the following structure:
             {
                 "url": string
             }
@@ -81,7 +82,7 @@ class SystemUpdateService(ServiceClass):
             data = dict(url=url)
             resp = self.system_update.execute('fetch', _data=data)
             return Image(data=resp.data, datarep=resp)
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to fetch an update image.')
 
@@ -92,7 +93,7 @@ class SystemUpdateService(ServiceClass):
             self.system_update = self.servicedef.bind('update')
             resp = self.system_update.execute('get')
             return Update(data=resp.data, datarep=resp)
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('No update found')
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Riverbed Technology, Inc.
+# Copyright (c) 2018 Riverbed Technology, Inc.
 #
 # This software is licensed under the terms and conditions of the MIT License
 # accompanying the software ("License").  This software is distributed "AS IS"
@@ -77,7 +77,7 @@ class SourceProxy(object):
 
     def to_dict(self):
         ret = {}
-        for k, v in vars(self).iteritems():
+        for k, v in vars(self).items():
             if v:
                 ret[k] = v
         return ret
@@ -134,7 +134,7 @@ class ReportService(object):
                 for source in sources:
                     cols = source['columns']
                     source['columns'] = \
-                        OrderedDict(sorted(zip(map(lambda x: x['id'], cols),
+                        OrderedDict(sorted(zip([x['id'] for x in cols],
                                                cols)))
                     source['filters_on_metrics'] = \
                         source['capabilities']['filters_on_metrics']
@@ -155,7 +155,7 @@ class ReportService(object):
                 logger.debug("Loading sources data from {}"
                              .format(sources_filename))
                 # Only load valid sources based on settings
-                for k, v in sources_file.data.iteritems():
+                for k, v in sources_file.data.items():
                     if k in report_source_to_groups:
                         self._sources[k] = v
 
@@ -536,7 +536,6 @@ class DataDef(object):
             v = getattr(self.timefilter, k, None)
             if v:
                 data_def['time'][k] = str(v)
-
         if self.retention_time:
             data_def['time']['retention_time'] = str(self.retention_time)
 
@@ -630,9 +629,8 @@ class Report(object):
         # operate on each column, then zip back into list of tuples
         datacols = []
         for i, c in enumerate(zip(*result['data'])):
-            datacols.append(map(functions[i], c))
-
-        records = zip(*datacols)
+            datacols.append(list(map(functions[i], c)))
+        records = list(zip(*datacols))
 
         return records
 
@@ -703,6 +701,8 @@ class Report(object):
                 source_name = self._data_defs[index].source.name
                 if 'data' in resp:
                     data = self._cast_number(resp, source_name)
+                else:
+                    data = None
                 return {'data': data, 'meta': resp['meta']}
 
     def get_legend(self, index=0, details=False):
@@ -740,7 +740,13 @@ class Report(object):
 
         :param int index: DataDef to process into DataFrame.  Defaults to 0.
         """
-        import pandas
+        try:
+            import pandas
+        except ImportError as e:
+            logger.exception("Pandas module is required to run this function. "
+                             "Install pandas and retry. %s" % e)
+            return
+
         data = self.get_data(index)
 
         # check if we are a live version and extract data directly

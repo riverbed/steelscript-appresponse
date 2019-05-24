@@ -45,7 +45,7 @@ class SslKeysApp(AppResponseApp):
             if key is not None:
                 print("Key successfully imported")
                 print(key)
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to import SSL Key')
 
@@ -57,7 +57,7 @@ class SslKeysApp(AppResponseApp):
                 print(str(len(keys)))
             else:
                 print('0')
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to get SSL Keys.')
 
@@ -72,7 +72,7 @@ class SslKeysApp(AppResponseApp):
                 key.print_properties()
             else:
                 print("No SSL Key retrieved")
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to get SSL Key')
 
@@ -86,7 +86,7 @@ class SslKeysApp(AppResponseApp):
             if key is not None:
                 key.datarep.execute('delete')
                 print("Key deleted.")
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to delete SSL Key')
 
@@ -98,7 +98,7 @@ class SslKeysApp(AppResponseApp):
                 print(str(len(keys)))
             else:
                 print('0')
-        except RvbdHTTPException, e:
+        except RvbdHTTPException as e:
             if str(e).startswith('404'):
                 raise ValueError('Failed to get SSL Keys')
 
