@@ -44,9 +44,9 @@ def packet_report_columns(app):
 
 @pytest.fixture
 def report_time_frame():
-    # return u"05/21/19 17:10:10.001 to 05/21/19 18:15:10.001"
+    return u"05/23/19 14:30:10 to 05/23/19 14:35:10"
     #        06/05/17 17:09:00 to 06/05/17 18:09:00
-    return "previous hour"
+    # return "previous hour"
 
 
 class TestPacketsReport:
