@@ -36,8 +36,8 @@ def pytest_configure(config):
         {'targetBaseUrl': AR_ENDPOINT}))
     print("Started WireMock Recording for ARX. Response from server: %s" %
           req.content)
-#
-#
+
+
 def pytest_unconfigure(config):
     stop_api = "%s/%s" % (WIREMOCK_SERVER, WIREMOCK_STOP_RECORDING)
     snapshot_api = "%s/%s" % (WIREMOCK_SERVER, WIREMOCK_SNAPSHOT)
