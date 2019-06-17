@@ -10,9 +10,9 @@ from setuptools import setup, find_packages
 from gitpy_versioning import get_version
 
 install_requires = (
-    'steelscript>=2.0a1',
-    'sleepwalker>=2.0a1',
-    'reschema==2.0a2'
+    'steelscript>=2.0',
+    'sleepwalker>=2.0',
+    'reschema>=2.0'
 )
 
 setup_args = {
