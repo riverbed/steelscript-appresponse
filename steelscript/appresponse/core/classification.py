@@ -114,7 +114,7 @@ class ClassificationService(ServiceClass):
         :param ids: a list of integers representing ids of HostGroups to be
             deleted. If None, all hostgroups will be deleted.
         """
-        if not ids:
+        if ids is None:
             data = dict(delete_all=True)
         else:
             data = dict(delete_ids=ids)
