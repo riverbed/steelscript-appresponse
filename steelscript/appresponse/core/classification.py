@@ -108,13 +108,15 @@ class ClassificationService(ServiceClass):
         return [HostGroup(data=item, servicedef=self.servicedef)
                 for item in resp.data['items']]
 
-    def bulk_delete(self, ids=None):
+    def bulk_delete(self, ids=None, delete_all=False):
         """Delete Hostgroups on an appresponse appliance.
 
         :param ids: a list of integers representing ids of HostGroups to be
-            deleted. If None, all hostgroups will be deleted.
+            deleted.
+        :param delete_all: if True, delete all hostgroups regardless of
+            value in `ids`
         """
-        if ids is None:
+        if delete_all is True:
             data = dict(delete_all=True)
         else:
             data = dict(delete_ids=ids)
