@@ -27,7 +27,7 @@ report_groups = OrderedDict([
 if os.environ.get('AR11_ADVANCED_FEATURES', 'False').lower() == 'true':
     report_sources = OrderedDict([
         ('packets', ['packets']),
-        ('asa', ['aggregates', 'flow_tcp']),
+        ('asa', ['aggregates', 'flow_tcp', 'flow_ip']),
         ('wta', ['aggregates', 'wtapages', 'wtapageobjects']),
         ('db',  ['dbsession_summaries', 'sql_summaries',
                  'sqlsessions', 'sqlqueries']),
