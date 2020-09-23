@@ -25,8 +25,7 @@ AppResponse Object
 
 Interacting with an AppResponse Applicance leverages two key classes:
 
-* :py:class:`AppResponse <appresponse.AppResponse>` - provides the primary interface to the appliance, handling initialization, setup,
-and communication via REST API calls.
+* :py:class:`AppResponse <appresponse.AppResponse>` - provides the primary interface to the appliance, handling initialization, setup, and communication via REST API calls.
 
 * :py:class:`Report <reports.Report>` - talks through the AppResponse object to create new report and pull data when the report is completed.
 

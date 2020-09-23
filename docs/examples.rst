@@ -485,7 +485,7 @@ Example output::
 .. system_update_example:
 
 ``system_update.py``
--------------------
+--------------------
 
 This script takes no extra arguments. It will fetch an update image
 from provided url, print out the details of the image and delete it.
