@@ -95,7 +95,7 @@ class HostGroupApp(AppResponseApp):
         if self.options.operation == 'show':
             headers = ['id', 'name', 'active', 'definition']
             data = [[hg.id, hg.name, hg.data.enabled, hg.data.hosts]
-                    for hg in self.appresponse.classification.get_hostgroups()
+                    for hg in self.appresponse.classification.get_hostgroups() if hasattr(hg.data,'hosts')
                     ]
             Formatter.print_table(data, headers)
 
