@@ -29,8 +29,7 @@ if os.environ.get('AR11_ADVANCED_FEATURES', 'False').lower() == 'true':
         ('packets', ['packets']),
         ('asa', ['aggregates', 'flow_tcp', 'flow_ip']),
         ('wta', ['aggregates', 'wtapages', 'wtapageobjects']),
-        ('db',  ['dbsession_summaries', 'sql_summaries',
-                 'sqlsessions', 'sqlqueries']),
+        ('db',  ['aggregates', 'sqlsessions', 'sqlqueries']),
         ('uc', ['aggregates', 'voip_rtp_channels', 'voip_calls']),
         ('alerts', ['alert_list'])
     ])
@@ -40,7 +39,7 @@ else:
         ('packets', ['packets']),
         ('asa', ['aggregates']),
         ('wta', ['aggregates']),
-        ('db', ['dbsession_summaries', 'sql_summaries']),
+	('db', ['aggregates']),
         ('uc', ['aggregates']),
         ('alerts', ['alert_list'])
     ])
