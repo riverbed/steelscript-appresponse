@@ -4,6 +4,9 @@
 '
 ' print_hostgroups-raw.py
 '
+' Encoding: UTF8
+' End of Line Sequence: LF
+'
 ' Usage
 '     python print_hostgroups-raw.py appresponse-ip-address -u admin -p password
 '
