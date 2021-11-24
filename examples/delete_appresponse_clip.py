@@ -22,16 +22,27 @@
 '''
 
 import sys
-from steelscript.common.service import Service, UserAuth
+from steelscript.common.service import UserAuth
+from steelscript.common import Service
+from steelscript.common.exceptions import RvbdHTTPException
 
 host = sys.argv[1]
 username = sys.argv[2]
 password = sys.argv[3]
 clip_id = sys.argv[4]
+uri= '/api/npm.clips/1.0/clips/items/'
 
-auth = UserAuth(username=username, password=password)
+ar11 = Service("appresponse", host, auth=UserAuth(username, password))
 
-service = Service('AppResponse', host=host, auth=auth)
+path = uri + clip_id
 
-uri = '/api/npm.clips/1.0/clips/items/' + clip_id
-print("Deleting clip id: "+clip_id)
+try:
+    result = ar11.conn.request('DELETE', path)
+    if result.status_code == 204:
+        print("Successfully deleted clip ID: "+clip_id)
+except RvbdHTTPException as e:
+    if e.status == 404:
+        message = "Clip ID file does not exist!"
+    else:
+        message = "Error retrieving information on '{}'".format(path)
+    print(message)
