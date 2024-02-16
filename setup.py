@@ -7,10 +7,9 @@
 from glob import glob
 
 from setuptools import setup, find_packages
-from gitpy_versioning import get_version
 
 install_requires = (
-    'steelscript>=2.0',
+    'steelscript>=24.2.0',
     'sleepwalker>=2.0',
     'reschema>=2.0'
 )
@@ -18,7 +17,7 @@ install_requires = (
 setup_args = {
     'name':                'steelscript.appresponse',
     'namespace_packages':  ['steelscript'],
-    'version':             get_version(),
+    'version':             '24.2.1',
     'author':              'Riverbed Technology',
     'author_email':        'eng-github@riverbed.com',
     'url':                 'http://pythonhosted.org/steelscript',
