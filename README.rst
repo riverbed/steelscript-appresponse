@@ -1,8 +1,8 @@
-Riverbed SteelScript for SteelCentral AppResponse
+Riverbed SteelScript for AppResponse
 =================================================
 
 This package provides device specific bindings for interacting
-with Riverbed SteelCentral AppResponse devices as part of the Riverbed
+with Riverbed AppResponse devices as part of the Riverbed
 SteelScript for Python.
 
 For a complete guide to installation, see:
@@ -12,7 +12,7 @@ For a complete guide to installation, see:
 License
 =======
 
-Copyright (c) 2019 Riverbed Technology, Inc.
+Copyright (c) 2019-2024 Riverbed Technology, Inc.
 
 This software is licensed under the terms and conditions of the MIT License
 accompanying the software ("License").  This software is distributed "AS IS" as
