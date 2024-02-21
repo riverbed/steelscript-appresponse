@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Riverbed Technology, Inc.
+# Copyright (c) 2019-2024 Riverbed Technology, Inc.
 #
 # This software is licensed under the terms and conditions of the MIT License
 # accompanying the software ("License").  This software is distributed "AS IS"
@@ -7,18 +7,16 @@
 from glob import glob
 
 from setuptools import setup, find_packages
-from gitpy_versioning import get_version
 
 install_requires = (
-    'steelscript>=2.0',
+    'steelscript>=24.2.0',
     'sleepwalker>=2.0',
     'reschema>=2.0'
 )
 
 setup_args = {
     'name':                'steelscript.appresponse',
-    'namespace_packages':  ['steelscript'],
-    'version':             get_version(),
+    'version':             '24.2.1',
     'author':              'Riverbed Technology',
     'author_email':        'eng-github@riverbed.com',
     'url':                 'http://pythonhosted.org/steelscript',
