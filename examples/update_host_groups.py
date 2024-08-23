@@ -158,7 +158,7 @@ class HostGroupApp(AppResponseApp):
                   .format(self.options.id or self.options.name))
 
         elif self.options.operation == 'clear':  # clear all hostgroups
-            self.appresponse.classification.bulk_delete()
+            self.appresponse.classification.bulk_delete(delete_all=True)
             print("Successfully cleared all hostgroups")
 
 
